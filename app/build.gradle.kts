@@ -5,11 +5,11 @@ plugins {
 }
 
 android {
-    namespace = "com.who_summoned_the_cloud.eromoro"
+    namespace = "com.who_summoned_the_cloud.eromoro.app"
     compileSdk = 36
 
     defaultConfig {
-        applicationId = "com.who_summoned_the_cloud.eromoro"
+        applicationId = "com.who_summoned_the_cloud.eromoro.app"
         minSdk = 26
         targetSdk = 36
         versionCode = 1
@@ -56,4 +56,8 @@ dependencies {
     androidTestImplementation(libs.androidx.compose.ui.test.junit4)
     debugImplementation(libs.androidx.compose.ui.tooling)
     debugImplementation(libs.androidx.compose.ui.test.manifest)
+
+    implementation(project(":common"))
+    implementation(project(":data"))
+    implementation(project(":presentation"))
 }

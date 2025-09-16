@@ -1,4 +1,4 @@
-package com.who_summoned_the_cloud.eromoro.ui.theme
+package com.who_summoned_the_cloud.eromoro.app.theme
 
 import androidx.compose.ui.graphics.Color
 

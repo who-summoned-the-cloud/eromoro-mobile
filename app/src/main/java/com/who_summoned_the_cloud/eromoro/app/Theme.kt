@@ -1,6 +1,5 @@
-package com.who_summoned_the_cloud.eromoro.ui.theme
+package com.who_summoned_the_cloud.eromoro.app.theme
 
-import android.app.Activity
 import android.os.Build
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.MaterialTheme

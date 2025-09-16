@@ -21,4 +21,6 @@ dependencyResolutionManagement {
 
 rootProject.name = "eromoro-mobile"
 include(":app")
- 
+include(":presentation")
+include(":data")
+include(":common")

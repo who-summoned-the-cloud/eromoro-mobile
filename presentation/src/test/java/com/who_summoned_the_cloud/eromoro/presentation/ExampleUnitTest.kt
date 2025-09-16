@@ -1,4 +1,4 @@
-package com.who_summoned_the_cloud.eromoro
+package com.who_summoned_the_cloud.eromoro.presentation
 
 import org.junit.Test
 
