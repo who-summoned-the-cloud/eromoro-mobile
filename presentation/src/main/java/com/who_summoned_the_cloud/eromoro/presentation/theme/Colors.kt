@@ -29,8 +29,8 @@ object Colors {
     val gray = ColorMap(
         colorMap = mapOf(
             50 to Color(0xFFF8F8F8),
-            100 to Color(0xFFEEEEEE),
-            200 to Color(0xFFDEDEDE),
+            100 to Color(0xFFF2F2F2),
+            200 to Color(0xFFE8E8E8),
             300 to Color(0xFFC6C6C6),
             400 to Color(0xFF9E9E9E),
             500 to Color(0xFF7A7A7A),
