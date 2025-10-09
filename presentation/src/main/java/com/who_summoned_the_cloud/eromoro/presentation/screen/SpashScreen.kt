@@ -23,7 +23,7 @@ fun SplashScreen() {
     val resources = LocalResources.current
     val bitmap = remember {
         BitmapFactory
-            .decodeResource(resources, R.raw.img_logo)
+            .decodeResource(resources, R.raw.image_logo)
             .asImageBitmap()
     }
 

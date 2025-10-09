@@ -62,7 +62,7 @@ fun LoginFormScreen(
 
     val logo = remember {
         BitmapFactory
-            .decodeResource(resources, R.raw.img_logo_descripted)
+            .decodeResource(resources, R.raw.image_logo_descripted)
             .asImageBitmap()
     }
 

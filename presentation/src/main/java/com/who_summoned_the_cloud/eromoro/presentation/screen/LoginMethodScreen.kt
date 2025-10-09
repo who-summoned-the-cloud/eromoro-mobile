@@ -46,7 +46,7 @@ fun LoginMethodScreen(
 
     val (logo, googleLogo, kakaoLogo) = remember {
         listOf(
-            R.raw.img_logo_descripted,
+            R.raw.image_logo_descripted,
             R.raw.image_google,
             R.raw.image_kakao,
         ).map {
