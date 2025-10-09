@@ -123,7 +123,7 @@ fun SignUpSuccessScreen(
 
                 val alpha by animateFloatAsState(
                     targetValue = if (isInitialized) 1f else 0f,
-                    animationSpec = tween(durationMillis = 2000),
+                    animationSpec = tween(durationMillis = 1000),
                 )
 
                 val offset by animateIntOffsetAsState(
@@ -131,7 +131,7 @@ fun SignUpSuccessScreen(
                         x = 0f,
                         y = with(LocalDensity.current) { 10.dp.toPx() }
                     ).round(),
-                    animationSpec = tween(durationMillis = 2000),
+                    animationSpec = tween(durationMillis = 1000),
                 )
 
                 LaunchedEffect(key1 = Unit) {
