@@ -2,10 +2,12 @@ package com.who_summoned_the_cloud.eromoro.presentation.component
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonColors
@@ -39,6 +41,7 @@ fun CustomButton(
     shape: Shape = RoundedCornerShape(14.dp),
     isEnabled: Boolean = true,
     text: String? = null,
+    fillMaxWidth: Boolean = true,
     content: (@Composable RowScope.() -> Unit)? = null,
 ) {
     Button(
@@ -48,13 +51,15 @@ fun CustomButton(
         shape = shape,
         border = border,
         modifier = Modifier
-            .fillMaxWidth()
+            .let { if (fillMaxWidth) it.fillMaxWidth() else it }
             .let { if (height != null) it.height(height) else it },
+        contentPadding = PaddingValues(0.dp),
     ) {
         if (content != null) {
             Row(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(5.dp),
+                modifier = Modifier.padding(horizontal = 20.dp)
             ) {
                 content.invoke(this@Row)
             }
