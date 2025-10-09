@@ -52,7 +52,7 @@ fun CustomSingleLineInputField(
     tail: @Composable (RowScope.() -> Unit)? = null,
 ) {
     Column(
-        verticalArrangement = Arrangement.spacedBy(10.dp)
+        verticalArrangement = Arrangement.spacedBy(5.dp)
     ) {
         Box(
             modifier = Modifier
