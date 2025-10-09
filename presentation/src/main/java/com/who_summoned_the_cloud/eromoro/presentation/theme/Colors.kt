@@ -44,4 +44,5 @@ object Colors {
     val positiveGreen = Color(0xFF48DD86)
     val negativeRed = Color(0xFFFF3D51)
     val kakaoYellow = Color(0xFFFAE100)
+    val kakaoBrown = Color(0xFF3C1E1E)
 }

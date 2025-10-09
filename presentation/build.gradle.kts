@@ -54,4 +54,7 @@ dependencies {
     androidTestImplementation(libs.androidx.espresso.core)
 
     implementation(project(":common"))
+
+    implementation(libs.coil.compose)
+    implementation(libs.coil.network.okhttp)
 }
