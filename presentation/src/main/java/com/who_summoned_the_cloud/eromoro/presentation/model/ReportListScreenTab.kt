@@ -1,23 +1,19 @@
 package com.who_summoned_the_cloud.eromoro.presentation.model
 
+import com.who_summoned_the_cloud.eromoro.common.model.ReportCategory
 import java.time.LocalDate
 
 sealed class ReportListScreenTab {
 
     data class MyReports(
-        val category: Category?,
+        val category: ReportCategory?,
         val sort: Sort,
         val reports: Fetch<List<Report>, Unit>,
         val showLoadingAtBottom: Boolean,
         val menuExpandedReportId: Long?,
-        val onCategoryChipClicked: (Category?) -> Unit,
+        val onCategoryChipClicked: (ReportCategory?) -> Unit,
         val onNewPageRequest: () -> Unit,
     ) : ReportListScreenTab() {
-
-        enum class Category {
-            TO_COMMUNITY,
-            TO_LOCAL_GOVERNANCE,
-        }
 
         enum class Sort {
             NEWEST,
@@ -27,7 +23,7 @@ sealed class ReportListScreenTab {
         data class Report(
             val id: Long,
             val imageUrl: String?,
-            val category: Category,
+            val category: ReportCategory,
             val state: State,
             val title: String,
             val address: String,

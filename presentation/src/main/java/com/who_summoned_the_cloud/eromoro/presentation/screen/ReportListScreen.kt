@@ -43,6 +43,7 @@ import coil3.compose.rememberAsyncImagePainter
 import com.who_summoned_the_cloud.eromoro.presentation.R
 import com.who_summoned_the_cloud.eromoro.presentation.component.CustomChip
 import com.who_summoned_the_cloud.eromoro.presentation.component.CustomProgressIndicator
+import com.who_summoned_the_cloud.eromoro.common.model.ReportCategory
 import com.who_summoned_the_cloud.eromoro.presentation.model.Fetch
 import com.who_summoned_the_cloud.eromoro.presentation.model.ReportListScreenTab
 import com.who_summoned_the_cloud.eromoro.presentation.theme.Colors
@@ -189,16 +190,16 @@ private fun MyReportsTab(
             ) {
                 listOf(
                     null,
-                    ReportListScreenTab.MyReports.Category.TO_COMMUNITY,
-                    ReportListScreenTab.MyReports.Category.TO_LOCAL_GOVERNANCE,
+                    ReportCategory.TO_COMMUNITY,
+                    ReportCategory.TO_LOCAL_GOVERNANCE,
                 ).forEach { category ->
                     val isSelected = category == prop.category
 
                     CustomChip(
                         text = when (category) {
                             null -> "전체"
-                            ReportListScreenTab.MyReports.Category.TO_COMMUNITY -> "제보"
-                            ReportListScreenTab.MyReports.Category.TO_LOCAL_GOVERNANCE -> "신고"
+                            ReportCategory.TO_COMMUNITY -> "제보"
+                            ReportCategory.TO_LOCAL_GOVERNANCE -> "신고"
                         },
                         isSelected = isSelected,
                         onClick = { prop.onCategoryChipClicked(category) },
@@ -253,8 +254,8 @@ private fun MyReportsTab(
                                         ) {
                                             Text(
                                                 text = when (report.category) {
-                                                    ReportListScreenTab.MyReports.Category.TO_COMMUNITY -> "제보"
-                                                    ReportListScreenTab.MyReports.Category.TO_LOCAL_GOVERNANCE -> "신고"
+                                                    ReportCategory.TO_COMMUNITY -> "제보"
+                                                    ReportCategory.TO_LOCAL_GOVERNANCE -> "신고"
                                                 },
                                                 fontSize = 13.sp,
                                                 fontWeight = FontWeight.Normal,
@@ -407,7 +408,7 @@ fun PreviewReportListScreen() {
                     ReportListScreenTab.MyReports.Report(
                         id = 1,
                         imageUrl = null,
-                        category = ReportListScreenTab.MyReports.Category.TO_COMMUNITY,
+                        category = ReportCategory.TO_COMMUNITY,
                         state = ReportListScreenTab.MyReports.Report.State.APPROVED,
                         title = "망리단길 계단 제보드립니다.",
                         address = "마포구 망원동",
@@ -422,7 +423,7 @@ fun PreviewReportListScreen() {
                     ), ReportListScreenTab.MyReports.Report(
                         id = 2,
                         imageUrl = null,
-                        category = ReportListScreenTab.MyReports.Category.TO_LOCAL_GOVERNANCE,
+                        category = ReportCategory.TO_LOCAL_GOVERNANCE,
                         state = ReportListScreenTab.MyReports.Report.State.BEFORE_APPROVAL,
                         title = "망리단길 계단 제보드립니다.",
                         address = "마포구 망원동",

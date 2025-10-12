@@ -56,6 +56,10 @@ dependencies {
 
     implementation(project(":common"))
 
+    // Coil
     implementation(libs.coil.compose)
     implementation(libs.coil.network.okhttp)
+
+    // Naver Map Compose SDK
+    implementation(libs.naver.map.compose)
 }
