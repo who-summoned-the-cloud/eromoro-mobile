@@ -4,6 +4,7 @@ import android.graphics.BitmapFactory
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -27,7 +28,10 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.BlurredEdgeTreatment
 import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.draw.blur
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.platform.LocalResources
@@ -127,6 +131,25 @@ fun CustomBottomNavigationBar(
                         contentAlignment = Alignment.Center,
                         modifier = Modifier.size(48.dp),
                     ) {
+                        Canvas(
+                            modifier = Modifier
+                                .size(60.dp)
+                                .blur(
+                                    radius = 24.dp,
+                                    edgeTreatment = BlurredEdgeTreatment.Unbounded
+                                )
+                        ) {
+                            val radialGradientBrush = Brush.radialGradient(
+                                colors = listOf(
+                                    Colors.pink[100].copy(alpha = activeIconAlpha),
+                                    Colors.pink[100].copy(alpha = 0f)
+                                ),
+                                center = center,
+                                radius = 24.dp.toPx()
+                            )
+
+                            drawCircle(brush = radialGradientBrush)
+                        }
                         Image(
                             bitmap = backgroundIcons[it]!!,
                             contentDescription = label,
