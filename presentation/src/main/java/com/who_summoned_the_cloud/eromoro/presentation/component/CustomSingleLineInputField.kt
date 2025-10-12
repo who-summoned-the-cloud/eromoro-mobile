@@ -49,6 +49,7 @@ fun CustomSingleLineInputField(
     placeholder: String? = null,
     placeholderColor: Color = Colors.gray[300],
     isValueHided: Boolean = false,
+    isReadonly: Boolean = false,
     tail: @Composable (RowScope.() -> Unit)? = null,
 ) {
     Column(
@@ -98,6 +99,7 @@ fun CustomSingleLineInputField(
                         } else {
                             null
                         },
+                        readOnly = isReadonly,
                     )
                 }
                 tail?.invoke(this@Row)
@@ -121,6 +123,7 @@ fun PreviewCustomSingleLineInputField() {
     CustomSingleLineInputField(
         state = TextFieldState(initialText = "eromoro2025"),
         underText = "아이디는 6~12자 이내로 설정해주세요.",
+        isReadonly = true,
     ) {
         Image(
             painter = painterResource(R.drawable.image_circle_x),

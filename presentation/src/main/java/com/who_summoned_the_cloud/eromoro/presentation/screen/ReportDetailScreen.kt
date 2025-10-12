@@ -48,7 +48,7 @@ import coil3.compose.rememberAsyncImagePainter
 import com.who_summoned_the_cloud.eromoro.common.model.ReportCategory
 import com.who_summoned_the_cloud.eromoro.presentation.R
 import com.who_summoned_the_cloud.eromoro.presentation.component.CustomButton
-import com.who_summoned_the_cloud.eromoro.presentation.component.PositionMap
+import com.who_summoned_the_cloud.eromoro.presentation.component.PositionViewerMap
 import com.who_summoned_the_cloud.eromoro.presentation.theme.Colors
 import java.time.LocalDate
 
@@ -237,7 +237,7 @@ fun ReportDetailScreen(
                             .clip(RoundedCornerShape(14.dp))
                             .height(width / 3)
                     ) {
-                        if (latitude != null && longitude != null) PositionMap(
+                        if (latitude != null && longitude != null) PositionViewerMap(
                             latitude = latitude,
                             longitude = longitude,
                         )

@@ -19,7 +19,7 @@ import com.naver.maps.map.compose.rememberCameraPositionState
 
 @OptIn(ExperimentalNaverMapApi::class)
 @Composable
-fun PositionMap(
+fun PositionViewerMap(
     latitude: Double,
     longitude: Double,
 ) {
@@ -60,6 +60,6 @@ fun PositionMap(
 
 @Preview
 @Composable
-fun PreviewPositionMap() {
-    PositionMap(latitude = 37.0, longitude = 126.9)
+fun PreviewPositionViewerMap() {
+    PositionViewerMap(latitude = 37.0, longitude = 126.9)
 }

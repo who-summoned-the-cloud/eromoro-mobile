@@ -47,7 +47,7 @@ import com.who_summoned_the_cloud.eromoro.presentation.component.CustomButton
 import com.who_summoned_the_cloud.eromoro.presentation.component.CustomChip
 import com.who_summoned_the_cloud.eromoro.presentation.component.CustomSingleLineInputField
 import com.who_summoned_the_cloud.eromoro.presentation.component.CustomToggle
-import com.who_summoned_the_cloud.eromoro.presentation.component.PositionMap
+import com.who_summoned_the_cloud.eromoro.presentation.component.PositionViewerMap
 import com.who_summoned_the_cloud.eromoro.presentation.theme.Colors
 import com.who_summoned_the_cloud.eromoro.presentation.util.drawUpperShadow
 import java.net.URI
@@ -232,7 +232,7 @@ fun ReportWritingScreen(
                                 onClick = onMapClicked,
                             )
                     ) {
-                        PositionMap(
+                        PositionViewerMap(
                             latitude = latitude,
                             longitude = longitude,
                         )
