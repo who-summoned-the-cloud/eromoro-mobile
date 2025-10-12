@@ -112,6 +112,8 @@ fun PositionViewerMap(
         )
 
         MapEffect { map ->
+            targetMetersPerDp = map.projection.metersPerDp
+
             map.addOnCameraIdleListener {
                 targetMetersPerDp = map.projection.metersPerDp
             }
