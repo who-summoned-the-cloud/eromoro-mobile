@@ -54,6 +54,7 @@ fun ReportListScreen(
     reportTab: ReportListScreenTab.MyReports?,
     rankingTab: ReportListScreenTab.Ranking?,
     onTabClicked: (Class<out ReportListScreenTab>) -> Unit,
+    onCameraButtonClicked: () -> Unit,
 ) {
     val statusBarPadding = WindowInsets.statusBars
         .asPaddingValues()
@@ -71,73 +72,102 @@ fun ReportListScreen(
         pagerState.scrollToPage(page)
     }
 
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(color = Colors.white),
-    ) {
+    Box {
         Column(
             modifier = Modifier
-                .shadow(elevation = 8.dp, spotColor = Color.Black.copy(alpha = 0.5f))
+                .fillMaxSize()
                 .background(color = Colors.white),
         ) {
-            Spacer(modifier = Modifier.height(statusBarPadding))
-            Text(
-                text = "장애물 제보!",
-                fontWeight = FontWeight.Bold,
-                fontSize = 20.sp,
-                modifier = Modifier.padding(start = 24.dp, top = 20.dp, bottom = 5.dp),
-            )
-            Row(
-                modifier = Modifier.fillMaxWidth()
+            Column(
+                modifier = Modifier
+                    .shadow(elevation = 8.dp, spotColor = Color.Black.copy(alpha = 0.5f))
+                    .background(color = Colors.white),
             ) {
-                listOf(
-                    ReportListScreenTab.MyReports::class.java to "내가 쓴 글",
-                    ReportListScreenTab.Ranking::class.java to "제보자 랭킹",
-                ).forEach { (tab, text) ->
-                    val isSelected = tab == currentTab
+                Spacer(modifier = Modifier.height(statusBarPadding))
+                Text(
+                    text = "장애물 제보!",
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 20.sp,
+                    modifier = Modifier.padding(start = 24.dp, top = 20.dp, bottom = 5.dp),
+                )
+                Row(
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    listOf(
+                        ReportListScreenTab.MyReports::class.java to "내가 쓴 글",
+                        ReportListScreenTab.Ranking::class.java to "제보자 랭킹",
+                    ).forEach { (tab, text) ->
+                        val isSelected = tab == currentTab
 
-                    Box(
-                        contentAlignment = Alignment.BottomCenter,
-                        modifier = Modifier
-                            .weight(1f)
-                            .clickable { onTabClicked(tab) }) {
-                        if (isSelected) Box(
+                        Box(
+                            contentAlignment = Alignment.BottomCenter,
                             modifier = Modifier
-                                .padding(horizontal = 32.dp)
-                                .fillMaxWidth()
-                                .height(2.dp)
-                                .background(
-                                    color = Colors.pink[100],
-                                    shape = RoundedCornerShape(percent = 50),
-                                ),
-                        )
-                        Text(
-                            text = text,
-                            fontSize = 15.sp,
-                            fontWeight = FontWeight.Medium,
-                            color = if (isSelected) Colors.black else Colors.gray[300],
-                            modifier = Modifier.padding(vertical = 16.dp),
-                        )
+                                .weight(1f)
+                                .clickable { onTabClicked(tab) }) {
+                            if (isSelected) Box(
+                                modifier = Modifier
+                                    .padding(horizontal = 32.dp)
+                                    .fillMaxWidth()
+                                    .height(2.dp)
+                                    .background(
+                                        color = Colors.pink[100],
+                                        shape = RoundedCornerShape(percent = 50),
+                                    ),
+                            )
+                            Text(
+                                text = text,
+                                fontSize = 15.sp,
+                                fontWeight = FontWeight.Medium,
+                                color = if (isSelected) Colors.black else Colors.gray[300],
+                                modifier = Modifier.padding(vertical = 16.dp),
+                            )
+                        }
+                    }
+                }
+            }
+            HorizontalPager(
+                state = pagerState,
+                userScrollEnabled = false,
+            ) { pageIndex ->
+                when (pageIndex) {
+                    0 -> reportTab?.let { MyReportsTab(it) }
+                    1 -> rankingTab?.let { RankingTab(it) }
+                    else -> throw IllegalArgumentException("Unknown page: $pageIndex")
+                } ?: run {
+                    Box(
+                        contentAlignment = Alignment.Center,
+                        modifier = Modifier.fillMaxSize(),
+                    ) {
+                        CustomProgressIndicator()
                     }
                 }
             }
         }
-        HorizontalPager(
-            state = pagerState,
-            userScrollEnabled = false,
-        ) { pageIndex ->
-            when (pageIndex) {
-                0 -> reportTab?.let { MyReportsTab(it) }
-                1 -> rankingTab?.let { RankingTab(it) }
-                else -> throw IllegalArgumentException("Unknown page: $pageIndex")
-            } ?: run {
-                Box(
-                    contentAlignment = Alignment.Center,
-                    modifier = Modifier.fillMaxSize(),
-                ) {
-                    CustomProgressIndicator()
-                }
+        Box(
+            contentAlignment = Alignment.BottomEnd,
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(end = 16.dp, bottom = 22.dp)
+        ) {
+            Box(
+                contentAlignment = Alignment.Center,
+                modifier = Modifier
+                    .size(60.dp)
+                    .shadow(
+                        elevation = 8.dp,
+                        spotColor = Color.Black.copy(alpha = 0.5f),
+                        shape = CircleShape,
+                    )
+                    .background(color = Colors.pink[100], shape = CircleShape)
+                    .clip(CircleShape)
+                    .clickable { onCameraButtonClicked() }
+            ) {
+                Icon(
+                    painter = painterResource(R.drawable.icon_camera),
+                    contentDescription = "사진으로 제보하기 버튼",
+                    modifier = Modifier.size(28.dp),
+                    tint = Colors.white,
+                )
             }
         }
     }
@@ -416,5 +446,6 @@ fun PreviewReportListScreen() {
         ),
         rankingTab = null,
         onTabClicked = {},
+        onCameraButtonClicked = {},
     )
 }
