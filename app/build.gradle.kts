@@ -2,6 +2,8 @@ plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
+
+    id("com.google.android.libraries.mapsplatform.secrets-gradle-plugin")
 }
 
 android {
@@ -37,6 +39,7 @@ android {
     buildFeatures {
         compose = true
         viewBinding = false
+        buildConfig = true
     }
     ndkVersion = "27.0.12077973"
     buildToolsVersion = "36.0.0"
@@ -63,4 +66,7 @@ dependencies {
     implementation(project(":common"))
     implementation(project(":data"))
     implementation(project(":presentation"))
+
+    // Naver Map Compose SDK
+    implementation(libs.naver.map.compose)
 }
