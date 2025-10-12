@@ -33,7 +33,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
@@ -50,6 +49,7 @@ import com.who_summoned_the_cloud.eromoro.presentation.component.CustomSingleLin
 import com.who_summoned_the_cloud.eromoro.presentation.component.CustomToggle
 import com.who_summoned_the_cloud.eromoro.presentation.component.PositionMap
 import com.who_summoned_the_cloud.eromoro.presentation.theme.Colors
+import com.who_summoned_the_cloud.eromoro.presentation.util.drawUpperShadow
 import java.net.URI
 
 @Composable
@@ -244,7 +244,7 @@ fun ReportWritingScreen(
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .shadow(elevation = 20.dp)
+                .drawUpperShadow()
                 .background(color = Colors.white)
         ) {
             Row(
