@@ -9,17 +9,13 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.WindowInsets
-import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
-import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
@@ -48,16 +44,17 @@ import com.who_summoned_the_cloud.eromoro.common.model.UserType
 import com.who_summoned_the_cloud.eromoro.presentation.R
 import com.who_summoned_the_cloud.eromoro.presentation.component.CustomButton
 import com.who_summoned_the_cloud.eromoro.presentation.component.CustomSingleLineInputField
-import com.who_summoned_the_cloud.eromoro.presentation.model.SignUpField
+import com.who_summoned_the_cloud.eromoro.presentation.model.SignUpScreenField
 import com.who_summoned_the_cloud.eromoro.presentation.theme.Colors
+import com.who_summoned_the_cloud.eromoro.presentation.util.SystemUiPadding
 
 @Composable
 fun SignUpFormScreen(
     profileImage: ImageBitmap?,
-    nickname: SignUpField,
-    id: SignUpField,
-    password: SignUpField,
-    passwordCheck: SignUpField,
+    nickname: SignUpScreenField,
+    id: SignUpScreenField,
+    password: SignUpScreenField,
+    passwordCheck: SignUpScreenField,
     userType: UserType?,
     isSignUpButtonEnabled: Boolean,
     onBackButtonClicked: () -> Unit,
@@ -65,14 +62,6 @@ fun SignUpFormScreen(
     onUserTypeButtonClicked: (UserType) -> Unit,
     onSignUpButtonClicked: () -> Unit,
 ) {
-    val (statusBarPadding, navigationBarPadding) = WindowInsets.run {
-        listOf(statusBars, navigationBars).map {
-            it
-                .asPaddingValues()
-                .calculateTopPadding()
-        }
-    }
-
     val scrollState = rememberScrollState()
 
     Column(
@@ -80,7 +69,7 @@ fun SignUpFormScreen(
             .fillMaxSize()
             .background(color = Colors.white)
     ) {
-        Spacer(modifier = Modifier.height(statusBarPadding))
+        Spacer(modifier = Modifier.height(SystemUiPadding.statusBarHeight))
         Box(
             contentAlignment = Alignment.CenterStart
         ) {
@@ -204,13 +193,7 @@ fun SignUpFormScreen(
                         letterSpacing = (-0.1).sp,
                     )
                 }
-                listOf(
-                    UserType.SENIOR,
-                    UserType.PREGNANT,
-                    UserType.PHYSICAL_DISABILITY,
-                    UserType.INFANT,
-                    UserType.OTHER,
-                )
+                UserType.entries
                     .chunked(2)
                     .forEach { userTypeRow ->
                         Row(
@@ -222,12 +205,12 @@ fun SignUpFormScreen(
                                 if (userTypeRow.size < 2) null else userTypeRow[1],
                             ).forEach { currentUserType ->
                                 if (currentUserType != null) {
-                                    val (icon, label) = when (currentUserType) {
-                                        UserType.SENIOR -> R.drawable.icon_senior to "노인"
-                                        UserType.PREGNANT -> R.drawable.icon_pregnant to "임산부"
-                                        UserType.PHYSICAL_DISABILITY -> R.drawable.icon_physical_disability to "지체장애인"
-                                        UserType.INFANT -> R.drawable.icon_pram to "유아동반자"
-                                        UserType.OTHER -> R.drawable.icon_no_disability to "해당없음"
+                                    val icon = when (currentUserType) {
+                                        UserType.SENIOR -> R.drawable.icon_senior
+                                        UserType.PREGNANT -> R.drawable.icon_pregnant
+                                        UserType.PHYSICAL_DISABILITY -> R.drawable.icon_physical_disability
+                                        UserType.INFANT -> R.drawable.icon_pram
+                                        UserType.OTHER -> R.drawable.icon_no_disability
                                     }
 
                                     val shape = RoundedCornerShape(14.dp)
@@ -252,8 +235,7 @@ fun SignUpFormScreen(
                                             horizontalArrangement = Arrangement.spacedBy(12.dp),
                                             verticalAlignment = Alignment.CenterVertically,
                                             modifier = Modifier.padding(
-                                                horizontal = 15.dp,
-                                                vertical = 13.dp
+                                                horizontal = 15.dp, vertical = 13.dp
                                             )
                                         ) {
                                             Box(
@@ -264,13 +246,13 @@ fun SignUpFormScreen(
                                             ) {
                                                 Icon(
                                                     painter = painterResource(icon),
-                                                    contentDescription = label,
+                                                    contentDescription = currentUserType.label,
                                                     modifier = Modifier.size(34.dp),
                                                     tint = Colors.white,
                                                 )
                                             }
                                             Text(
-                                                text = label,
+                                                text = currentUserType.label,
                                                 fontSize = 15.sp,
                                                 fontWeight = if (isSelected) FontWeight.Medium else FontWeight.Light,
                                                 color = if (isSelected) Colors.pink[100] else Colors.gray[500],
@@ -295,14 +277,14 @@ fun SignUpFormScreen(
                 text = "가입하기",
             )
         }
-        Spacer(modifier = Modifier.height(navigationBarPadding))
+        Spacer(modifier = Modifier.height(SystemUiPadding.navigationBarHeight))
     }
 }
 
 @Composable
 private fun InputTextForm(
     label: String,
-    fields: List<Pair<SignUpField, String>>,
+    fields: List<Pair<SignUpScreenField, String>>,
 ) {
     Column(
         verticalArrangement = Arrangement.spacedBy(8.dp),
@@ -323,8 +305,8 @@ private fun InputTextForm(
                     state = field.state,
                     underText = field.underText,
                     underTextColor = when (field.validation) {
-                        SignUpField.Validation.PASS -> Colors.positiveGreen
-                        SignUpField.Validation.ERROR -> Colors.negativeRed
+                        SignUpScreenField.Validation.PASS -> Colors.positiveGreen
+                        SignUpScreenField.Validation.ERROR -> Colors.negativeRed
                         null -> Colors.gray[300]
                     },
                     placeholder = placeholder,
@@ -333,7 +315,7 @@ private fun InputTextForm(
                         true
                     )
 
-                    val icon = if (field.validation == SignUpField.Validation.PASS) {
+                    val icon = if (field.validation == SignUpScreenField.Validation.PASS) {
                         R.drawable.image_circle_check
                     } else if (!isBlank) {
                         R.drawable.image_circle_x
@@ -374,22 +356,22 @@ private fun InputTextForm(
 fun PreviewSignUpFormScreen() {
     SignUpFormScreen(
         profileImage = null,
-        nickname = SignUpField(
+        nickname = SignUpScreenField(
             state = TextFieldState(initialText = "이로모로"),
             underText = null,
             validation = null,
         ),
-        id = SignUpField(
+        id = SignUpScreenField(
             state = TextFieldState(initialText = "eromoro2025"),
             underText = "사용 가능한 비밀번호입니다.",
-            validation = SignUpField.Validation.PASS,
+            validation = SignUpScreenField.Validation.PASS,
         ),
-        password = SignUpField(
+        password = SignUpScreenField(
             state = TextFieldState(initialText = "12345"),
             underText = "8자 이상 입력해주세요.",
-            validation = SignUpField.Validation.ERROR,
+            validation = SignUpScreenField.Validation.ERROR,
         ),
-        passwordCheck = SignUpField(
+        passwordCheck = SignUpScreenField(
             state = TextFieldState(),
             underText = "비밀번호는 8~15자의 영문/숫자 또는 특수문자로 조합해주세요.",
             validation = null,

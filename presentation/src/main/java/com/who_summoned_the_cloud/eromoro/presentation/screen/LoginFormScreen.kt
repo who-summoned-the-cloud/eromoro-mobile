@@ -1,6 +1,5 @@
 package com.who_summoned_the_cloud.eromoro.presentation.screen
 
-import android.graphics.BitmapFactory
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -10,14 +9,10 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.WindowInsets
-import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.text.input.TextFieldState
@@ -25,11 +20,8 @@ import androidx.compose.foundation.text.input.rememberTextFieldState
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.asImageBitmap
-import androidx.compose.ui.platform.LocalResources
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -38,6 +30,8 @@ import com.who_summoned_the_cloud.eromoro.presentation.component.CustomButton
 import com.who_summoned_the_cloud.eromoro.presentation.component.CustomOutlinedButton
 import com.who_summoned_the_cloud.eromoro.presentation.component.CustomSingleLineInputField
 import com.who_summoned_the_cloud.eromoro.presentation.theme.Colors
+import com.who_summoned_the_cloud.eromoro.presentation.util.SystemUiPadding
+import com.who_summoned_the_cloud.eromoro.presentation.util.rememberBitmap
 
 @Composable
 fun LoginFormScreen(
@@ -50,28 +44,14 @@ fun LoginFormScreen(
     onLoginButtonClicked: () -> Unit,
     onSignUpButtonClicked: () -> Unit,
 ) {
-    val resources = LocalResources.current
-
-    val (statusBarPadding, navigationBarPadding) = WindowInsets.run {
-        listOf(statusBars, navigationBars).map {
-            it
-                .asPaddingValues()
-                .calculateTopPadding()
-        }
-    }
-
-    val logo = remember {
-        BitmapFactory
-            .decodeResource(resources, R.raw.image_logo_descripted)
-            .asImageBitmap()
-    }
+    val (logo) = rememberBitmap(R.raw.image_logo_descripted)
 
     Column(
         modifier = Modifier
             .fillMaxSize()
             .background(color = Colors.white),
     ) {
-        Spacer(modifier = Modifier.height(statusBarPadding))
+        Spacer(modifier = Modifier.height(SystemUiPadding.statusBarHeight))
         IconButton(
             onClick = onBackButtonClicked
         ) {
@@ -148,7 +128,7 @@ fun LoginFormScreen(
                 )
             }
         }
-        Spacer(modifier = Modifier.height(navigationBarPadding))
+        Spacer(modifier = Modifier.height(SystemUiPadding.navigationBarHeight))
     }
 }
 

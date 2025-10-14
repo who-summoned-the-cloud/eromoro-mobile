@@ -1,6 +1,5 @@
 package com.who_summoned_the_cloud.eromoro.presentation.screen
 
-import android.graphics.BitmapFactory
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.animateIntOffsetAsState
 import androidx.compose.animation.core.tween
@@ -12,16 +11,12 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.WindowInsets
-import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.layout.width
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -40,9 +35,7 @@ import androidx.compose.ui.draw.blur
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.platform.LocalDensity
-import androidx.compose.ui.platform.LocalResources
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -54,6 +47,8 @@ import androidx.compose.ui.unit.sp
 import com.who_summoned_the_cloud.eromoro.presentation.R
 import com.who_summoned_the_cloud.eromoro.presentation.component.CustomButton
 import com.who_summoned_the_cloud.eromoro.presentation.theme.Colors
+import com.who_summoned_the_cloud.eromoro.presentation.util.SystemUiPadding
+import com.who_summoned_the_cloud.eromoro.presentation.util.rememberBitmap
 
 @Composable
 fun SignUpSuccessScreen(
@@ -61,21 +56,7 @@ fun SignUpSuccessScreen(
     onBackButtonClicked: () -> Unit,
     onStartButtonClicked: () -> Unit,
 ) {
-    val resources = LocalResources.current
-
-    val (statusBarPadding, navigationBarPadding) = WindowInsets.run {
-        listOf(statusBars, navigationBars).map {
-            it
-                .asPaddingValues()
-                .calculateTopPadding()
-        }
-    }
-
-    val fanfare = remember {
-        BitmapFactory
-            .decodeResource(resources, R.raw.image_fanfare)
-            .asImageBitmap()
-    }
+    val (fanfare) = rememberBitmap(R.raw.image_fanfare)
 
     Column(
         modifier = Modifier
@@ -87,7 +68,7 @@ fun SignUpSuccessScreen(
                 ),
             ),
     ) {
-        Spacer(modifier = Modifier.height(statusBarPadding))
+        Spacer(modifier = Modifier.height(SystemUiPadding.statusBarHeight))
         IconButton(
             onClick = onBackButtonClicked
         ) {
@@ -190,7 +171,7 @@ fun SignUpSuccessScreen(
                 )
             }
         }
-        Spacer(modifier = Modifier.height(navigationBarPadding))
+        Spacer(modifier = Modifier.height(SystemUiPadding.navigationBarHeight))
     }
 }
 

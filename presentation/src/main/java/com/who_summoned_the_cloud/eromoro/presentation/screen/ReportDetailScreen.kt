@@ -9,16 +9,12 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.WindowInsets
-import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -50,6 +46,7 @@ import com.who_summoned_the_cloud.eromoro.presentation.R
 import com.who_summoned_the_cloud.eromoro.presentation.component.CustomButton
 import com.who_summoned_the_cloud.eromoro.presentation.component.PositionViewerMap
 import com.who_summoned_the_cloud.eromoro.presentation.theme.Colors
+import com.who_summoned_the_cloud.eromoro.presentation.util.SystemUiPadding
 import java.time.LocalDate
 
 @Composable
@@ -74,15 +71,6 @@ fun ReportDetailScreen(
     onModifyLocationButtonClicked: () -> Unit,
 ) {
     val density = LocalDensity.current
-
-    val (statusBarPadding, navigationBarPadding) = WindowInsets.run {
-        listOf(statusBars, navigationBars).map {
-            it
-                .asPaddingValues()
-                .calculateTopPadding()
-        }
-    }
-
     var width by remember { mutableStateOf(400.dp) }
 
     Box(
@@ -115,7 +103,7 @@ fun ReportDetailScreen(
                     Column(
                         horizontalAlignment = Alignment.CenterHorizontally,
                     ) {
-                        Spacer(modifier = Modifier.height(statusBarPadding))
+                        Spacer(modifier = Modifier.height(SystemUiPadding.statusBarHeight))
                         Row(
                             horizontalArrangement = Arrangement.SpaceBetween,
                             verticalAlignment = Alignment.CenterVertically,
@@ -310,7 +298,7 @@ fun ReportDetailScreen(
                     onClick = onModifyLocationButtonClicked,
                 )
             }
-            Spacer(modifier = Modifier.height(navigationBarPadding))
+            Spacer(modifier = Modifier.height(SystemUiPadding.navigationBarHeight))
         }
     }
 }

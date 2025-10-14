@@ -1,6 +1,5 @@
 package com.who_summoned_the_cloud.eromoro.presentation.screen
 
-import android.graphics.BitmapFactory
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -9,21 +8,15 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.WindowInsets
-import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.asImageBitmap
-import androidx.compose.ui.platform.LocalResources
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -31,6 +24,8 @@ import androidx.compose.ui.unit.sp
 import com.who_summoned_the_cloud.eromoro.presentation.R
 import com.who_summoned_the_cloud.eromoro.presentation.component.CustomButton
 import com.who_summoned_the_cloud.eromoro.presentation.theme.Colors
+import com.who_summoned_the_cloud.eromoro.presentation.util.SystemUiPadding
+import com.who_summoned_the_cloud.eromoro.presentation.util.rememberBitmap
 
 @Composable
 fun LoginMethodScreen(
@@ -38,23 +33,11 @@ fun LoginMethodScreen(
     onKakaoLoginButtonClicked: () -> Unit,
     onGoogleLoginButtonClicked: () -> Unit,
 ) {
-    val resource = LocalResources.current
-
-    val navigationBarPadding = WindowInsets.navigationBars
-        .asPaddingValues()
-        .calculateBottomPadding()
-
-    val (logo, googleLogo, kakaoLogo) = remember {
-        listOf(
-            R.raw.image_logo_descripted,
-            R.raw.image_google,
-            R.raw.image_kakao,
-        ).map {
-            BitmapFactory
-                .decodeResource(resource, it)
-                .asImageBitmap()
-        }
-    }
+    val (logo, googleLogo, kakaoLogo) = rememberBitmap(
+        R.raw.image_logo_descripted,
+        R.raw.image_google,
+        R.raw.image_kakao,
+    )
 
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
@@ -133,7 +116,7 @@ fun LoginMethodScreen(
                 }
             }
         }
-        Spacer(modifier = Modifier.height(navigationBarPadding))
+        Spacer(modifier = Modifier.height(SystemUiPadding.navigationBarHeight))
     }
 }
 

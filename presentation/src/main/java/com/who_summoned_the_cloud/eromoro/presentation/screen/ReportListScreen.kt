@@ -9,16 +9,12 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.WindowInsets
-import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
@@ -40,13 +36,14 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil3.compose.rememberAsyncImagePainter
+import com.who_summoned_the_cloud.eromoro.common.model.ReportCategory
 import com.who_summoned_the_cloud.eromoro.presentation.R
 import com.who_summoned_the_cloud.eromoro.presentation.component.CustomChip
 import com.who_summoned_the_cloud.eromoro.presentation.component.CustomProgressIndicator
-import com.who_summoned_the_cloud.eromoro.common.model.ReportCategory
 import com.who_summoned_the_cloud.eromoro.presentation.model.Fetch
 import com.who_summoned_the_cloud.eromoro.presentation.model.ReportListScreenTab
 import com.who_summoned_the_cloud.eromoro.presentation.theme.Colors
+import com.who_summoned_the_cloud.eromoro.presentation.util.SystemUiPadding
 import java.time.LocalDate
 
 @Composable
@@ -57,10 +54,6 @@ fun ReportListScreen(
     onTabClicked: (Class<out ReportListScreenTab>) -> Unit,
     onCameraButtonClicked: () -> Unit,
 ) {
-    val statusBarPadding = WindowInsets.statusBars
-        .asPaddingValues()
-        .calculateTopPadding()
-
     val pagerState = rememberPagerState { 2 }
 
     LaunchedEffect(key1 = currentTab) {
@@ -84,7 +77,7 @@ fun ReportListScreen(
                     .shadow(elevation = 8.dp, spotColor = Color.Black.copy(alpha = 0.5f))
                     .background(color = Colors.white),
             ) {
-                Spacer(modifier = Modifier.height(statusBarPadding))
+                Spacer(modifier = Modifier.height(SystemUiPadding.statusBarHeight))
                 Text(
                     text = "장애물 제보!",
                     fontWeight = FontWeight.Bold,
@@ -178,10 +171,6 @@ fun ReportListScreen(
 private fun MyReportsTab(
     prop: ReportListScreenTab.MyReports,
 ) {
-    val navigationBarPadding = WindowInsets.navigationBars
-        .asPaddingValues()
-        .calculateTopPadding()
-
     LazyColumn {
         item {
             Row(
@@ -383,7 +372,7 @@ private fun MyReportsTab(
         }
 
         item {
-            Spacer(modifier = Modifier.height(navigationBarPadding + 120.dp))
+            Spacer(modifier = Modifier.height(SystemUiPadding.navigationBarHeight + 120.dp))
         }
     }
 }
