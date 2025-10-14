@@ -216,7 +216,7 @@ private fun MyReportsTab(
                         ) {
                             Image(
                                 painter = rememberAsyncImagePainter(
-                                    model = report.imageUrl,
+                                    model = report.imageUri,
                                 ),
                                 contentDescription = "제보 대표 이미지",
                                 modifier = Modifier
@@ -396,7 +396,7 @@ fun PreviewReportListScreen() {
                 listOf(
                     ReportListScreenTab.MyReports.Report(
                         id = 1,
-                        imageUrl = null,
+                        imageUri = null,
                         category = ReportCategory.TO_COMMUNITY,
                         state = ReportListScreenTab.MyReports.Report.State.APPROVED,
                         title = "망리단길 계단 제보드립니다.",
@@ -411,7 +411,7 @@ fun PreviewReportListScreen() {
                         onClick = {},
                     ), ReportListScreenTab.MyReports.Report(
                         id = 2,
-                        imageUrl = null,
+                        imageUri = null,
                         category = ReportCategory.TO_LOCAL_GOVERNANCE,
                         state = ReportListScreenTab.MyReports.Report.State.BEFORE_APPROVAL,
                         title = "망리단길 계단 제보드립니다.",

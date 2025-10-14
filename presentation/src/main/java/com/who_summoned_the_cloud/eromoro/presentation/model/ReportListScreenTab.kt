@@ -1,5 +1,6 @@
 package com.who_summoned_the_cloud.eromoro.presentation.model
 
+import android.net.Uri
 import com.who_summoned_the_cloud.eromoro.common.model.ReportCategory
 import java.time.LocalDate
 
@@ -22,7 +23,7 @@ sealed class ReportListScreenTab {
 
         data class Report(
             val id: Long,
-            val imageUrl: String?,
+            val imageUri: Uri?,
             val category: ReportCategory,
             val state: State,
             val title: String,

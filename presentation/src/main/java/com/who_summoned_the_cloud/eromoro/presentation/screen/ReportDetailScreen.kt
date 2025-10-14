@@ -1,5 +1,6 @@
 package com.who_summoned_the_cloud.eromoro.presentation.screen
 
+import android.net.Uri
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -51,7 +52,7 @@ import java.time.LocalDate
 
 @Composable
 fun ReportDetailScreen(
-    imageUrl: String?,
+    imageUri: Uri?,
     like: Int?,
     dislike: Int?,
     category: ReportCategory?,
@@ -90,7 +91,7 @@ fun ReportDetailScreen(
                     .height(400.dp)
             ) {
                 Image(
-                    painter = rememberAsyncImagePainter(model = imageUrl),
+                    painter = rememberAsyncImagePainter(model = imageUri),
                     contentDescription = "제보 이미지",
                     modifier = Modifier
                         .fillMaxWidth()
@@ -307,7 +308,7 @@ fun ReportDetailScreen(
 @Composable
 fun PreviewReportDetailScreen() {
     ReportDetailScreen(
-        imageUrl = null,
+        imageUri = null,
         like = 21,
         dislike = 1,
         category = ReportCategory.TO_LOCAL_GOVERNANCE,

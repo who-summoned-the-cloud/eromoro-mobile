@@ -1,5 +1,6 @@
 package com.who_summoned_the_cloud.eromoro.presentation.screen
 
+import android.net.Uri
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -47,11 +48,10 @@ import com.who_summoned_the_cloud.eromoro.presentation.component.PositionViewerM
 import com.who_summoned_the_cloud.eromoro.presentation.theme.Colors
 import com.who_summoned_the_cloud.eromoro.presentation.util.SystemUiPadding
 import com.who_summoned_the_cloud.eromoro.presentation.util.drawUpperShadow
-import java.net.URI
 
 @Composable
 fun ReportWritingScreen(
-    image: URI?,
+    image: Uri?,
     title: TextFieldState,
     content: TextFieldState,
     obstacleType: ObstacleType?,

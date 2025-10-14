@@ -1,5 +1,6 @@
 package com.who_summoned_the_cloud.eromoro.presentation.screen
 
+import android.net.Uri
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -33,13 +34,13 @@ import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import coil3.compose.rememberAsyncImagePainter
 import com.who_summoned_the_cloud.eromoro.common.model.UserType
 import com.who_summoned_the_cloud.eromoro.presentation.R
 import com.who_summoned_the_cloud.eromoro.presentation.component.CustomButton
@@ -50,7 +51,7 @@ import com.who_summoned_the_cloud.eromoro.presentation.util.SystemUiPadding
 
 @Composable
 fun SignUpFormScreen(
-    profileImage: ImageBitmap?,
+    profileImage: Uri?,
     nickname: SignUpScreenField,
     id: SignUpScreenField,
     password: SignUpScreenField,
@@ -117,7 +118,7 @@ fun SignUpFormScreen(
                     ) {
                         if (profileImage != null) {
                             Image(
-                                bitmap = profileImage,
+                                painter = rememberAsyncImagePainter(profileImage),
                                 contentDescription = "프로필 이미지",
                                 modifier = Modifier.fillMaxSize(),
                                 contentScale = ContentScale.Crop,
