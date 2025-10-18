@@ -2,6 +2,7 @@ package com.who_summoned_the_cloud.eromoro.presentation.util
 
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.asPaddingValues
+import androidx.compose.foundation.layout.ime
 import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.statusBars
 import androidx.compose.runtime.Composable
@@ -17,4 +18,9 @@ object SystemUiPadding {
         @Composable get() = WindowInsets.statusBars
             .asPaddingValues()
             .calculateTopPadding()
+
+    val imeHeight: Dp
+        @Composable get() = WindowInsets.ime
+            .asPaddingValues()
+            .calculateBottomPadding()
 }

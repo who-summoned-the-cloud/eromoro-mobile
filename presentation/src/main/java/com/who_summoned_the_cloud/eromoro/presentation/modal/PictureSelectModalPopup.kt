@@ -29,7 +29,7 @@ import com.who_summoned_the_cloud.eromoro.presentation.R
 import com.who_summoned_the_cloud.eromoro.presentation.theme.Colors
 
 @Composable
-fun PictureSelectModal(
+fun PictureSelectModalPopup(
     onDismissRequest: () -> Unit,
     onCameraButtonClicked: () -> Unit,
     onGalleryButtonClicked: () -> Unit,
@@ -89,7 +89,7 @@ fun PreviewPictureSelectModal() {
     Box(
         modifier = Modifier.fillMaxSize()
     ) {
-        PictureSelectModal(
+        PictureSelectModalPopup(
             onDismissRequest = {},
             onCameraButtonClicked = {},
             onGalleryButtonClicked = {},
