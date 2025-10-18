@@ -48,6 +48,7 @@ import com.who_summoned_the_cloud.eromoro.presentation.component.CustomSingleLin
 import com.who_summoned_the_cloud.eromoro.presentation.model.SignUpScreenField
 import com.who_summoned_the_cloud.eromoro.presentation.theme.Colors
 import com.who_summoned_the_cloud.eromoro.presentation.util.SystemUiPadding
+import com.who_summoned_the_cloud.eromoro.presentation.util.getUserTypeIconRes
 
 @Composable
 fun SignUpFormScreen(
@@ -206,14 +207,7 @@ fun SignUpFormScreen(
                                 if (userTypeRow.size < 2) null else userTypeRow[1],
                             ).forEach { currentUserType ->
                                 if (currentUserType != null) {
-                                    val icon = when (currentUserType) {
-                                        UserType.SENIOR -> R.drawable.icon_senior
-                                        UserType.PREGNANT -> R.drawable.icon_pregnant
-                                        UserType.PHYSICAL_DISABILITY -> R.drawable.icon_physical_disability
-                                        UserType.INFANT -> R.drawable.icon_pram
-                                        UserType.OTHER -> R.drawable.icon_no_disability
-                                    }
-
+                                    val icon = getUserTypeIconRes(currentUserType)
                                     val shape = RoundedCornerShape(14.dp)
                                     val isSelected = currentUserType == userType
 

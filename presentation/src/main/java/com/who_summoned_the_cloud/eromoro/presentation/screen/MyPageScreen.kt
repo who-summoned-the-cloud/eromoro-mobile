@@ -63,7 +63,7 @@ fun MyPageScreen(
     courseCount: Int?,
     point: Int?,
     likedCourseList: Fetch<List<MyPageScreenLikedCourse>, Unit>,
-    showLoadingOnEndOfLikedCourse: Boolean,
+    showLoadingAtTheEndOfLikedCourse: Boolean,
     onModifyProfileClicked: () -> Unit,
     onGoToLikedCourseListButtonClicked: () -> Unit,
     onNewLikedCoursePageRequest: () -> Unit,
@@ -296,7 +296,7 @@ fun MyPageScreen(
                 }
             }
 
-            if (showLoadingOnEndOfLikedCourse) item {
+            if (showLoadingAtTheEndOfLikedCourse) item {
                 Box(
                     contentAlignment = Alignment.Center,
                     modifier = Modifier.size(max(width / 4f, 100.dp))
@@ -359,7 +359,7 @@ fun PreviewMyPageScreen() {
                 it + it + it + it
             }
         ),
-        showLoadingOnEndOfLikedCourse = true,
+        showLoadingAtTheEndOfLikedCourse = true,
         onModifyProfileClicked = {},
         onGoToLikedCourseListButtonClicked = {},
         onNewLikedCoursePageRequest = {},
