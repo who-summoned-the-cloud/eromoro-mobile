@@ -9,7 +9,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
 import androidx.compose.ui.Modifier
-import com.who_summoned_the_cloud.eromoro.presentation.component.PreviewPositionViewerMap
+import com.who_summoned_the_cloud.eromoro.presentation.component.map.PreviewPositionPairMap
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -20,7 +20,7 @@ class MainActivity : ComponentActivity() {
                 Box(
                     modifier = Modifier.padding(innerPadding)
                 ) {
-                    PreviewPositionViewerMap()
+                    PreviewPositionPairMap()
                 }
             }
         }

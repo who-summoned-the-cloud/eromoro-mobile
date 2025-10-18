@@ -26,9 +26,9 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.who_summoned_the_cloud.eromoro.presentation.R
-import com.who_summoned_the_cloud.eromoro.presentation.component.CustomButton
-import com.who_summoned_the_cloud.eromoro.presentation.component.CustomOutlinedButton
-import com.who_summoned_the_cloud.eromoro.presentation.component.CustomSingleLineInputField
+import com.who_summoned_the_cloud.eromoro.presentation.component.common.CustomButton
+import com.who_summoned_the_cloud.eromoro.presentation.component.common.CustomOutlinedButton
+import com.who_summoned_the_cloud.eromoro.presentation.component.common.CustomSingleLineInputField
 import com.who_summoned_the_cloud.eromoro.presentation.theme.Colors
 import com.who_summoned_the_cloud.eromoro.presentation.util.SystemUiPadding
 import com.who_summoned_the_cloud.eromoro.presentation.util.rememberBitmap

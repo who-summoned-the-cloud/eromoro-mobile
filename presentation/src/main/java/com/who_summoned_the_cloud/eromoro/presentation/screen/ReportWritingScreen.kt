@@ -40,11 +40,12 @@ import androidx.compose.ui.unit.sp
 import coil3.compose.rememberAsyncImagePainter
 import com.who_summoned_the_cloud.eromoro.common.model.ObstacleType
 import com.who_summoned_the_cloud.eromoro.presentation.R
-import com.who_summoned_the_cloud.eromoro.presentation.component.CustomButton
-import com.who_summoned_the_cloud.eromoro.presentation.component.CustomChip
-import com.who_summoned_the_cloud.eromoro.presentation.component.CustomSingleLineInputField
-import com.who_summoned_the_cloud.eromoro.presentation.component.CustomToggle
-import com.who_summoned_the_cloud.eromoro.presentation.component.PositionViewerMap
+import com.who_summoned_the_cloud.eromoro.presentation.component.common.CustomButton
+import com.who_summoned_the_cloud.eromoro.presentation.component.common.CustomChip
+import com.who_summoned_the_cloud.eromoro.presentation.component.common.CustomSingleLineInputField
+import com.who_summoned_the_cloud.eromoro.presentation.component.common.CustomToggle
+import com.who_summoned_the_cloud.eromoro.presentation.component.map.PositionMap
+import com.who_summoned_the_cloud.eromoro.presentation.model.Position
 import com.who_summoned_the_cloud.eromoro.presentation.theme.Colors
 import com.who_summoned_the_cloud.eromoro.presentation.util.SystemUiPadding
 import com.who_summoned_the_cloud.eromoro.presentation.util.drawUpperShadow
@@ -55,8 +56,7 @@ fun ReportWritingScreen(
     title: TextFieldState,
     content: TextFieldState,
     obstacleType: ObstacleType?,
-    latitude: Double?,
-    longitude: Double?,
+    currentPosition: Position?,
     address: String?,
     isUpdateMode: Boolean,
     isForLocalGovernance: Boolean,
@@ -210,7 +210,7 @@ fun ReportWritingScreen(
                         color = Colors.gray[500],
                         modifier = Modifier.padding(start = 8.dp)
                     )
-                    if (latitude != null && longitude != null && address != null) Box(
+                    if (currentPosition != null && address != null) Box(
                         modifier = Modifier
                             .height(width - 32.dp)
                             .clip(RoundedCornerShape(14.dp))
@@ -220,9 +220,8 @@ fun ReportWritingScreen(
                                 onClick = onMapClicked,
                             )
                     ) {
-                        PositionViewerMap(
-                            latitude = latitude,
-                            longitude = longitude,
+                        PositionMap(
+                            currentPosition = currentPosition
                         )
                     }
                 }
@@ -276,8 +275,7 @@ fun PreviewReportWritingScreen() {
             initialText = "주안역 2번출구 쪽 엘레베이터가 고장나서 이용하지 못했어요.\n" + "\n" + "안내 표지판 조차 설치되어있지 않네요 ㅜ"
         ),
         obstacleType = ObstacleType.NO_ELEVATOR,
-        latitude = 37.12,
-        longitude = 126.99,
+        currentPosition = Position( 37.12 to 126.99),
         address = "인천광역시 미추홀구 주안역 1호선",
         isUpdateMode = false,
         isForLocalGovernance = true,

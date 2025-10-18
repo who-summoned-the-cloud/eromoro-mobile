@@ -1,4 +1,4 @@
-package com.who_summoned_the_cloud.eromoro.presentation.component
+package com.who_summoned_the_cloud.eromoro.presentation.component.common
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement

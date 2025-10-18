@@ -45,7 +45,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.round
 import androidx.compose.ui.unit.sp
 import com.who_summoned_the_cloud.eromoro.presentation.R
-import com.who_summoned_the_cloud.eromoro.presentation.component.CustomButton
+import com.who_summoned_the_cloud.eromoro.presentation.component.common.CustomButton
 import com.who_summoned_the_cloud.eromoro.presentation.theme.Colors
 import com.who_summoned_the_cloud.eromoro.presentation.util.SystemUiPadding
 import com.who_summoned_the_cloud.eromoro.presentation.util.rememberBitmap

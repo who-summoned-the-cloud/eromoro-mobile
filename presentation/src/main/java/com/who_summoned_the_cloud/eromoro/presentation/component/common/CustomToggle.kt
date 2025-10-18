@@ -1,4 +1,4 @@
-package com.who_summoned_the_cloud.eromoro.presentation.component
+package com.who_summoned_the_cloud.eromoro.presentation.component.common
 
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.animateIntOffsetAsState
@@ -22,6 +22,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.IntOffset
@@ -51,7 +52,11 @@ fun CustomToggle(
         modifier = Modifier
             .width(46.dp)
             .height(26.dp)
-            .shadow(elevation = 4.dp, shape = RoundedCornerShape(12.dp))
+            .shadow(
+                elevation = 4.dp,
+                shape = RoundedCornerShape(12.dp),
+                spotColor = Color.Black.copy(alpha = 0.5f),
+            )
             .background(color = color, shape = RoundedCornerShape(12.dp))
             .clickable(
                 indication = null,

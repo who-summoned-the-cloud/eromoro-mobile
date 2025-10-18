@@ -57,7 +57,7 @@ import androidx.compose.ui.unit.sp
 import coil3.compose.rememberAsyncImagePainter
 import com.who_summoned_the_cloud.eromoro.common.model.UserType
 import com.who_summoned_the_cloud.eromoro.presentation.R
-import com.who_summoned_the_cloud.eromoro.presentation.component.CustomProgressIndicator
+import com.who_summoned_the_cloud.eromoro.presentation.component.common.CustomProgressIndicator
 import com.who_summoned_the_cloud.eromoro.presentation.model.Fetch
 import com.who_summoned_the_cloud.eromoro.presentation.model.HomeScreenPlace
 import com.who_summoned_the_cloud.eromoro.presentation.theme.Colors
@@ -218,7 +218,7 @@ fun HomeScreen(
                                         color = Color(0xFF6D6D6D),
                                         fontSize = 14.sp,
                                         fontWeight = FontWeight.Normal,
-                                        letterSpacing = (-0.03).sp,
+                                        letterSpacing = (-0.3).sp,
                                     )
                                 }
 
@@ -234,7 +234,7 @@ fun HomeScreen(
                         fontSize = 24.sp,
                         fontWeight = FontWeight.Bold,
                         lineHeight = 34.sp,
-                        letterSpacing = (-0.05).sp,
+                        letterSpacing = (-0.5).sp,
                         maxLines = 2,
                         overflow = TextOverflow.Visible,
                         modifier = Modifier.padding(start = 24.dp),
@@ -329,7 +329,7 @@ fun HomeScreen(
                             text = "근처 인기 코스 보러가기",
                             fontSize = 18.sp,
                             fontWeight = FontWeight.Bold,
-                            letterSpacing = (-0.04).sp,
+                            letterSpacing = (-0.4).sp,
                             color = Colors.gray[700],
                             modifier = Modifier.padding(start = 8.dp),
                         )
@@ -419,7 +419,7 @@ fun HomeScreen(
                                                         color = if (place.isLiked) Colors.pink[100] else Colors.gray[500],
                                                         fontSize = 13.sp,
                                                         fontWeight = FontWeight.Normal,
-                                                        letterSpacing = (-0.02).sp,
+                                                        letterSpacing = (-0.2).sp,
                                                     )
                                                 }
                                                 */
@@ -467,7 +467,7 @@ fun HomeScreen(
                         text = "지역 / 유형별 추천받기",
                         fontSize = 18.sp,
                         fontWeight = FontWeight.Bold,
-                        letterSpacing = (-0.04).sp,
+                        letterSpacing = (-0.4).sp,
                         color = Colors.gray[700],
                         modifier = Modifier.padding(start = 8.dp),
                     )
@@ -620,14 +620,14 @@ fun HomeScreen(
                                                     color = Colors.gray[700],
                                                     fontSize = 16.sp,
                                                     fontWeight = FontWeight.Medium,
-                                                    letterSpacing = (-0.03).sp,
+                                                    letterSpacing = (-0.3).sp,
                                                 )
                                                 Text(
                                                     text = getDistanceExpression(place.distance),
                                                     color = Colors.gray[500],
                                                     fontSize = 13.sp,
                                                     fontWeight = FontWeight.Normal,
-                                                    letterSpacing = (-0.03).sp,
+                                                    letterSpacing = (-0.3).sp,
                                                 )
                                             }
                                             AvailableUserTypeListView(

@@ -158,7 +158,7 @@ fun SearchScreen(
                                             color = if (it in searchTextChars) Colors.pink[100] else Colors.black,
                                             fontWeight = FontWeight.Medium,
                                             fontSize = 15.sp,
-                                            letterSpacing = (-0.03).sp,
+                                            letterSpacing = (-0.3).sp,
                                         )
                                     ) {
                                         append(text = it.toString())
@@ -203,7 +203,7 @@ fun SearchScreen(
                 text = "최근 검색",
                 fontSize = 15.sp,
                 fontWeight = FontWeight.Medium,
-                letterSpacing = (-0.03).sp,
+                letterSpacing = (-0.3).sp,
                 modifier = Modifier.padding(start = 24.dp, top = 16.dp),
             )
             LazyRow(
