@@ -26,21 +26,10 @@ import com.naver.maps.map.compose.rememberUpdatedMarkerState
 import com.naver.maps.map.overlay.OverlayImage
 import com.who_summoned_the_cloud.eromoro.presentation.R
 import com.who_summoned_the_cloud.eromoro.presentation.model.Position
+import com.who_summoned_the_cloud.eromoro.presentation.model.PositionMapScope
+import com.who_summoned_the_cloud.eromoro.presentation.model.PositionPairMapMode
 import com.who_summoned_the_cloud.eromoro.presentation.util.rememberBitmap
 import kotlin.math.roundToInt
-
-sealed class PositionPairMapMode {
-    data object SelectingStart : PositionPairMapMode()
-
-    data class SelectingEnd(
-        val start: Position,
-    ) : PositionPairMapMode()
-
-    data class Confirming(
-        val start: Position,
-        val end: Position,
-    ) : PositionPairMapMode()
-}
 
 @OptIn(ExperimentalNaverMapApi::class)
 @Composable

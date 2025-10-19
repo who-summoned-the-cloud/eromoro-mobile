@@ -41,12 +41,9 @@ import com.naver.maps.map.compose.rememberUpdatedMarkerState
 import com.naver.maps.map.overlay.OverlayImage
 import com.who_summoned_the_cloud.eromoro.presentation.R
 import com.who_summoned_the_cloud.eromoro.presentation.model.Position
+import com.who_summoned_the_cloud.eromoro.presentation.model.PositionMapScope
 import com.who_summoned_the_cloud.eromoro.presentation.theme.Colors
 import com.who_summoned_the_cloud.eromoro.presentation.util.rememberBitmap
-
-interface PositionMapScope {
-    fun moveMap(position: Position)
-}
 
 @OptIn(ExperimentalNaverMapApi::class)
 @Composable

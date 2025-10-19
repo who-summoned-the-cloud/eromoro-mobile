@@ -13,8 +13,11 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -28,32 +31,25 @@ import com.who_summoned_the_cloud.eromoro.presentation.component.common.CustomEl
 import com.who_summoned_the_cloud.eromoro.presentation.component.common.CustomElevatedCurrentPositionButton
 import com.who_summoned_the_cloud.eromoro.presentation.component.common.CustomNonModalBottomSheet
 import com.who_summoned_the_cloud.eromoro.presentation.component.common.CustomOutlinedButton
+import com.who_summoned_the_cloud.eromoro.presentation.component.common.CustomProgressIndicator
 import com.who_summoned_the_cloud.eromoro.presentation.component.common.CustomSingleLineInputField
 import com.who_summoned_the_cloud.eromoro.presentation.component.common.CustomSlider
-import com.who_summoned_the_cloud.eromoro.presentation.component.map.PositionMapScope
+import com.who_summoned_the_cloud.eromoro.presentation.model.PositionMapScope
 import com.who_summoned_the_cloud.eromoro.presentation.component.map.PositionPairMap
-import com.who_summoned_the_cloud.eromoro.presentation.component.map.PositionPairMapMode
+import com.who_summoned_the_cloud.eromoro.presentation.model.PositionPairMapMode
+import com.who_summoned_the_cloud.eromoro.presentation.model.MapCourseGeneratingScreenMode
 import com.who_summoned_the_cloud.eromoro.presentation.model.Position
 import com.who_summoned_the_cloud.eromoro.presentation.theme.Colors
 import com.who_summoned_the_cloud.eromoro.presentation.util.SystemUiPadding
+import kotlin.math.roundToInt
 
 @Composable
 fun MapCourseGeneratingScreen(
-    nickname: String?,
-    currentAddress: String?,
     currentPosition: Position?,
-    mode: PositionPairMapMode,
-    isNextButtonEnabled: Boolean,
-    maxDurationMinute: Int,
-    minDurationMinute: Int,
-    selectedDurationMinute: Int,
+    mode: MapCourseGeneratingScreenMode,
     onBackButtonClicked: () -> Unit,
     onPositionChanged: (Position) -> Unit,
     onCurrentLocationButtonClicked: () -> Unit,
-    onSearchFieldClicked: () -> Unit,
-    onNextButtonClicked: () -> Unit,
-    onPreviousButtonClicked: (() -> Unit)?,
-    onSelectedDurationMinuteChanged: (Int) -> Unit,
     content: @Composable PositionMapScope.() -> Unit
 ) {
     Box(
@@ -61,7 +57,7 @@ fun MapCourseGeneratingScreen(
     ) {
         PositionPairMap(
             currentPosition = currentPosition,
-            mode = mode,
+            mode = mode.mapMode,
             onPositionChanged = onPositionChanged,
             content = content,
         )
@@ -89,35 +85,76 @@ fun MapCourseGeneratingScreen(
                     ) {
                         Text(
                             text = when (mode) {
-                                is PositionPairMapMode.SelectingStart -> "${nickname}님, 어디서 출발하시나요?"
-                                is PositionPairMapMode.SelectingEnd -> "${nickname}님, 어디로 가시나요?"
-                                is PositionPairMapMode.Confirming -> "추천받으실 코스의 소요시간을 설정해주세요"
+                                is MapCourseGeneratingScreenMode.SelectingStart -> "${mode.nickname}님, 어디서 출발하시나요?"
+                                is MapCourseGeneratingScreenMode.SelectingEnd -> "${mode.nickname}님, 어디로 가시나요?"
+                                is MapCourseGeneratingScreenMode.SelectingDuration -> "추천받으실 코스의 소요시간을 설정해주세요"
+                                is MapCourseGeneratingScreenMode.Waiting -> "해당 조건에 맞춘 코스를 짜는 중이에요.."
                             },
                             fontSize = 18.sp,
                             fontWeight = FontWeight.Bold,
                             letterSpacing = (-0.4).sp,
                         )
-                        Text(
-                            text = when (mode) {
-                                is PositionPairMapMode.SelectingStart, is PositionPairMapMode.SelectingEnd -> "지도를 움직여 위치를 지정하거나, 검색해보세요!"
-
-                                is PositionPairMapMode.Confirming -> "5분 단위의 슬라이더예요! 음직여 보세요."
-                            },
-                            fontSize = 15.sp,
-                            fontWeight = FontWeight.Light,
-                            color = Colors.gray[400],
-                        )
+                        when (mode) {
+                            is MapCourseGeneratingScreenMode.MarkerConfigurable -> "지도를 움직여 위치를 지정하거나, 검색해보세요!"
+                            is MapCourseGeneratingScreenMode.SelectingDuration -> "5분 단위의 슬라이더예요! 움직여 보세요."
+                            is MapCourseGeneratingScreenMode.Waiting -> "잠시만 기다려 주세요!"
+                            else -> null
+                        }?.let {
+                            Text(
+                                text = it,
+                                fontSize = 15.sp,
+                                fontWeight = FontWeight.Light,
+                                color = Colors.gray[400],
+                            )
+                        }
                     }
                     when (mode) {
-                        is PositionPairMapMode.Confirming -> {
+                        is MapCourseGeneratingScreenMode.MarkerConfigurable -> {
+                            val isStart = mode.mapMode is PositionPairMapMode.SelectingStart
+
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                modifier = Modifier.padding(16.dp),
+                            ) {
+                                Text(
+                                    text = if (isStart) "출발" else "도착",
+                                    color = if (isStart) Colors.pink[100] else Colors.blue[100],
+                                    fontSize = 15.sp,
+                                    fontWeight = FontWeight.Medium,
+                                    modifier = Modifier.padding(horizontal = 8.dp)
+                                )
+                                Box(
+                                    modifier = Modifier.clickable(
+                                        interactionSource = null, indication = null
+                                    ) {
+                                        mode.onSearchFieldClicked()
+                                    },
+                                ) {
+                                    CustomSingleLineInputField(
+                                        state = TextFieldState(
+                                            initialText = mode.currentAddress ?: ""
+                                        ),
+                                        placeholder = if (isStart) "어디서 출발하나요?" else "어디로 갈까요?",
+                                        isReadonly = true,
+                                    )
+                                }
+                            }
+                        }
+
+                        is MapCourseGeneratingScreenMode.SelectingDuration -> {
+                            var sliderValue by remember { mutableFloatStateOf((mode.selectedMinute.toFloat() - mode.minMinute) / (mode.maxMinute - mode.minMinute)) }
+                            var selectedMinute by remember(sliderValue) { mutableIntStateOf(((sliderValue * (mode.maxMinute - mode.minMinute) + mode.minMinute) / mode.minuteGap).roundToInt() * mode.minuteGap) }
+
+                            LaunchedEffect(selectedMinute) {
+                                mode.onSelectedMinuteChanged(selectedMinute)
+                            }
+
                             Column(
                                 modifier = Modifier.padding(bottom = 16.dp),
                             ) {
                                 CustomSlider(
-                                    value = (selectedDurationMinute.toFloat() - minDurationMinute) / (maxDurationMinute - minDurationMinute),
-                                    onValueChange = {
-                                        onSelectedDurationMinuteChanged((minDurationMinute + (maxDurationMinute - minDurationMinute) * it).toInt())
-                                    },
+                                    value = sliderValue,
+                                    onValueChange = { sliderValue = it },
                                 )
                                 Row(
                                     horizontalArrangement = Arrangement.spacedBy(
@@ -136,7 +173,7 @@ fun MapCourseGeneratingScreen(
                                         fontWeight = FontWeight.Medium,
                                     )
                                     Text(
-                                        text = "${selectedDurationMinute}분",
+                                        text = "${selectedMinute}분",
                                         color = Colors.pink[100],
                                         fontSize = 20.sp,
                                         fontWeight = FontWeight.Bold,
@@ -146,56 +183,56 @@ fun MapCourseGeneratingScreen(
                             }
                         }
 
-                        else -> {
-                            val isStart = mode is PositionPairMapMode.SelectingStart
-
-                            Row(
-                                verticalAlignment = Alignment.CenterVertically,
-                                modifier = Modifier.padding(16.dp),
+                        is MapCourseGeneratingScreenMode.Waiting -> {
+                            Box(
+                                contentAlignment = Alignment.Center,
+                                modifier = Modifier
+                                    .padding(36.dp)
+                                    .fillMaxWidth()
                             ) {
-                                Text(
-                                    text = if (isStart) "출발" else "도착",
-                                    color = if (isStart) Colors.pink[100] else Colors.blue[100],
-                                    fontSize = 15.sp,
-                                    fontWeight = FontWeight.Medium,
-                                    modifier = Modifier.padding(horizontal = 8.dp)
-                                )
-                                Box(
-                                    modifier = Modifier.clickable(
-                                        interactionSource = null, indication = null
-                                    ) {
-                                        onSearchFieldClicked()
-                                    },
-                                ) {
-                                    CustomSingleLineInputField(
-                                        state = TextFieldState(initialText = currentAddress ?: ""),
-                                        placeholder = if (isStart) "어디서 출발하나요?" else "어디로 갈까요?",
-                                        isReadonly = true,
-                                    )
-                                }
+                                CustomProgressIndicator()
                             }
+                        }
+
+                        else -> {
+                            throw IllegalArgumentException("Invalid mode: $mode")
                         }
                     }
                     Row(
                         horizontalArrangement = Arrangement.spacedBy(10.dp),
                         modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
                     ) {
-                        if (onPreviousButtonClicked != null) Box(
-                            modifier = Modifier.weight(1f)
-                        ) {
-                            CustomOutlinedButton(
-                                text = "이전",
-                                onClick = onPreviousButtonClicked,
-                            )
+                        if (mode is MapCourseGeneratingScreenMode.Irrevocable) {
+                            Box(
+                                modifier = Modifier.weight(1f)
+                            ) {
+                                when (mode) {
+                                    is MapCourseGeneratingScreenMode.Waiting -> "그만두기"
+                                    else -> "이전"
+                                }.let {
+                                    CustomOutlinedButton(
+                                        text = "이전",
+                                        onClick = mode.onPreviousButtonClicked,
+                                    )
+                                }
+                            }
                         }
-                        Box(
-                            modifier = Modifier.weight(3.6f)
-                        ) {
-                            CustomButton(
-                                text = if (mode is PositionPairMapMode.Confirming) "코스 추천받기" else "다음",
-                                isEnabled = isNextButtonEnabled,
-                                onClick = onNextButtonClicked,
-                            )
+                        if (mode is MapCourseGeneratingScreenMode.ForwardLooking) {
+                            Box(
+                                modifier = Modifier.weight(3.6f)
+                            ) {
+                                when (mode) {
+                                    is MapCourseGeneratingScreenMode.MarkerConfigurable -> "다음"
+                                    is MapCourseGeneratingScreenMode.SelectingDuration -> "코스 추천받기"
+                                    else -> null
+                                }?.let {
+                                    CustomButton(
+                                        text = it,
+                                        isEnabled = mode.isNextButtonEnabled,
+                                        onClick = mode.onNextButtonClicked,
+                                    )
+                                }
+                            }
                         }
                     }
                     Spacer(modifier = Modifier.height(SystemUiPadding.navigationBarHeight))
@@ -208,52 +245,73 @@ fun MapCourseGeneratingScreen(
 @Preview
 @Composable
 fun PreviewMapCourseGeneratingScreen() {
-    MapCourseGeneratingScreen(
-        nickname = "이로모로",
-        currentAddress = "경복궁역 3호선",
-        currentPosition = Position(37.5666805 to 126.9784147),
-        mode = PositionPairMapMode.SelectingEnd(
-            start = Position(37.5666805 to 126.9784147),
-        ),
-        isNextButtonEnabled = true,
-        maxDurationMinute = 120,
-        minDurationMinute = 10,
-        selectedDurationMinute = 60,
-        onBackButtonClicked = {},
-        onPositionChanged = {},
-        onCurrentLocationButtonClicked = {},
-        onSearchFieldClicked = {},
-        onNextButtonClicked = {},
-        onPreviousButtonClicked = {},
-        onSelectedDurationMinuteChanged = {},
-        content = {},
-    )
-}
-
-@Preview
-@Composable
-fun PreviewMapCourseGeneratingScreenLastStep() {
+    var step by remember { mutableIntStateOf(0) }
     var minute by remember { mutableIntStateOf(60) }
+    var position by remember { mutableStateOf(Position(37.5666805 to 126.9784147)) }
+    var start by remember { mutableStateOf(Position(37.5666805 to 126.9784147)) }
+    var end by remember { mutableStateOf(Position(37.5666805 to 126.9784147)) }
+
+    val mode = when (step) {
+        0 -> MapCourseGeneratingScreenMode.SelectingStart(
+            mapMode = PositionPairMapMode.SelectingStart,
+            isNextButtonEnabled = true,
+            nickname = "이로모로",
+            currentAddress = "경복궁역 3호선",
+            onSearchFieldClicked = {},
+            onNextButtonClicked = {
+                start = position
+                step++
+            },
+        )
+
+        1 -> MapCourseGeneratingScreenMode.SelectingEnd(
+            mapMode = PositionPairMapMode.SelectingEnd(
+                start = start,
+            ),
+            isNextButtonEnabled = true,
+            nickname = "이로모로",
+            currentAddress = "경복궁역 3호선",
+            onSearchFieldClicked = {},
+            onNextButtonClicked = {
+                end = position
+                step++
+            },
+            onPreviousButtonClicked = { step-- },
+        )
+
+        2 -> MapCourseGeneratingScreenMode.SelectingDuration(
+            mapMode = PositionPairMapMode.Confirming(
+                start = start,
+                end = end,
+            ),
+            isNextButtonEnabled = true,
+            maxMinute = 120,
+            minMinute = 10,
+            minuteGap = 5,
+            selectedMinute = minute,
+            onNextButtonClicked = { step++ },
+            onPreviousButtonClicked = { step-- },
+            onSelectedMinuteChanged = { minute = it },
+        )
+
+        3 -> MapCourseGeneratingScreenMode.Waiting(
+            mapMode = PositionPairMapMode.Confirming(
+                start = start,
+                end = end,
+            ),
+            onPreviousButtonClicked = { step-- },
+        )
+
+        else -> throw IllegalArgumentException("Invalid step: $step")
+    }
+
 
     MapCourseGeneratingScreen(
-        nickname = "이로모로",
-        currentAddress = "경복궁역 3호선",
+        mode = mode,
         currentPosition = Position(37.5666805 to 126.9784147),
-        mode = PositionPairMapMode.Confirming(
-            start = Position(37.5666805 to 126.9784147),
-            end = Position(37.9 to 127.0),
-        ),
-        isNextButtonEnabled = true,
-        maxDurationMinute = 120,
-        minDurationMinute = 10,
-        selectedDurationMinute = minute,
         onBackButtonClicked = {},
-        onPositionChanged = {},
+        onPositionChanged = { position = it },
         onCurrentLocationButtonClicked = {},
-        onSearchFieldClicked = {},
-        onNextButtonClicked = {},
-        onPreviousButtonClicked = {},
-        onSelectedDurationMinuteChanged = { minute = it },
         content = {},
     )
 }

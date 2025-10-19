@@ -23,7 +23,7 @@ import com.who_summoned_the_cloud.eromoro.presentation.component.common.CustomEl
 import com.who_summoned_the_cloud.eromoro.presentation.component.common.CustomNonModalBottomSheet
 import com.who_summoned_the_cloud.eromoro.presentation.component.common.CustomSingleLineInputField
 import com.who_summoned_the_cloud.eromoro.presentation.component.map.PositionMap
-import com.who_summoned_the_cloud.eromoro.presentation.component.map.PositionMapScope
+import com.who_summoned_the_cloud.eromoro.presentation.model.PositionMapScope
 import com.who_summoned_the_cloud.eromoro.presentation.model.Position
 import com.who_summoned_the_cloud.eromoro.presentation.theme.Colors
 import com.who_summoned_the_cloud.eromoro.presentation.util.SystemUiPadding
