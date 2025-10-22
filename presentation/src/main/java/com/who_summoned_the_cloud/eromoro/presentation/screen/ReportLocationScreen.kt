@@ -17,12 +17,12 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.who_summoned_the_cloud.eromoro.presentation.component.common.CustomButton
-import com.who_summoned_the_cloud.eromoro.presentation.component.common.CustomElevatedBackButton
-import com.who_summoned_the_cloud.eromoro.presentation.component.common.CustomElevatedCurrentPositionButton
-import com.who_summoned_the_cloud.eromoro.presentation.component.common.CustomNonModalBottomSheet
-import com.who_summoned_the_cloud.eromoro.presentation.component.common.CustomSingleLineInputField
-import com.who_summoned_the_cloud.eromoro.presentation.component.map.PositionMap
+import com.who_summoned_the_cloud.eromoro.presentation.component.CustomButton
+import com.who_summoned_the_cloud.eromoro.presentation.component.CustomElevatedBackButton
+import com.who_summoned_the_cloud.eromoro.presentation.component.CustomElevatedCurrentPositionButton
+import com.who_summoned_the_cloud.eromoro.presentation.component.CustomNonModalBottomSheet
+import com.who_summoned_the_cloud.eromoro.presentation.component.CustomSingleLineInputField
+import com.who_summoned_the_cloud.eromoro.presentation.component.CustomMap
 import com.who_summoned_the_cloud.eromoro.presentation.model.PositionMapScope
 import com.who_summoned_the_cloud.eromoro.presentation.model.Position
 import com.who_summoned_the_cloud.eromoro.presentation.theme.Colors
@@ -42,7 +42,7 @@ fun ReportLocationScreen(
     Box(
         modifier = Modifier.fillMaxSize()
     ) {
-        PositionMap(
+        CustomMap(
             currentPosition = currentPosition,
             onPositionChanged = onPositionChanged,
             content = content,

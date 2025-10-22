@@ -1,4 +1,4 @@
-package com.who_summoned_the_cloud.eromoro.presentation.component.common
+package com.who_summoned_the_cloud.eromoro.presentation.component
 
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.tween

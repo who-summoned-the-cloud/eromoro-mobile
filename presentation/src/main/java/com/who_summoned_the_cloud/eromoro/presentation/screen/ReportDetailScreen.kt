@@ -44,8 +44,8 @@ import androidx.compose.ui.unit.sp
 import coil3.compose.rememberAsyncImagePainter
 import com.who_summoned_the_cloud.eromoro.common.model.ReportCategory
 import com.who_summoned_the_cloud.eromoro.presentation.R
-import com.who_summoned_the_cloud.eromoro.presentation.component.common.CustomButton
-import com.who_summoned_the_cloud.eromoro.presentation.component.map.PositionMap
+import com.who_summoned_the_cloud.eromoro.presentation.component.CustomButton
+import com.who_summoned_the_cloud.eromoro.presentation.component.CustomMap
 import com.who_summoned_the_cloud.eromoro.presentation.model.Position
 import com.who_summoned_the_cloud.eromoro.presentation.theme.Colors
 import com.who_summoned_the_cloud.eromoro.presentation.util.SystemUiPadding
@@ -58,7 +58,7 @@ fun ReportDetailScreen(
     dislike: Int?,
     category: ReportCategory?,
     title: String?,
-    currentPosition: Position?,
+    position: Position?,
     address: String?,
     type: String?,
     date: LocalDate?,
@@ -226,9 +226,7 @@ fun ReportDetailScreen(
                             .clip(RoundedCornerShape(14.dp))
                             .height(width / 3)
                     ) {
-                        currentPosition?.let {
-                            PositionMap(currentPosition = it)
-                        }
+                        CustomMap(currentPosition = position)
                     }
                     if (address != null) Column(
                         verticalArrangement = Arrangement.spacedBy(3.dp),
@@ -312,7 +310,7 @@ fun PreviewReportDetailScreen() {
         dislike = 1,
         category = ReportCategory.TO_LOCAL_GOVERNANCE,
         title = "마포구청역 엘레베이터 고장",
-        currentPosition = Position(37.566535 to 126.977969),
+        position = Position(37.566535 to 126.977969),
         address = "마포구청역 2번출구",
         type = "엘리베이터",
         date = LocalDate.now(),

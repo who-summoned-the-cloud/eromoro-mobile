@@ -38,8 +38,8 @@ import androidx.compose.ui.unit.sp
 import coil3.compose.rememberAsyncImagePainter
 import com.who_summoned_the_cloud.eromoro.common.model.ReportCategory
 import com.who_summoned_the_cloud.eromoro.presentation.R
-import com.who_summoned_the_cloud.eromoro.presentation.component.common.CustomChip
-import com.who_summoned_the_cloud.eromoro.presentation.component.common.CustomProgressIndicator
+import com.who_summoned_the_cloud.eromoro.presentation.component.CustomChip
+import com.who_summoned_the_cloud.eromoro.presentation.component.CustomProgressIndicator
 import com.who_summoned_the_cloud.eromoro.presentation.model.Fetch
 import com.who_summoned_the_cloud.eromoro.presentation.model.ReportListScreenTab
 import com.who_summoned_the_cloud.eromoro.presentation.theme.Colors

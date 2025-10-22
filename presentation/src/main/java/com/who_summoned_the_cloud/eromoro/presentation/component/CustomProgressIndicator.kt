@@ -1,4 +1,4 @@
-package com.who_summoned_the_cloud.eromoro.presentation.component.common
+package com.who_summoned_the_cloud.eromoro.presentation.component
 
 import androidx.compose.foundation.layout.size
 import androidx.compose.material3.CircularProgressIndicator

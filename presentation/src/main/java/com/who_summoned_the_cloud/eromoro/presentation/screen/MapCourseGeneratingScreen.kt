@@ -26,17 +26,17 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.who_summoned_the_cloud.eromoro.presentation.component.common.CustomButton
-import com.who_summoned_the_cloud.eromoro.presentation.component.common.CustomElevatedBackButton
-import com.who_summoned_the_cloud.eromoro.presentation.component.common.CustomElevatedCurrentPositionButton
-import com.who_summoned_the_cloud.eromoro.presentation.component.common.CustomNonModalBottomSheet
-import com.who_summoned_the_cloud.eromoro.presentation.component.common.CustomOutlinedButton
-import com.who_summoned_the_cloud.eromoro.presentation.component.common.CustomProgressIndicator
-import com.who_summoned_the_cloud.eromoro.presentation.component.common.CustomSingleLineInputField
-import com.who_summoned_the_cloud.eromoro.presentation.component.common.CustomSlider
+import com.who_summoned_the_cloud.eromoro.presentation.component.CustomButton
+import com.who_summoned_the_cloud.eromoro.presentation.component.CustomElevatedBackButton
+import com.who_summoned_the_cloud.eromoro.presentation.component.CustomElevatedCurrentPositionButton
+import com.who_summoned_the_cloud.eromoro.presentation.component.CustomNonModalBottomSheet
+import com.who_summoned_the_cloud.eromoro.presentation.component.CustomOutlinedButton
+import com.who_summoned_the_cloud.eromoro.presentation.component.CustomProgressIndicator
+import com.who_summoned_the_cloud.eromoro.presentation.component.CustomSingleLineInputField
+import com.who_summoned_the_cloud.eromoro.presentation.component.CustomSlider
 import com.who_summoned_the_cloud.eromoro.presentation.model.PositionMapScope
-import com.who_summoned_the_cloud.eromoro.presentation.component.map.PositionPairMap
-import com.who_summoned_the_cloud.eromoro.presentation.model.PositionPairMapMode
+import com.who_summoned_the_cloud.eromoro.presentation.component.CustomMap
+import com.who_summoned_the_cloud.eromoro.presentation.model.CenterMarkerType
 import com.who_summoned_the_cloud.eromoro.presentation.model.MapCourseGeneratingScreenMode
 import com.who_summoned_the_cloud.eromoro.presentation.model.Position
 import com.who_summoned_the_cloud.eromoro.presentation.theme.Colors
@@ -55,9 +55,15 @@ fun MapCourseGeneratingScreen(
     Box(
         modifier = Modifier.fillMaxSize()
     ) {
-        PositionPairMap(
+        CustomMap(
             currentPosition = currentPosition,
-            mode = mode.mapMode,
+            start = if (mode is MapCourseGeneratingScreenMode.HasStart) mode.start else null,
+            end = if (mode is MapCourseGeneratingScreenMode.HasEnd) mode.end else null,
+            centerMarkerType = when (mode) {
+                !is MapCourseGeneratingScreenMode.HasStart -> CenterMarkerType.START
+                !is MapCourseGeneratingScreenMode.HasEnd -> CenterMarkerType.END
+                else -> null
+            },
             onPositionChanged = onPositionChanged,
             content = content,
         )
@@ -110,7 +116,7 @@ fun MapCourseGeneratingScreen(
                     }
                     when (mode) {
                         is MapCourseGeneratingScreenMode.MarkerConfigurable -> {
-                            val isStart = mode.mapMode is PositionPairMapMode.SelectingStart
+                            val isStart = mode is MapCourseGeneratingScreenMode.SelectingStart
 
                             Row(
                                 verticalAlignment = Alignment.CenterVertically,
@@ -253,7 +259,6 @@ fun PreviewMapCourseGeneratingScreen() {
 
     val mode = when (step) {
         0 -> MapCourseGeneratingScreenMode.SelectingStart(
-            mapMode = PositionPairMapMode.SelectingStart,
             isNextButtonEnabled = true,
             nickname = "이로모로",
             currentAddress = "경복궁역 3호선",
@@ -265,9 +270,7 @@ fun PreviewMapCourseGeneratingScreen() {
         )
 
         1 -> MapCourseGeneratingScreenMode.SelectingEnd(
-            mapMode = PositionPairMapMode.SelectingEnd(
-                start = start,
-            ),
+            start = start,
             isNextButtonEnabled = true,
             nickname = "이로모로",
             currentAddress = "경복궁역 3호선",
@@ -280,10 +283,8 @@ fun PreviewMapCourseGeneratingScreen() {
         )
 
         2 -> MapCourseGeneratingScreenMode.SelectingDuration(
-            mapMode = PositionPairMapMode.Confirming(
-                start = start,
-                end = end,
-            ),
+            start = start,
+            end = end,
             isNextButtonEnabled = true,
             maxMinute = 120,
             minMinute = 10,
@@ -295,10 +296,8 @@ fun PreviewMapCourseGeneratingScreen() {
         )
 
         3 -> MapCourseGeneratingScreenMode.Waiting(
-            mapMode = PositionPairMapMode.Confirming(
-                start = start,
-                end = end,
-            ),
+            start = start,
+            end = end,
             onPreviousButtonClicked = { step-- },
         )
 

@@ -1,12 +1,18 @@
 package com.who_summoned_the_cloud.eromoro.presentation.model
 
-sealed class MapCourseGeneratingScreenMode(
-    open val mapMode: PositionPairMapMode,
-) {
+sealed class MapCourseGeneratingScreenMode {
     interface MarkerConfigurable {
         val nickname: String?
         val currentAddress: String?
         val onSearchFieldClicked: () -> Unit
+    }
+
+    interface HasStart {
+        val start: Position
+    }
+
+    interface HasEnd : HasStart {
+        val end: Position
     }
 
     interface Irrevocable {
@@ -19,31 +25,32 @@ sealed class MapCourseGeneratingScreenMode(
     }
 
     data class SelectingStart(
-        override val mapMode: PositionPairMapMode.SelectingStart,
         override val isNextButtonEnabled: Boolean,
         override val nickname: String?,
         override val currentAddress: String?,
         override val onSearchFieldClicked: () -> Unit,
         override val onNextButtonClicked: () -> Unit,
-    ) : MapCourseGeneratingScreenMode(mapMode = mapMode),
+    ) : MapCourseGeneratingScreenMode(),
         ForwardLooking,
         MarkerConfigurable
 
     data class SelectingEnd(
-        override val mapMode: PositionPairMapMode.SelectingEnd,
+        override val start: Position,
         override val isNextButtonEnabled: Boolean,
         override val nickname: String?,
         override val currentAddress: String?,
         override val onSearchFieldClicked: () -> Unit,
         override val onNextButtonClicked: () -> Unit,
         override val onPreviousButtonClicked: () -> Unit,
-    ) : MapCourseGeneratingScreenMode(mapMode = mapMode),
+    ) : MapCourseGeneratingScreenMode(),
         ForwardLooking,
         Irrevocable,
-        MarkerConfigurable
+        MarkerConfigurable,
+        HasStart
 
     data class SelectingDuration(
-        override val mapMode: PositionPairMapMode.Confirming,
+        override val start: Position,
+        override val end: Position,
         override val isNextButtonEnabled: Boolean,
         val maxMinute: Int,
         val minMinute: Int,
@@ -52,13 +59,16 @@ sealed class MapCourseGeneratingScreenMode(
         override val onNextButtonClicked: () -> Unit,
         override val onPreviousButtonClicked: () -> Unit,
         val onSelectedMinuteChanged: (Int) -> Unit,
-    ) : MapCourseGeneratingScreenMode(mapMode = mapMode),
+    ) : MapCourseGeneratingScreenMode(),
         ForwardLooking,
-        Irrevocable
+        Irrevocable,
+        HasEnd
 
     data class Waiting(
-        override val mapMode: PositionPairMapMode.Confirming,
+        override val start: Position,
+        override val end: Position,
         override val onPreviousButtonClicked: () -> Unit,
-    ) : MapCourseGeneratingScreenMode(mapMode = mapMode),
-        Irrevocable
+    ) : MapCourseGeneratingScreenMode(),
+        Irrevocable,
+        HasEnd
 }

@@ -1,4 +1,4 @@
-package com.who_summoned_the_cloud.eromoro.presentation.component.common
+package com.who_summoned_the_cloud.eromoro.presentation.component
 
 import android.graphics.BitmapFactory
 import androidx.compose.animation.animateColorAsState

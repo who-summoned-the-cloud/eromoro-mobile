@@ -40,11 +40,11 @@ import androidx.compose.ui.unit.sp
 import coil3.compose.rememberAsyncImagePainter
 import com.who_summoned_the_cloud.eromoro.common.model.ObstacleType
 import com.who_summoned_the_cloud.eromoro.presentation.R
-import com.who_summoned_the_cloud.eromoro.presentation.component.common.CustomButton
-import com.who_summoned_the_cloud.eromoro.presentation.component.common.CustomChip
-import com.who_summoned_the_cloud.eromoro.presentation.component.common.CustomSingleLineInputField
-import com.who_summoned_the_cloud.eromoro.presentation.component.common.CustomToggle
-import com.who_summoned_the_cloud.eromoro.presentation.component.map.PositionMap
+import com.who_summoned_the_cloud.eromoro.presentation.component.CustomButton
+import com.who_summoned_the_cloud.eromoro.presentation.component.CustomChip
+import com.who_summoned_the_cloud.eromoro.presentation.component.CustomSingleLineInputField
+import com.who_summoned_the_cloud.eromoro.presentation.component.CustomToggle
+import com.who_summoned_the_cloud.eromoro.presentation.component.CustomMap
 import com.who_summoned_the_cloud.eromoro.presentation.model.Position
 import com.who_summoned_the_cloud.eromoro.presentation.theme.Colors
 import com.who_summoned_the_cloud.eromoro.presentation.util.SystemUiPadding
@@ -220,7 +220,7 @@ fun ReportWritingScreen(
                                 onClick = onMapClicked,
                             )
                     ) {
-                        PositionMap(
+                        CustomMap(
                             currentPosition = currentPosition
                         )
                     }
