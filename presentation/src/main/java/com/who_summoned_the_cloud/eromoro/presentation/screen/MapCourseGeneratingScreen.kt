@@ -34,7 +34,7 @@ import com.who_summoned_the_cloud.eromoro.presentation.component.CustomOutlinedB
 import com.who_summoned_the_cloud.eromoro.presentation.component.CustomProgressIndicator
 import com.who_summoned_the_cloud.eromoro.presentation.component.CustomSingleLineInputField
 import com.who_summoned_the_cloud.eromoro.presentation.component.CustomSlider
-import com.who_summoned_the_cloud.eromoro.presentation.model.PositionMapScope
+import com.who_summoned_the_cloud.eromoro.presentation.model.CustomMapScope
 import com.who_summoned_the_cloud.eromoro.presentation.component.CustomMap
 import com.who_summoned_the_cloud.eromoro.presentation.model.CenterMarkerType
 import com.who_summoned_the_cloud.eromoro.presentation.model.MapCourseGeneratingScreenMode
@@ -50,7 +50,7 @@ fun MapCourseGeneratingScreen(
     onBackButtonClicked: () -> Unit,
     onPositionChanged: (Position) -> Unit,
     onCurrentLocationButtonClicked: () -> Unit,
-    content: @Composable PositionMapScope.() -> Unit
+    content: @Composable CustomMapScope.() -> Unit
 ) {
     Box(
         modifier = Modifier.fillMaxSize()

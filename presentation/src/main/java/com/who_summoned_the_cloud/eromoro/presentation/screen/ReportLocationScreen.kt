@@ -23,7 +23,7 @@ import com.who_summoned_the_cloud.eromoro.presentation.component.CustomElevatedC
 import com.who_summoned_the_cloud.eromoro.presentation.component.CustomNonModalBottomSheet
 import com.who_summoned_the_cloud.eromoro.presentation.component.CustomSingleLineInputField
 import com.who_summoned_the_cloud.eromoro.presentation.component.CustomMap
-import com.who_summoned_the_cloud.eromoro.presentation.model.PositionMapScope
+import com.who_summoned_the_cloud.eromoro.presentation.model.CustomMapScope
 import com.who_summoned_the_cloud.eromoro.presentation.model.Position
 import com.who_summoned_the_cloud.eromoro.presentation.theme.Colors
 import com.who_summoned_the_cloud.eromoro.presentation.util.SystemUiPadding
@@ -37,7 +37,7 @@ fun ReportLocationScreen(
     onCurrentLocationButtonClicked: () -> Unit,
     onDoneButtonClicked: () -> Unit,
     onPositionChanged: (Position) -> Unit,
-    content: @Composable PositionMapScope.() -> Unit
+    content: @Composable CustomMapScope.() -> Unit
 ) {
     Box(
         modifier = Modifier.fillMaxSize()

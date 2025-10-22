@@ -1,6 +1,7 @@
 package com.who_summoned_the_cloud.eromoro.presentation.component
 
 import android.graphics.BitmapFactory
+import android.graphics.PointF
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Image
@@ -47,7 +48,7 @@ import com.who_summoned_the_cloud.eromoro.common.model.ObstacleType
 import com.who_summoned_the_cloud.eromoro.presentation.R
 import com.who_summoned_the_cloud.eromoro.presentation.model.CenterMarkerType
 import com.who_summoned_the_cloud.eromoro.presentation.model.Position
-import com.who_summoned_the_cloud.eromoro.presentation.model.PositionMapScope
+import com.who_summoned_the_cloud.eromoro.presentation.model.CustomMapScope
 import com.who_summoned_the_cloud.eromoro.presentation.theme.Colors
 import com.who_summoned_the_cloud.eromoro.presentation.util.rememberBitmap
 import kotlin.math.roundToInt
@@ -63,7 +64,7 @@ fun CustomMap(
     obstacles: List<Pair<Position, ObstacleType>>? = null,
     centerMarkerType: CenterMarkerType? = null,
     onPositionChanged: ((Position) -> Unit)? = null,
-    content: @Composable @NaverMapComposable (PositionMapScope.() -> Unit)? = null,
+    content: @Composable @NaverMapComposable (CustomMapScope.() -> Unit)? = null,
 ) {
     if (LocalInspectionMode.current) {
         Box(
@@ -279,11 +280,34 @@ fun CustomMap(
                 }
             }
 
-            content?.invoke(object : PositionMapScope {
+            content?.invoke(object : CustomMapScope {
                 override fun moveMap(position: Position) {
+                    move(position, PointF(0.5f, 0.5f))
+                }
+
+                override fun moveMap(position: Position, pivot: PointF) {
+                    move(position, pivot)
+                }
+
+                override fun moveMap(position: Position, pivot: Offset) {
+                    val (width, height) = map?.width to map?.height
+
+                    if (width == null || height == null) {
+                        moveMap(position)
+                        return
+                    }
+
+                    move(
+                        position,
+                        PointF(((width + pivot.x) / (width * 2)), (height + pivot.y) / (height * 2))
+                    )
+                }
+
+                private fun move(position: Position, pivot: PointF) {
                     val cameraUpdate = CameraUpdate
                         .scrollTo(position.toLatLng())
                         .animate(CameraAnimation.Easing, 500)
+                        .pivot(pivot)
 
                     map?.moveCamera(cameraUpdate)
                 }

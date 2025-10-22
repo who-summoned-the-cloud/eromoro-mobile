@@ -17,6 +17,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
@@ -40,6 +41,7 @@ fun CustomButton(
     border: BorderStroke? = null,
     shape: Shape = RoundedCornerShape(14.dp),
     isEnabled: Boolean = true,
+    showShadow: Boolean = false,
     text: String? = null,
     fillMaxWidth: Boolean = true,
     content: (@Composable RowScope.() -> Unit)? = null,
@@ -52,7 +54,8 @@ fun CustomButton(
         border = border,
         modifier = Modifier
             .let { if (fillMaxWidth) it.fillMaxWidth() else it }
-            .let { if (height != null) it.height(height) else it },
+            .let { if (height != null) it.height(height) else it }
+            .let { if (showShadow) it.shadow(elevation = 10.dp, shape = shape) else it },
         contentPadding = PaddingValues(0.dp),
     ) {
         if (content != null) {

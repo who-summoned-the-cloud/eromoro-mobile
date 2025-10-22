@@ -1,5 +1,6 @@
 package com.who_summoned_the_cloud.eromoro.presentation.screen
 
+import android.graphics.PointF
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -20,6 +21,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -28,6 +30,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.layout.LayoutCoordinates
+import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
@@ -43,7 +48,7 @@ import com.who_summoned_the_cloud.eromoro.presentation.component.CustomStatRatin
 import com.who_summoned_the_cloud.eromoro.presentation.model.Fetch
 import com.who_summoned_the_cloud.eromoro.presentation.model.MapCourseViewerScreenCourse
 import com.who_summoned_the_cloud.eromoro.presentation.model.Position
-import com.who_summoned_the_cloud.eromoro.presentation.model.PositionMapScope
+import com.who_summoned_the_cloud.eromoro.presentation.model.CustomMapScope
 import com.who_summoned_the_cloud.eromoro.presentation.theme.Colors
 import com.who_summoned_the_cloud.eromoro.presentation.util.SystemUiPadding
 import com.who_summoned_the_cloud.eromoro.presentation.util.getDistanceExpression
@@ -54,7 +59,7 @@ fun MapCourseViewerScreen(
     selectedCourseIndex: Int,
     onBackButtonClicked: () -> Unit,
     onCourseStartButtonClicked: () -> Unit,
-    content: @Composable PositionMapScope.() -> Unit,
+    content: @Composable CustomMapScope.() -> Unit,
 ) {
     val (mainCourse, otherCourses) = remember(courses, selectedCourseIndex) {
         if (courses !is Fetch.Success) return@remember null to null
@@ -69,16 +74,61 @@ fun MapCourseViewerScreen(
             .filterNotNull()
     }
 
+    var screenCoordinates: LayoutCoordinates? by remember { mutableStateOf(null) }
+    var courseCardCoordinates: LayoutCoordinates? by remember { mutableStateOf(null) }
+
     Box(
-        modifier = Modifier.fillMaxSize()
+        modifier = Modifier
+            .fillMaxSize()
+            .onGloballyPositioned { screenCoordinates = it },
     ) {
         CustomMap(
             start = mainCourse?.first(),
             end = mainCourse?.last(),
             mainCourse = mainCourse,
             otherCourses = otherCourses,
-            content = content,
-        )
+        ) {
+            val density = LocalDensity.current
+            val statusBarPadding = SystemUiPadding.statusBarHeight
+
+            LaunchedEffect(mainCourse) {
+                mainCourse?.let {
+                    val (start, end, top, bottom) = listOf(
+                        mainCourse.minOf { it.latitude },
+                        mainCourse.maxOf { it.latitude },
+                        mainCourse.minOf { it.longitude },
+                        mainCourse.maxOf { it.longitude },
+                    )
+
+                    val middle = Position(
+                        latitude = (start + end) / 2,
+                        longitude = (top + bottom) / 2,
+                    )
+
+                    val pivot = Offset(
+                        x = 0f,
+                        y = run {
+                            val screenCoordinates = screenCoordinates
+                            val courseCardCoordinates = courseCardCoordinates
+
+                            if (screenCoordinates == null || courseCardCoordinates == null) return@run 0f
+
+                            val totalY = screenCoordinates.size.height
+                            val innerY = courseCardCoordinates.size.height
+                            val upperPadding = with(density) {
+                                (statusBarPadding + 60.dp).toPx()
+                            }
+
+                            (totalY - innerY + upperPadding) / 2f
+                        }
+                    )
+
+                    moveMap(middle, pivot)
+                }
+            }
+
+            content.invoke(this)
+        }
         Column(
             verticalArrangement = Arrangement.SpaceBetween, modifier = Modifier.fillMaxSize()
         ) {
@@ -91,6 +141,7 @@ fun MapCourseViewerScreen(
             }
             Column(
                 horizontalAlignment = Alignment.End,
+                modifier = Modifier.onGloballyPositioned { courseCardCoordinates = it },
             ) {
                 LazyRow(
                     horizontalArrangement = Arrangement.spacedBy(10.dp),
@@ -256,6 +307,7 @@ fun MapCourseViewerScreen(
                 ) {
                     CustomButton(
                         onClick = onCourseStartButtonClicked,
+                        showShadow = true,
                     ) {
                         Text(
                             text = "코스 시작",
@@ -282,8 +334,8 @@ fun MapCourseViewerScreen(
 fun PreviewMapCourseViewerScreen() {
     var selectedCourseIndex: Int by remember { mutableStateOf(0) }
 
-    MapCourseViewerScreen(
-        courses = Fetch.Success(
+    val courses: Fetch<List<MapCourseViewerScreenCourse>, Unit> = remember {
+        Fetch.Success(
             listOf(
                 MapCourseViewerScreenCourse(
                     badge = MapCourseViewerScreenCourse.Badge.POPULAR,
@@ -338,10 +390,37 @@ fun PreviewMapCourseViewerScreen() {
                 .mapIndexed { index, it ->
                     it.copy(onClick = { selectedCourseIndex = index })
                 },
-        ),
+        )
+    }
+
+    MapCourseViewerScreen(
+        courses = courses,
         selectedCourseIndex = selectedCourseIndex,
         onBackButtonClicked = {},
         onCourseStartButtonClicked = {},
-        content = {},
-    )
+    ) {
+        LaunchedEffect(selectedCourseIndex) {
+            val course = if (courses is Fetch.Success) courses.data[selectedCourseIndex] else null
+            val positions =
+                if (course?.coursePositions is Fetch.Success) course.coursePositions else null
+
+            positions?.let {
+                val (start, end, top, bottom) = positions.data.let { positions ->
+                    listOf(
+                        positions.minOf { it.latitude },
+                        positions.maxOf { it.latitude },
+                        positions.minOf { it.longitude },
+                        positions.maxOf { it.longitude },
+                    )
+                }
+
+                val middle = Position(
+                    latitude = (start + end) / 2,
+                    longitude = (top + bottom) / 2,
+                )
+
+                moveMap(middle, PointF(0.5f, 0.33f))
+            }
+        }
+    }
 }
