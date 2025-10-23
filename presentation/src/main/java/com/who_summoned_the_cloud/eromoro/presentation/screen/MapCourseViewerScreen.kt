@@ -44,7 +44,7 @@ import com.who_summoned_the_cloud.eromoro.presentation.R
 import com.who_summoned_the_cloud.eromoro.presentation.component.CustomButton
 import com.who_summoned_the_cloud.eromoro.presentation.component.CustomElevatedBackButton
 import com.who_summoned_the_cloud.eromoro.presentation.component.CustomMap
-import com.who_summoned_the_cloud.eromoro.presentation.component.CustomStatRatingBar
+import com.who_summoned_the_cloud.eromoro.presentation.component.CustomStarRatingBar
 import com.who_summoned_the_cloud.eromoro.presentation.model.Fetch
 import com.who_summoned_the_cloud.eromoro.presentation.model.MapCourseViewerScreenCourse
 import com.who_summoned_the_cloud.eromoro.presentation.model.Position
@@ -83,8 +83,6 @@ fun MapCourseViewerScreen(
             .onGloballyPositioned { screenCoordinates = it },
     ) {
         CustomMap(
-            start = mainCourse?.first(),
-            end = mainCourse?.last(),
             mainCourse = mainCourse,
             otherCourses = otherCourses,
         ) {
@@ -250,7 +248,7 @@ fun MapCourseViewerScreen(
                                                 horizontalArrangement = Arrangement.spacedBy(8.dp),
                                                 verticalAlignment = Alignment.CenterVertically,
                                             ) {
-                                                CustomStatRatingBar(
+                                                CustomStarRatingBar(
                                                     rating = course.rating,
                                                     emptyStarColor = if (isSelected) Colors.white else Colors.gray[100],
                                                 )

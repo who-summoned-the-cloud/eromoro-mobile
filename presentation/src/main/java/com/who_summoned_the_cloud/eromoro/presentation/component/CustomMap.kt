@@ -57,10 +57,10 @@ import kotlin.math.roundToInt
 @Composable
 fun CustomMap(
     currentPosition: Position? = null,
-    start: Position? = null,
-    end: Position? = null,
     mainCourse: List<Position>? = null,
     otherCourses: List<List<Position>>? = null,
+    start: Position? = mainCourse?.firstOrNull(),
+    end: Position? = mainCourse?.lastOrNull(),
     obstacles: List<Pair<Position, ObstacleType>>? = null,
     centerMarkerType: CenterMarkerType? = null,
     onPositionChanged: ((Position) -> Unit)? = null,
