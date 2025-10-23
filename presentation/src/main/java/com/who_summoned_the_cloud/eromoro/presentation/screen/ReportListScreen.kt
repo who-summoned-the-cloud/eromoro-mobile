@@ -234,6 +234,10 @@ private fun MyReportsTab(
                                 contentDescription = "제보 대표 이미지",
                                 modifier = Modifier
                                     .size(120.dp)
+                                    .background(
+                                        color = Colors.gray[400],
+                                        shape = RoundedCornerShape(14.dp),
+                                    )
                                     .clip(RoundedCornerShape(14.dp)),
                             )
                             Column(
