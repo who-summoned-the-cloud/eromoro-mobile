@@ -23,7 +23,7 @@ sealed class ReportListScreenTab {
 
         data class Report(
             val id: Long,
-            val imageUri: Uri?,
+            val image: Uri?,
             val category: ReportCategory,
             val state: State,
             val title: String,
@@ -46,6 +46,15 @@ sealed class ReportListScreenTab {
     }
 
     data class Ranking(
-        val data: Unit,
-    ) : ReportListScreenTab()
+        val ranking: Fetch<List<Ranking>, Unit>,
+        val showLoadingAtBottom: Boolean,
+        val onNewPageRequested: () -> Unit,
+    ) : ReportListScreenTab() {
+
+        data class Ranking(
+            val nickname: String,
+            val image: Uri?,
+            val reportCount: Int,
+        )
+    }
 }

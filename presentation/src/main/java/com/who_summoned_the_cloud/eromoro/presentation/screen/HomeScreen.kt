@@ -370,7 +370,7 @@ fun HomeScreen(
                                             .clickable { place.onClick() }) {
                                         Image(
                                             painter = rememberAsyncImagePainter(
-                                                model = place.imageUri
+                                                model = place.image
                                             ),
                                             contentDescription = "${place.title}의 사진",
                                             modifier = Modifier
@@ -565,7 +565,7 @@ fun HomeScreen(
                                         ) {
                                             Image(
                                                 painter = rememberAsyncImagePainter(
-                                                    model = place.imageUri
+                                                    model = place.image
                                                 ),
                                                 contentDescription = "${place.title}의 사진",
                                                 modifier = Modifier
@@ -702,7 +702,7 @@ fun PreviewHomeScreen() {
         nearbyPlaces = Fetch.Success(
             listOf(
                 HomeScreenPlace(
-                    imageUri = null,
+                    image = null,
                     title = "한강공원",
                     distance = 100,
                     courseCount = 2,
@@ -721,7 +721,7 @@ fun PreviewHomeScreen() {
         recommendedPlaces = Fetch.Success(
             listOf(
                 HomeScreenPlace(
-                    imageUri = null,
+                    image = null,
                     title = "경복궁",
                     distance = 100,
                     courseCount = 2,

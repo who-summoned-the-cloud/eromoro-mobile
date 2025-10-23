@@ -4,7 +4,7 @@ import android.net.Uri
 import com.who_summoned_the_cloud.eromoro.common.model.UserType
 
 data class HomeScreenPlace(
-    val imageUri: Uri?,
+    val image: Uri?,
     val title: String,
     val distance: Int,
     val courseCount: Int,

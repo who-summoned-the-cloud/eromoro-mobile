@@ -263,7 +263,7 @@ fun MyPageScreen(
                             modifier = Modifier.clickable { likedCourse.onClick() },
                         ) {
                             Image(
-                                painter = rememberAsyncImagePainter(model = likedCourse.imageUri),
+                                painter = rememberAsyncImagePainter(model = likedCourse.image),
                                 contentDescription = "좋아요 코스 이미지",
                                 modifier = Modifier
                                     .width(max(width / 3f, 150.dp))
@@ -351,7 +351,7 @@ fun PreviewMyPageScreen() {
             listOf(
                 MyPageScreenLikedCourse(
                     id = 0,
-                    imageUri = null,
+                    image = null,
                     title = "보라매공원 코스",
                     onClick = {},
                 ),
