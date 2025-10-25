@@ -47,10 +47,12 @@ import com.naver.maps.map.overlay.OverlayImage
 import com.who_summoned_the_cloud.eromoro.common.model.ObstacleType
 import com.who_summoned_the_cloud.eromoro.presentation.R
 import com.who_summoned_the_cloud.eromoro.presentation.model.CenterMarkerType
-import com.who_summoned_the_cloud.eromoro.presentation.model.Position
+import com.who_summoned_the_cloud.eromoro.common.model.Position
 import com.who_summoned_the_cloud.eromoro.presentation.model.CustomMapScope
+import com.who_summoned_the_cloud.eromoro.presentation.util.toLatLng
 import com.who_summoned_the_cloud.eromoro.presentation.theme.Colors
 import com.who_summoned_the_cloud.eromoro.presentation.util.rememberBitmap
+import com.who_summoned_the_cloud.eromoro.presentation.util.toPosition
 import kotlin.math.roundToInt
 
 @OptIn(ExperimentalNaverMapApi::class)
@@ -269,7 +271,7 @@ fun CustomMap(
 
                 val listener = NaverMap.OnCameraIdleListener {
                     targetMetersPerDp = loadedMap.projection.metersPerDp
-                    onPositionChanged?.invoke(Position(loadedMap.cameraPosition.target))
+                    onPositionChanged?.invoke(loadedMap.cameraPosition.target.toPosition())
                 }
 
                 loadedMap.addOnCameraIdleListener(listener)

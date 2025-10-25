@@ -46,7 +46,7 @@ import com.who_summoned_the_cloud.eromoro.common.model.ReportCategory
 import com.who_summoned_the_cloud.eromoro.presentation.R
 import com.who_summoned_the_cloud.eromoro.presentation.component.CustomButton
 import com.who_summoned_the_cloud.eromoro.presentation.component.CustomMap
-import com.who_summoned_the_cloud.eromoro.presentation.model.Position
+import com.who_summoned_the_cloud.eromoro.common.model.Position
 import com.who_summoned_the_cloud.eromoro.presentation.theme.Colors
 import com.who_summoned_the_cloud.eromoro.presentation.util.SystemUiPadding
 import java.time.LocalDate

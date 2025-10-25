@@ -2,6 +2,7 @@ package com.who_summoned_the_cloud.eromoro.presentation.model
 
 import androidx.annotation.FloatRange
 import com.who_summoned_the_cloud.eromoro.common.model.ObstacleType
+import com.who_summoned_the_cloud.eromoro.common.model.Position
 
 data class MapCourseViewerScreenCourse(
     val badge: Badge?,

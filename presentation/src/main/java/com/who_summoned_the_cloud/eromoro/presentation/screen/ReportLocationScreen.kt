@@ -24,7 +24,7 @@ import com.who_summoned_the_cloud.eromoro.presentation.component.CustomNonModalB
 import com.who_summoned_the_cloud.eromoro.presentation.component.CustomSingleLineInputField
 import com.who_summoned_the_cloud.eromoro.presentation.component.CustomMap
 import com.who_summoned_the_cloud.eromoro.presentation.model.CustomMapScope
-import com.who_summoned_the_cloud.eromoro.presentation.model.Position
+import com.who_summoned_the_cloud.eromoro.common.model.Position
 import com.who_summoned_the_cloud.eromoro.presentation.theme.Colors
 import com.who_summoned_the_cloud.eromoro.presentation.util.SystemUiPadding
 

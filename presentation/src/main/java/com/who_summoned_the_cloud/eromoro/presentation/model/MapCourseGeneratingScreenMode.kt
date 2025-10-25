@@ -1,5 +1,7 @@
 package com.who_summoned_the_cloud.eromoro.presentation.model
 
+import com.who_summoned_the_cloud.eromoro.common.model.Position
+
 sealed class MapCourseGeneratingScreenMode {
     interface MarkerConfigurable {
         val nickname: String?
