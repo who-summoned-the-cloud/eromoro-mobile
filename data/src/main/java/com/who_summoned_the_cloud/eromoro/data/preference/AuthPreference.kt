@@ -2,8 +2,11 @@ package com.who_summoned_the_cloud.eromoro.data.preference
 
 import android.content.SharedPreferences
 import androidx.core.content.edit
+import javax.inject.Inject
+import javax.inject.Singleton
 
-class AuthPreference(
+@Singleton
+class AuthPreference @Inject constructor(
     private val prefs: SharedPreferences
 ) {
     companion object {

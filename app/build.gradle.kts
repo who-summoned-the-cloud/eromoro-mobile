@@ -2,6 +2,8 @@ plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
+    alias(libs.plugins.hilt.android)
+    alias(libs.plugins.google.devtools.ksp)
 
     id("com.google.android.libraries.mapsplatform.secrets-gradle-plugin")
 }
@@ -25,22 +27,26 @@ android {
             isMinifyEnabled = false
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
-                "proguard-rules.pro"
+                "proguard-rules.pro",
             )
         }
     }
+
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_11
         targetCompatibility = JavaVersion.VERSION_11
     }
+
     kotlinOptions {
         jvmTarget = "11"
     }
+
     buildFeatures {
         compose = true
         viewBinding = false
         buildConfig = true
     }
+
     ndkVersion = "27.0.12077973"
     buildToolsVersion = "36.0.0"
 }
@@ -69,4 +75,12 @@ dependencies {
 
     // Naver Map Compose SDK
     implementation(libs.naver.map.compose)
+
+    // Hilt
+    implementation(libs.hilt.android)
+    ksp(libs.hilt.android.compiler)
+    androidTestImplementation(libs.hilt.android.test)
+    androidTestAnnotationProcessor(libs.hilt.android.compiler)
+    testImplementation(libs.hilt.android.test)
+    testAnnotationProcessor(libs.hilt.android.compiler)
 }

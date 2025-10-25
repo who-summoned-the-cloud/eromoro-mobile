@@ -1,11 +1,14 @@
 package com.who_summoned_the_cloud.eromoro.data.repository
 
 import com.who_summoned_the_cloud.eromoro.data.preference.AuthPreference
-import com.who_summoned_the_cloud.eromoro.data.util.AuthorizedRepository
+import com.who_summoned_the_cloud.eromoro.data.repository.AuthorizedRepository
+import javax.inject.Inject
 import org.openapitools.client.apis.UserControllerApi
 import org.openapitools.client.models.SignInDto
+import javax.inject.Singleton
 
-class AuthRepository(
+@Singleton
+class AuthRepository @Inject constructor(
     override val authPreference: AuthPreference,
     override val userControllerApi: UserControllerApi,
 ) : AuthorizedRepository {
@@ -15,8 +18,7 @@ class AuthRepository(
      */
     suspend fun login(id: String, password: String) {
         val dto = SignInDto(
-            username = id,
-            password = password
+            username = id, password = password
         )
 
         val response = userControllerApi.signIn(dto)

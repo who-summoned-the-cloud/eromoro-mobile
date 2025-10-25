@@ -1,17 +1,18 @@
 [versions]
 agp = "8.13.0"
 coilCompose = "3.3.0"
-kotlin = "2.2.20"
+hiltAndroid = "2.57.2"
+kotlin = "2.2.21"
 coreKtx = "1.17.0"
 junit = "4.13.2"
 junitVersion = "1.3.0"
 espressoCore = "3.7.0"
 lifecycleRuntimeKtx = "2.9.4"
 activityCompose = "1.11.0"
-composeBom = "2025.10.00"
+composeBom = "2025.10.01"
 appcompat = "1.7.1"
 material = "1.13.0"
-foundation = "1.9.3"
+foundation = "1.9.4"
 apiClient = "1.0.0-SNAPSHOT"
 naverMapCompose = "1.9.0"
 
@@ -20,6 +21,9 @@ androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = 
 api-client = { module = "com.eromoro:api-client", version.ref = "apiClient" }
 coil-compose = { module = "io.coil-kt.coil3:coil-compose", version.ref = "coilCompose" }
 coil-network-okhttp = { module = "io.coil-kt.coil3:coil-network-okhttp", version.ref = "coilCompose" }
+hilt-android = { module = "com.google.dagger:hilt-android", version.ref = "hiltAndroid" }
+hilt-android-compiler = { module = "com.google.dagger:hilt-android-compiler", version.ref = "hiltAndroid" }
+hilt-android-test = { group = "com.google.dagger", name = "hilt-android-testing", version.ref = "hiltAndroid" }
 junit = { group = "junit", name = "junit", version.ref = "junit" }
 androidx-junit = { group = "androidx.test.ext", name = "junit", version.ref = "junitVersion" }
 androidx-espresso-core = { group = "androidx.test.espresso", name = "espresso-core", version.ref = "espressoCore" }
@@ -43,4 +47,6 @@ android-application = { id = "com.android.application", version.ref = "agp" }
 kotlin-android = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }
 kotlin-compose = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
 android-library = { id = "com.android.library", version.ref = "agp" }
+hilt-android = { id = "com.google.dagger.hilt.android", version.ref = "hiltAndroid" }
+google-devtools-ksp = { id = "com.google.devtools.ksp", version = "2.3.0"}
 

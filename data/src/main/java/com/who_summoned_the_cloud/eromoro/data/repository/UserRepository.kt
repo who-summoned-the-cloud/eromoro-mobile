@@ -4,14 +4,17 @@ import com.who_summoned_the_cloud.eromoro.common.model.UserType
 import com.who_summoned_the_cloud.eromoro.data.model.SignUpRequest
 import com.who_summoned_the_cloud.eromoro.data.model.UserInfoModificationRequest
 import com.who_summoned_the_cloud.eromoro.data.preference.AuthPreference
-import com.who_summoned_the_cloud.eromoro.data.util.AuthorizedRepository
+import com.who_summoned_the_cloud.eromoro.data.repository.AuthorizedRepository
+import javax.inject.Inject
 import org.openapitools.client.apis.UserControllerApi
 import org.openapitools.client.models.CheckUsernameIsSameDTO
 import org.openapitools.client.models.CheckUsernameIsSameResultDTO
 import org.openapitools.client.models.SignUpDto
 import org.openapitools.client.models.UpdateUserInfoDTO
+import javax.inject.Singleton
 
-class UserRepository(
+@Singleton
+class UserRepository @Inject constructor(
     override val authPreference: AuthPreference,
     override val userControllerApi: UserControllerApi,
 ) : AuthorizedRepository {

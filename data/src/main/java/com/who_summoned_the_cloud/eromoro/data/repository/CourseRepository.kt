@@ -12,7 +12,7 @@ import com.who_summoned_the_cloud.eromoro.data.model.GeneratedCourse
 import com.who_summoned_the_cloud.eromoro.data.model.LikedCourse
 import com.who_summoned_the_cloud.eromoro.data.model.RegionalCourse
 import com.who_summoned_the_cloud.eromoro.data.preference.AuthPreference
-import com.who_summoned_the_cloud.eromoro.data.util.AuthorizedRepository
+import com.who_summoned_the_cloud.eromoro.data.repository.AuthorizedRepository
 import org.openapitools.client.apis.CourseControllerApi
 import org.openapitools.client.apis.UserControllerApi
 import org.openapitools.client.models.CourseInfoDto
@@ -22,8 +22,11 @@ import org.openapitools.client.models.GenerateDto
 import org.openapitools.client.models.GetCourseResultDto
 import org.openapitools.client.models.LatLon
 import androidx.core.content.edit
+import javax.inject.Inject
+import javax.inject.Singleton
 
-class CourseRepository(
+@Singleton
+class CourseRepository @Inject constructor(
     override val authPreference: AuthPreference,
     override val userControllerApi: UserControllerApi,
     private val courseControllerApi: CourseControllerApi,

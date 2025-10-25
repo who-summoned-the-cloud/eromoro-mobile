@@ -2,7 +2,9 @@ package com.who_summoned_the_cloud.eromoro.app
 
 import android.app.Application
 import com.naver.maps.map.NaverMapSdk
+import dagger.hilt.android.HiltAndroidApp
 
+@HiltAndroidApp
 class MainApplication: Application() {
 
     override fun onCreate() {
