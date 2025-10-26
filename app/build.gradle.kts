@@ -83,4 +83,12 @@ dependencies {
     androidTestAnnotationProcessor(libs.hilt.android.compiler)
     testImplementation(libs.hilt.android.test)
     testAnnotationProcessor(libs.hilt.android.compiler)
+
+    // Compose Navigation
+    implementation(libs.androidx.navigation.compose)
+    implementation(libs.androidx.hilt.navigation.compose)
+
+    // Google Location
+    implementation(libs.play.services.location)
+    implementation(libs.kotlinx.coroutines.play.services)
 }
