@@ -39,6 +39,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.max
 import androidx.compose.ui.unit.sp
 import coil3.compose.rememberAsyncImagePainter
 import com.who_summoned_the_cloud.eromoro.common.model.UserType
@@ -154,20 +155,33 @@ fun SignUpFormScreen(
                     modifier = Modifier.heightIn(min = 90.dp),
                 ) {
                     listOf(
-                        "닉네임" to listOf(
-                            nickname to "사용하실 닉네임을 입력해주세요.",
+                        Triple(
+                            "닉네임",
+                            listOf(
+                                nickname to "사용하실 닉네임을 입력해주세요.",
+                            ),
+                            false,
                         ),
-                        "아이디" to listOf(
-                            id to "사용하실 아이디를 입력해주세요.",
+                        Triple(
+                            "아이디",
+                            listOf(
+                                id to "사용하실 아이디를 입력해주세요.",
+                            ),
+                            false,
                         ),
-                        "비밀번호" to listOf(
-                            password to "사용하실 비밀번호를 입력해주세요.",
-                            passwordCheck to "비밀번호를 한 번 더 입력해주세요.",
+                        Triple(
+                            "비밀번호",
+                            listOf(
+                                password to "사용하실 비밀번호를 입력해주세요.",
+                                passwordCheck to "비밀번호를 한 번 더 입력해주세요.",
+                            ),
+                            true,
                         ),
-                    ).forEach { (label, fields) ->
+                    ).forEach { (label, fields, isHiding) ->
                         InputTextForm(
                             label = label,
                             fields = fields,
+                            isHiding = isHiding,
                         )
                     }
                 }
@@ -272,7 +286,13 @@ fun SignUpFormScreen(
                 text = "가입하기",
             )
         }
-        Spacer(modifier = Modifier.height(SystemUiPadding.navigationBarHeight))
+        Spacer(
+            modifier = Modifier.height(
+                max(
+                    SystemUiPadding.navigationBarHeight, SystemUiPadding.imeHeight
+                )
+            )
+        )
     }
 }
 
@@ -280,6 +300,7 @@ fun SignUpFormScreen(
 private fun InputTextForm(
     label: String,
     fields: List<Pair<SignUpScreenField, String>>,
+    isHiding: Boolean = false,
 ) {
     Column(
         verticalArrangement = Arrangement.spacedBy(8.dp),
@@ -305,6 +326,7 @@ private fun InputTextForm(
                         null -> Colors.gray[300]
                     },
                     placeholder = placeholder,
+                    isValueHided = isHiding,
                 ) {
                     val isBlank by snapshotFlow { field.state.text.isBlank() }.collectAsState(
                         true

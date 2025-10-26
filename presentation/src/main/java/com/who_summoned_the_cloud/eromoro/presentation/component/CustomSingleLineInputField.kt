@@ -15,10 +15,8 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
-import androidx.compose.foundation.text.input.InputTransformation
 import androidx.compose.foundation.text.input.TextFieldLineLimits
 import androidx.compose.foundation.text.input.TextFieldState
-import androidx.compose.foundation.text.input.byValue
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -36,6 +34,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.who_summoned_the_cloud.eromoro.presentation.R
 import com.who_summoned_the_cloud.eromoro.presentation.theme.Colors
+import com.who_summoned_the_cloud.eromoro.presentation.util.ValueHidingOutputTransformation
 
 @Composable
 fun CustomSingleLineInputField(
@@ -94,12 +93,9 @@ fun CustomSingleLineInputField(
                             fontSize = 15.sp,
                         ),
                         lineLimits = TextFieldLineLimits.SingleLine,
-                        inputTransformation = if (isValueHided) {
-                            InputTransformation.byValue { _, proposed -> "●".repeat(proposed.length) }
-                        } else {
-                            null
-                        },
+                        outputTransformation = ValueHidingOutputTransformation(isValueHided),
                         readOnly = isReadonly,
+                        modifier = Modifier.fillMaxWidth(),
                     )
                 }
                 tail?.invoke(this@Row)
