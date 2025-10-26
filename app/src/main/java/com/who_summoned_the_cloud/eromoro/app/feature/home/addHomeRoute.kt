@@ -1,7 +1,6 @@
 package com.who_summoned_the_cloud.eromoro.app.feature.home
 
 import androidx.compose.foundation.text.input.rememberTextFieldState
-import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -13,24 +12,25 @@ import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.composable
 import androidx.navigation.navigation
-import com.google.android.gms.location.LocationServices
-import com.google.android.gms.location.Priority
-import com.google.android.gms.tasks.CancellationTokenSource
 import com.who_summoned_the_cloud.eromoro.app.util.NavigationBarApp
 import com.who_summoned_the_cloud.eromoro.app.util.getLocation
+import com.who_summoned_the_cloud.eromoro.app.util.launch
+import com.who_summoned_the_cloud.eromoro.common.model.KoreanAreas
 import com.who_summoned_the_cloud.eromoro.common.model.Position
+import com.who_summoned_the_cloud.eromoro.presentation.modal.AddressSelectModalBottomSheet
 import com.who_summoned_the_cloud.eromoro.presentation.model.Fetch
+import com.who_summoned_the_cloud.eromoro.presentation.model.HomeScreenPlace
 import com.who_summoned_the_cloud.eromoro.presentation.screen.HomeScreen
 import com.who_summoned_the_cloud.eromoro.presentation.screen.SearchScreen
 import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.tasks.await
 
 fun NavGraphBuilder.addHomeRoute(
     navController: NavHostController,
 ) {
     navigation(
-        startDestination = "/home", route = "/home/main"
+        startDestination = "/home/main",
+        route = "/home",
     ) {
         composable(
             route = "/home/main"
@@ -40,23 +40,45 @@ fun NavGraphBuilder.addHomeRoute(
 
             val search = rememberTextFieldState()
             var nickname: String? by remember { mutableStateOf(null) }
+            var currentLocation: Fetch<String, Unit> by remember { mutableStateOf(Fetch.Loading()) }
+            var nearbyPlaces: Fetch<List<HomeScreenPlace>, Unit> by remember { mutableStateOf(Fetch.Loading()) }
+            val recommendedPlaces: Fetch<List<HomeScreenPlace>, Unit> by remember {
+                mutableStateOf(
+                    Fetch.Loading()
+                )
+            }
 
-            var isLocationLoading by remember { mutableStateOf(true) }
-            var currentLocation: String? by remember { mutableStateOf(null) }
+            var sigungu: String? by remember { mutableStateOf(null) }
+            var sido: String? by remember {
+                mutableStateOf(
+                    KoreanAreas
+                        .getAllSido()
+                        .first()
+                )
+            }
+
+            var showAddressBottomSheet by remember { mutableStateOf(false) }
 
             LaunchedEffect(Unit) {
-                runCatching {
-                    val location = getLocation(context)
-                    currentLocation = viewModel.getAddress(
-                        Position(location.latitude to location.longitude)
-                    )
+                val location = runCatching { getLocation(context) }.getOrNull()
+
+                if (location == null) {
+                    currentLocation = Fetch.Error(Unit)
+                    return@LaunchedEffect
                 }
 
-                isLocationLoading = false
+                viewModel.launch {
+                    runCatching {
+                        val address = getAddress(Position(location.latitude to location.longitude))
+                        currentLocation = Fetch.Success(address)
+                    }.onFailure {
+                        currentLocation = Fetch.Error(Unit)
+                    }
+                }
             }
 
             LaunchedEffect(Unit) {
-                nickname = viewModel.getNickname()
+                viewModel.launch { nickname = getNickname() }
             }
 
             NavigationBarApp(
@@ -64,20 +86,14 @@ fun NavGraphBuilder.addHomeRoute(
             ) {
                 HomeScreen(
                     search = search,
-                    currentLocation = if (isLocationLoading) {
-                        Fetch.Loading()
-                    } else currentLocation?.let {
-                        Fetch.Success(data = it)
-                    } ?: run {
-                        Fetch.Error(error = Unit)
-                    },
+                    currentLocation = currentLocation,
                     nickname = nickname,
-                    nearbyPlaces = Fetch.Error(Unit),
+                    nearbyPlaces = nearbyPlaces,
                     showLoadingAtTheEndOfNearbyPlaces = false,
-                    recommendingCity = TODO(),
-                    recommendingCountry = TODO(),
-                    recommendedPlaces = TODO(),
-                    showLoadingAtTheEndOfRecommendedPlaces = TODO(),
+                    recommendingSido = sido,
+                    recommendingSigungu = sigungu,
+                    recommendedPlaces = recommendedPlaces,  // TODO
+                    showLoadingAtTheEndOfRecommendedPlaces = false,  // TODO
                     onSearchBarClicked = {
                         MainScope().launch {
                             navController.navigate("/home/search")
@@ -94,9 +110,7 @@ fun NavGraphBuilder.addHomeRoute(
                     onGoToNearbyCourseListButtonClicked = {
                         // TODO
                     },
-                    onAddressDropdownClicked = {
-                        // TODO
-                    },
+                    onAddressDropdownClicked = { showAddressBottomSheet = true },
                     onNewNearbyPlacePageRequest = {
                         // TODO
                     },
@@ -105,6 +119,14 @@ fun NavGraphBuilder.addHomeRoute(
                     },
                 )
             }
+
+            if (showAddressBottomSheet) AddressSelectModalBottomSheet(
+                sido = sido,
+                sigungu = sigungu,
+                onSidoSelected = { sido = it },
+                onSigunguSelected = { sigungu = it },
+                onCompleteButtonClicked = { showAddressBottomSheet = false },
+            )
         }
 
         composable(

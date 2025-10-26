@@ -14,7 +14,8 @@ class HomeViewModel @Inject constructor(
 ) : ViewModel() {
 
     suspend fun getNickname(): String {
-        return userRepository.getUserInfo().nickname
+        val userInfo = userRepository.getUserInfo()
+        return userInfo.nickname
     }
 
     suspend fun getAddress(position: Position): String {

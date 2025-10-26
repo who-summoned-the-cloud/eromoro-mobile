@@ -29,7 +29,6 @@ import com.who_summoned_the_cloud.eromoro.presentation.screen.SignUpFormScreen
 import com.who_summoned_the_cloud.eromoro.presentation.screen.SignUpSuccessScreen
 import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.launch
-import java.io.File
 
 fun NavGraphBuilder.addSignUpRoute(
     navController: NavHostController,
@@ -54,7 +53,7 @@ fun NavGraphBuilder.addSignUpRoute(
             var image: Uri? by remember { mutableStateOf(null) }
 
             var showPictureSelectPopup by remember { mutableStateOf(false) }
-            var isLoading by remember { mutableStateOf(false) }
+            var showLoading by remember { mutableStateOf(false) }
 
             val camera = rememberLauncherForActivityResult(
                 contract = ActivityResultContracts.TakePicture(),
@@ -98,7 +97,7 @@ fun NavGraphBuilder.addSignUpRoute(
                 onSignUpButtonClicked = {
                     viewModel
                         .launch {
-                            isLoading = true
+                            showLoading = true
 
                             val nickname = nickname.text.toString()
                             val userType = userType ?: return@launch
@@ -121,7 +120,7 @@ fun NavGraphBuilder.addSignUpRoute(
                                 }
                             }
                         }
-                        .invokeOnCompletion { isLoading = false }
+                        .invokeOnCompletion { showLoading = false }
                 },
             )
 
@@ -141,7 +140,7 @@ fun NavGraphBuilder.addSignUpRoute(
                 )
             }
 
-            if (isLoading) LoadingModal()
+            if (showLoading) LoadingModal()
         }
 
         composable(

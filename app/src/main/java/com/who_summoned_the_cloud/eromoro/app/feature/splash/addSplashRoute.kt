@@ -5,6 +5,7 @@ import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.composable
+import com.who_summoned_the_cloud.eromoro.app.util.launch
 import com.who_summoned_the_cloud.eromoro.presentation.screen.SplashScreen
 import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.delay
@@ -21,12 +22,11 @@ fun NavGraphBuilder.addSplash(
         LaunchedEffect(Unit) {
             delay(timeMillis = 2000)
 
-            val isLoggedIn = viewModel.getIsLogin()
+            viewModel.launch {
+                val isLoggedIn = getIsLogin()
 
-            if (isLoggedIn) {
-                MainScope().launch { navController.navigate("/home") }
-            } else {
-                MainScope().launch { navController.navigate("/login") }
+                if (isLoggedIn) MainScope().launch { navController.navigate("/home") }
+                else MainScope().launch { navController.navigate("/login") }
             }
         }
 
