@@ -2,41 +2,76 @@ package com.who_summoned_the_cloud.eromoro.data.repository
 
 import com.who_summoned_the_cloud.eromoro.common.model.UserType
 import com.who_summoned_the_cloud.eromoro.data.model.SignUpRequest
+import com.who_summoned_the_cloud.eromoro.data.model.User
 import com.who_summoned_the_cloud.eromoro.data.model.UserInfoModificationRequest
 import com.who_summoned_the_cloud.eromoro.data.preference.AuthPreference
-import com.who_summoned_the_cloud.eromoro.data.repository.AuthorizedRepository
-import javax.inject.Inject
+import okhttp3.MediaType.Companion.toMediaType
+import okhttp3.MultipartBody
+import okhttp3.OkHttpClient
+import okhttp3.Request
+import okhttp3.RequestBody.Companion.asRequestBody
+import okhttp3.RequestBody.Companion.toRequestBody
 import org.openapitools.client.apis.UserControllerApi
 import org.openapitools.client.models.CheckUsernameIsSameDTO
 import org.openapitools.client.models.CheckUsernameIsSameResultDTO
-import org.openapitools.client.models.SignUpDto
 import org.openapitools.client.models.UpdateUserInfoDTO
+import javax.inject.Inject
+import javax.inject.Named
 import javax.inject.Singleton
 
 @Singleton
 class UserRepository @Inject constructor(
     override val authPreference: AuthPreference,
     override val userControllerApi: UserControllerApi,
+    @param:Named("serverUrl") private val serverUrl: String,
 ) : AuthorizedRepository {
 
     /**
      * 회원 가입
      */
     suspend fun signUp(request: SignUpRequest) {
-        val dto = SignUpDto(
-            nickname = request.nickname,
-            username = request.id,
-            password = request.password,
-            userType = when (request.userType) {
-                UserType.OTHER -> SignUpDto.UserType.USER
-                UserType.INFANT -> SignUpDto.UserType.INFANT_GUARDIAN
-                UserType.PHYSICAL_DISABILITY -> SignUpDto.UserType.DISABLED
-                UserType.PREGNANT -> SignUpDto.UserType.PREGNANT
-                UserType.SENIOR -> SignUpDto.UserType.SENIOR
-            }
+        val client = OkHttpClient()
+
+        val requestBodyBuilder = MultipartBody
+            .Builder()
+            .setType(MultipartBody.FORM)
+
+        requestBodyBuilder.addFormDataPart(
+            "request",
+            null,
+            ("{" + listOf(
+                "nickname" to request.nickname,
+                "username" to request.id,
+                "password" to request.password,
+                "userType" to when (request.userType) {
+                    UserType.OTHER -> "USER"
+                    UserType.INFANT -> "INFANT_GUARDIAN"
+                    UserType.PHYSICAL_DISABILITY -> "DISABLED"
+                    UserType.PREGNANT -> "PREGNANT"
+                    UserType.SENIOR -> "SENIOR"
+                },
+            ).joinToString(",") {
+                    "\"${it.first}\":\"${it.second}\""
+                } + "}").toRequestBody("text/plain".toMediaType()),
         )
 
-        userControllerApi.signUp(dto)
+        request.profileImage?.let {
+            requestBodyBuilder.addFormDataPart(
+                "photo",
+                it.name,
+                it.asRequestBody("image/jpg".toMediaType()),
+            )
+        }
+
+        val request = Request
+            .Builder()
+            .url(serverUrl.removeSuffix("/") + "/users/signup")
+            .post(requestBodyBuilder.build())
+            .build()
+
+        client
+            .newCall(request)
+            .execute()
     }
 
     /**
@@ -48,6 +83,10 @@ class UserRepository @Inject constructor(
         return response.result?.isAvailable == CheckUsernameIsSameResultDTO.IsAvailable.AVAILABLE
     }
 
+    suspend fun getUserInfo(): User {
+        TODO()
+    }
+
     /**
      * 회원 정보 수정
      */
@@ -55,8 +94,7 @@ class UserRepository @Inject constructor(
         request: UserInfoModificationRequest,
     ) {
         val dto = UpdateUserInfoDTO(
-            nickname = request.nickname,
-            userType = request.userType?.let {
+            nickname = request.nickname, userType = request.userType?.let {
                 when (it) {
                     UserType.OTHER -> UpdateUserInfoDTO.UserType.USER
                     UserType.INFANT -> UpdateUserInfoDTO.UserType.INFANT_GUARDIAN
@@ -64,8 +102,7 @@ class UserRepository @Inject constructor(
                     UserType.PREGNANT -> UpdateUserInfoDTO.UserType.PREGNANT
                     UserType.SENIOR -> UpdateUserInfoDTO.UserType.SENIOR
                 }
-            }
-        )
+            })
 
         userControllerApi.withAuth {
             updateUserInfo(updateUserInfoDTO = dto)

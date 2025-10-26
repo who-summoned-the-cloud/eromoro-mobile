@@ -63,4 +63,10 @@ dependencies {
     androidTestAnnotationProcessor(libs.hilt.android.compiler)
     testImplementation(libs.hilt.android.test)
     testAnnotationProcessor(libs.hilt.android.compiler)
+
+    // OkHttp3 Logger
+    implementation(libs.logging.interceptor)
+
+    // Serialization
+    implementation(libs.kotlinx.serialization.json)
 }

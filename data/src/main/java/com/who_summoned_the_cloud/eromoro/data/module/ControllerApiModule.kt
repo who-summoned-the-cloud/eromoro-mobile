@@ -5,6 +5,7 @@ import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
+import okhttp3.OkHttpClient
 import org.openapitools.client.apis.CourseControllerApi
 import org.openapitools.client.apis.FeedbackControllerApi
 import org.openapitools.client.apis.UserControllerApi
@@ -25,23 +26,35 @@ object ControllerApiModule {
     @Singleton
     fun providesUserControllerApi(
         @Named("serverUrl") serverUrl: String,
+        okHttpClient: OkHttpClient,
     ): UserControllerApi {
-        return UserControllerApi(basePath = serverUrl)
+        return UserControllerApi(
+            basePath = serverUrl,
+            client = okHttpClient,
+        )
     }
 
     @Provides
     @Singleton
     fun providesCourseControllerApi(
         @Named("serverUrl") serverUrl: String,
+        okHttpClient: OkHttpClient,
     ): CourseControllerApi {
-        return CourseControllerApi(basePath = serverUrl)
+        return CourseControllerApi(
+            basePath = serverUrl,
+            client = okHttpClient,
+        )
     }
 
     @Provides
     @Singleton
     fun providesFeedbackControllerApi(
         @Named("serverUrl") serverUrl: String,
+        okHttpClient: OkHttpClient,
     ): FeedbackControllerApi {
-        return FeedbackControllerApi(basePath = serverUrl)
+        return FeedbackControllerApi(
+            basePath = serverUrl,
+            client = okHttpClient,
+        )
     }
 }
