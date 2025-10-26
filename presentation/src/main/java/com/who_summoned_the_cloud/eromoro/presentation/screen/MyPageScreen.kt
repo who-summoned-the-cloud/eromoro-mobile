@@ -65,6 +65,7 @@ fun MyPageScreen(
     likedCourseList: Fetch<List<MyPageScreenLikedCourse>, Unit>,
     showLoadingAtTheEndOfLikedCourse: Boolean,
     onModifyProfileClicked: () -> Unit,
+    onUsedCourseCardClicked: () -> Unit,
     onGoToLikedCourseListButtonClicked: () -> Unit,
     onNewLikedCoursePageRequest: () -> Unit,
     onLogoutButtonClicked: () -> Unit,
@@ -80,6 +81,7 @@ fun MyPageScreen(
             .verticalScroll(rememberScrollState())
             .onGloballyPositioned { width = with(density) { it.size.width.toDp() } }
     ) {
+        Spacer(modifier = Modifier.height(SystemUiPadding.statusBarHeight))
         Text(
             text = "마이페이지",
             fontSize = 20.sp,
@@ -154,21 +156,23 @@ fun MyPageScreen(
             modifier = Modifier.padding(horizontal = 16.dp),
         ) {
             listOf(
-                Triple("이용한 코스", R.raw.image_star_course, courseCount),
-                Triple("제보 리워드", R.raw.image_star_point, point),
-            ).forEach { (label, icon, value) ->
+                Triple("이용한 코스" to courseCount, R.raw.image_star_course, onUsedCourseCardClicked),
+                Triple("제보 리워드" to point, R.raw.image_star_point, {}),
+            ).forEach { (values, icon, onClick) ->
                 Box(
                     contentAlignment = Alignment.Center,
                     modifier = Modifier
                         .weight(1f)
                         .background(color = Colors.gray[100], shape = RoundedCornerShape(14.dp))
+                        .clip(RoundedCornerShape(14.dp))
+                        .clickable { onClick() }
                 ) {
                     Column(
                         horizontalAlignment = Alignment.CenterHorizontally,
                         modifier = Modifier.padding(vertical = 16.dp),
                     ) {
                         Text(
-                            text = label,
+                            text = values.first,
                             fontSize = 14.sp,
                             fontWeight = FontWeight.Medium,
                             color = Colors.gray[700],
@@ -184,9 +188,9 @@ fun MyPageScreen(
                                 contentDescription = null,
                                 modifier = Modifier.size(20.dp)
                             )
-                            if (value != null) {
+                            values.second?.let {
                                 Text(
-                                    text = value.toLocaleString(),
+                                    text = it.toLocaleString(),
                                     fontSize = 14.sp,
                                     fontWeight = FontWeight.Normal,
                                     color = Colors.gray[500],
@@ -322,7 +326,7 @@ fun MyPageScreen(
                     modifier = Modifier
                         .fillMaxWidth()
                         .clip(RoundedCornerShape(8.dp))
-                        .clickable { onClick },
+                        .clickable { onClick() },
                 ) {
                     Text(
                         text = label,
@@ -361,6 +365,7 @@ fun PreviewMyPageScreen() {
         ),
         showLoadingAtTheEndOfLikedCourse = true,
         onModifyProfileClicked = {},
+        onUsedCourseCardClicked = {},
         onGoToLikedCourseListButtonClicked = {},
         onNewLikedCoursePageRequest = {},
         onLogoutButtonClicked = {},

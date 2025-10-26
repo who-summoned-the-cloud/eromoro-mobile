@@ -10,7 +10,8 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.text.input.TextFieldState
+import androidx.compose.foundation.text.input.delete
+import androidx.compose.foundation.text.input.rememberTextFieldState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -26,19 +27,19 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.who_summoned_the_cloud.eromoro.common.model.Position
 import com.who_summoned_the_cloud.eromoro.presentation.component.CustomButton
 import com.who_summoned_the_cloud.eromoro.presentation.component.CustomElevatedBackButton
 import com.who_summoned_the_cloud.eromoro.presentation.component.CustomElevatedCurrentPositionButton
+import com.who_summoned_the_cloud.eromoro.presentation.component.CustomMap
 import com.who_summoned_the_cloud.eromoro.presentation.component.CustomNonModalBottomSheet
 import com.who_summoned_the_cloud.eromoro.presentation.component.CustomOutlinedButton
 import com.who_summoned_the_cloud.eromoro.presentation.component.CustomProgressIndicator
 import com.who_summoned_the_cloud.eromoro.presentation.component.CustomSingleLineInputField
 import com.who_summoned_the_cloud.eromoro.presentation.component.CustomSlider
-import com.who_summoned_the_cloud.eromoro.presentation.model.CustomMapScope
-import com.who_summoned_the_cloud.eromoro.presentation.component.CustomMap
 import com.who_summoned_the_cloud.eromoro.presentation.model.CenterMarkerType
+import com.who_summoned_the_cloud.eromoro.presentation.model.CustomMapScope
 import com.who_summoned_the_cloud.eromoro.presentation.model.MapCourseGeneratingScreenMode
-import com.who_summoned_the_cloud.eromoro.common.model.Position
 import com.who_summoned_the_cloud.eromoro.presentation.theme.Colors
 import com.who_summoned_the_cloud.eromoro.presentation.util.SystemUiPadding
 import kotlin.math.roundToInt
@@ -91,8 +92,8 @@ fun MapCourseGeneratingScreen(
                     ) {
                         Text(
                             text = when (mode) {
-                                is MapCourseGeneratingScreenMode.SelectingStart -> "${mode.nickname}님, 어디서 출발하시나요?"
-                                is MapCourseGeneratingScreenMode.SelectingEnd -> "${mode.nickname}님, 어디로 가시나요?"
+                                is MapCourseGeneratingScreenMode.SelectingStart -> "${mode.nickname?.let { "${it}님, " } ?: ""}어디서 출발하시나요?"
+                                is MapCourseGeneratingScreenMode.SelectingEnd -> "${mode.nickname?.let { "${it}님, " } ?: ""}어디로 가시나요?"
                                 is MapCourseGeneratingScreenMode.SelectingDuration -> "추천받으실 코스의 소요시간을 설정해주세요"
                                 is MapCourseGeneratingScreenMode.Waiting -> "해당 조건에 맞춘 코스를 짜는 중이에요.."
                             },
@@ -136,10 +137,17 @@ fun MapCourseGeneratingScreen(
                                         mode.onSearchFieldClicked()
                                     },
                                 ) {
+                                    val state = rememberTextFieldState()
+
+                                    LaunchedEffect(mode.currentAddress) {
+                                        state.edit {
+                                            delete(0, state.text.length)
+                                            append(mode.currentAddress)
+                                        }
+                                    }
+
                                     CustomSingleLineInputField(
-                                        state = TextFieldState(
-                                            initialText = mode.currentAddress ?: ""
-                                        ),
+                                        state = state,
                                         placeholder = if (isStart) "어디서 출발하나요?" else "어디로 갈까요?",
                                         isReadonly = true,
                                     )

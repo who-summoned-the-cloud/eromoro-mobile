@@ -76,8 +76,8 @@ fun HomeScreen(
     nickname: String?,
     nearbyPlaces: Fetch<List<HomeScreenPlace>, Unit>,
     showLoadingAtTheEndOfNearbyPlaces: Boolean,
-    recommendingCity: String?,
-    recommendingCountry: String?,
+    recommendingSido: String?,
+    recommendingSigungu: String?,
     recommendedPlaces: Fetch<List<HomeScreenPlace>, Unit>,
     showLoadingAtTheEndOfRecommendedPlaces: Boolean,
     onSearchBarClicked: () -> Unit,
@@ -476,8 +476,8 @@ fun HomeScreen(
                         horizontalArrangement = Arrangement.spacedBy(6.dp)
                     ) {
                         listOf(
-                            recommendingCity to onAddressDropdownClicked,
-                            recommendingCountry to onAddressDropdownClicked,
+                            recommendingSido to onAddressDropdownClicked,
+                            recommendingSigungu to onAddressDropdownClicked,
                         ).forEach { (text, onClick) ->
                             Box(
                                 modifier = Modifier
@@ -716,8 +716,8 @@ fun PreviewHomeScreen() {
             },
         ),
         showLoadingAtTheEndOfNearbyPlaces = true,
-        recommendingCity = "서울",
-        recommendingCountry = "종로구",
+        recommendingSido = "서울",
+        recommendingSigungu = "종로구",
         recommendedPlaces = Fetch.Success(
             listOf(
                 HomeScreenPlace(

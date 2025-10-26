@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ModalBottomSheet
+import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
@@ -19,11 +20,16 @@ import com.who_summoned_the_cloud.eromoro.presentation.theme.Colors
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CustomModalBottomSheet(
+    isSheetGestureEnabled: Boolean = true,
     onDismissRequest: () -> Unit,
     content: @Composable ColumnScope.() -> Unit,
 ) {
+    val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+
     ModalBottomSheet(
+        sheetState = sheetState,
         shape = RoundedCornerShape(topStart = 22.dp, topEnd = 22.dp),
+        sheetGesturesEnabled = isSheetGestureEnabled,
         containerColor = Colors.white,
         dragHandle = {
             Box(
