@@ -28,9 +28,9 @@ class ConditionalLoggingInterceptor : Interceptor {
             ?.startsWith("multipart/", ignoreCase = true) == true
 
         return if (isMultipart) {
-            bodyLogger.intercept(chain)
-        } else {
             headerLogger.intercept(chain)
+        } else {
+            bodyLogger.intercept(chain)
         }
     }
 }

@@ -7,13 +7,12 @@ import com.who_summoned_the_cloud.eromoro.data.model.ListableReport
 import com.who_summoned_the_cloud.eromoro.data.model.Report
 import com.who_summoned_the_cloud.eromoro.data.model.ReportRequest
 import com.who_summoned_the_cloud.eromoro.data.preference.AuthPreference
-import com.who_summoned_the_cloud.eromoro.data.repository.AuthorizedRepository
-import javax.inject.Inject
 import org.openapitools.client.apis.FeedbackControllerApi
 import org.openapitools.client.apis.UserControllerApi
 import org.openapitools.client.models.CreateDto
 import org.openapitools.client.models.DetailResultDto
 import org.openapitools.client.models.MyFeedbackDto
+import javax.inject.Inject
 import javax.inject.Singleton
 
 @Singleton

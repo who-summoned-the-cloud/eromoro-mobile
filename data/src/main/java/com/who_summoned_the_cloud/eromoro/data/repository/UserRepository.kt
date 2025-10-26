@@ -1,5 +1,6 @@
 package com.who_summoned_the_cloud.eromoro.data.repository
 
+import androidx.core.net.toUri
 import com.who_summoned_the_cloud.eromoro.common.model.UserType
 import com.who_summoned_the_cloud.eromoro.data.model.SignUpRequest
 import com.who_summoned_the_cloud.eromoro.data.model.User
@@ -14,6 +15,7 @@ import okhttp3.RequestBody.Companion.toRequestBody
 import org.openapitools.client.apis.UserControllerApi
 import org.openapitools.client.models.CheckUsernameIsSameDTO
 import org.openapitools.client.models.CheckUsernameIsSameResultDTO
+import org.openapitools.client.models.GetMyPageInfoResultDTO
 import org.openapitools.client.models.UpdateUserInfoDTO
 import javax.inject.Inject
 import javax.inject.Named
@@ -84,7 +86,25 @@ class UserRepository @Inject constructor(
     }
 
     suspend fun getUserInfo(): User {
-        TODO()
+        val response = userControllerApi.withAuth { getMyPageInfo() }
+
+        return response.result?.let {
+            User(
+                id = it.username!!,
+                nickname = it.nickname!!,
+                type = when (it.userType) {
+                    GetMyPageInfoResultDTO.UserType.DISABLED -> UserType.PHYSICAL_DISABILITY
+                    GetMyPageInfoResultDTO.UserType.SENIOR -> UserType.SENIOR
+                    GetMyPageInfoResultDTO.UserType.PREGNANT -> UserType.PREGNANT
+                    GetMyPageInfoResultDTO.UserType.INFANT_GUARDIAN -> UserType.INFANT
+                    GetMyPageInfoResultDTO.UserType.CHILD -> UserType.INFANT
+                    GetMyPageInfoResultDTO.UserType.USER -> UserType.OTHER
+                    null -> UserType.OTHER
+                },
+                image = it.profileImage?.toUri(),
+                courseCount = it.courseCount ?: 0
+            )
+        } ?: throw IllegalStateException("response is null")
     }
 
     /**
