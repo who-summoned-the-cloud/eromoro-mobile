@@ -8,6 +8,7 @@ import dagger.hilt.components.SingletonComponent
 import okhttp3.OkHttpClient
 import org.openapitools.client.apis.CourseControllerApi
 import org.openapitools.client.apis.FeedbackControllerApi
+import org.openapitools.client.apis.SpotControllerApi
 import org.openapitools.client.apis.UserControllerApi
 import javax.inject.Named
 import javax.inject.Singleton
@@ -53,6 +54,18 @@ object ControllerApiModule {
         okHttpClient: OkHttpClient,
     ): FeedbackControllerApi {
         return FeedbackControllerApi(
+            basePath = serverUrl,
+            client = okHttpClient,
+        )
+    }
+
+    @Provides
+    @Singleton
+    fun providesSpotControllerApi(
+        @Named("serverUrl") serverUrl: String,
+        okHttpClient: OkHttpClient,
+    ): SpotControllerApi {
+        return SpotControllerApi(
             basePath = serverUrl,
             client = okHttpClient,
         )

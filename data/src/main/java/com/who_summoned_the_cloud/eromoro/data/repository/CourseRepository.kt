@@ -1,6 +1,7 @@
 package com.who_summoned_the_cloud.eromoro.data.repository
 
 import android.content.SharedPreferences
+import androidx.core.content.edit
 import androidx.core.net.toUri
 import com.who_summoned_the_cloud.eromoro.common.model.ObstacleType
 import com.who_summoned_the_cloud.eromoro.common.model.Position
@@ -12,7 +13,6 @@ import com.who_summoned_the_cloud.eromoro.data.model.GeneratedCourse
 import com.who_summoned_the_cloud.eromoro.data.model.LikedCourse
 import com.who_summoned_the_cloud.eromoro.data.model.RegionalCourse
 import com.who_summoned_the_cloud.eromoro.data.preference.AuthPreference
-import com.who_summoned_the_cloud.eromoro.data.repository.AuthorizedRepository
 import org.openapitools.client.apis.CourseControllerApi
 import org.openapitools.client.apis.UserControllerApi
 import org.openapitools.client.models.CourseInfoDto
@@ -21,7 +21,6 @@ import org.openapitools.client.models.CoursePointListDto
 import org.openapitools.client.models.GenerateDto
 import org.openapitools.client.models.GetCourseResultDto
 import org.openapitools.client.models.LatLon
-import androidx.core.content.edit
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -38,15 +37,15 @@ class CourseRepository @Inject constructor(
     }
 
     /**
-     * 지역별 코스 목록 조회
+     * 관광지별 코스 목록 조회
      */
     suspend fun getRegionalCourseList(
         page: Int,
         size: Int,
-        regionId: Long,
+        spotId: Long,
     ): List<RegionalCourse> {
         val response = courseControllerApi.withAuth {
-            getCourseList(courseType = CourseControllerApi.CourseTypeGetCourseList.SPOT, spotId = regionId)
+            getCourseList(courseType = CourseControllerApi.CourseTypeGetCourseList.SPOT, spotId = spotId)
         }
 
         val courses = response.result?.courseList?.map {
