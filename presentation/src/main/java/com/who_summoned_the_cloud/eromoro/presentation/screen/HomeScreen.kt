@@ -74,6 +74,7 @@ fun HomeScreen(
     search: TextFieldState,
     currentLocation: Fetch<String, Unit>,
     nickname: String?,
+    showNearbyCourses: Boolean = false,  // FIXME: 서비스 준비 시 활성화
     nearbyPlaces: Fetch<List<HomeScreenPlace>, Unit>,
     showLoadingAtTheEndOfNearbyPlaces: Boolean,
     recommendingSido: String?,
@@ -311,7 +312,7 @@ fun HomeScreen(
                 }
             }
 
-            item {
+            if (showNearbyCourses) item {
                 Column(
                     verticalArrangement = Arrangement.spacedBy(16.dp),
                     modifier = Modifier.padding(bottom = 40.dp),
