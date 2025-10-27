@@ -13,6 +13,7 @@ import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.composable
 import androidx.navigation.navigation
+import com.who_summoned_the_cloud.eromoro.app.model.ToastCallback
 import com.who_summoned_the_cloud.eromoro.app.util.getLocation
 import com.who_summoned_the_cloud.eromoro.app.util.launch
 import com.who_summoned_the_cloud.eromoro.common.model.Position
@@ -29,6 +30,7 @@ import kotlinx.coroutines.launch
 
 fun NavGraphBuilder.addMapRoute(
     navController: NavHostController,
+    showToast: ToastCallback,
 ) {
     navigation(
         route = "/map", startDestination = "/map/new"

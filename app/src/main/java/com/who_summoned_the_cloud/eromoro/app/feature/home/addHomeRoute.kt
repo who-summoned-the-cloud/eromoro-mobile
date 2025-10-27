@@ -12,6 +12,8 @@ import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.composable
 import androidx.navigation.navigation
+import com.who_summoned_the_cloud.eromoro.app.model.ToastCallback
+import com.who_summoned_the_cloud.eromoro.app.util.FinishHandler
 import com.who_summoned_the_cloud.eromoro.app.util.NavigationBarApp
 import com.who_summoned_the_cloud.eromoro.app.util.getLocation
 import com.who_summoned_the_cloud.eromoro.app.util.launch
@@ -27,6 +29,7 @@ import kotlinx.coroutines.launch
 
 fun NavGraphBuilder.addHomeRoute(
     navController: NavHostController,
+    showToast: ToastCallback,
 ) {
     navigation(
         startDestination = "/home/main",
@@ -41,19 +44,25 @@ fun NavGraphBuilder.addHomeRoute(
             val search = rememberTextFieldState()
             var nickname: String? by remember { mutableStateOf(null) }
             var currentLocation: Fetch<String, Unit> by remember { mutableStateOf(Fetch.Loading()) }
-            var nearbyPlaces: Fetch<List<HomeScreenPlace>, Unit> by remember { mutableStateOf(Fetch.Loading()) }
+
             val recommendedPlaces: Fetch<List<HomeScreenPlace>, Unit> by remember {
-                mutableStateOf(
-                    Fetch.Loading()
-                )
+                mutableStateOf(Fetch.Loading())
             }
 
-            var sigungu: String? by remember { mutableStateOf(null) }
             var sido: String? by remember {
                 mutableStateOf(
-                    KoreanAreas
+                    value = KoreanAreas
                         .getAllSido()
-                        .first()
+                        .random()
+                )
+            }
+            var sigungu: String? by remember {
+                mutableStateOf(
+                    value = sido?.let { sido ->
+                        KoreanAreas
+                            .getAllSigungu(sido)
+                            ?.random()
+                    },
                 )
             }
 
@@ -88,8 +97,8 @@ fun NavGraphBuilder.addHomeRoute(
                     search = search,
                     currentLocation = currentLocation,
                     nickname = nickname,
-                    nearbyPlaces = nearbyPlaces,
-                    showLoadingAtTheEndOfNearbyPlaces = false,
+                    nearbyPlaces = Fetch.Error(Unit),  // TODO
+                    showLoadingAtTheEndOfNearbyPlaces = false,  // TODO
                     recommendingSido = sido,
                     recommendingSigungu = sigungu,
                     recommendedPlaces = recommendedPlaces,  // TODO
@@ -101,7 +110,7 @@ fun NavGraphBuilder.addHomeRoute(
                     },
                     onMyLikedCourseButtonClicked = {
                         MainScope().launch {
-                            navController.navigate("/mypage/liked")
+                            navController.navigate("/my-page/course-list/liked")
                         }
                     },
                     onLatestCourseButtonClicked = {
@@ -125,8 +134,11 @@ fun NavGraphBuilder.addHomeRoute(
                 sigungu = sigungu,
                 onSidoSelected = { sido = it },
                 onSigunguSelected = { sigungu = it },
+                isDoneButtonEnabled = sigungu != null,
                 onCompleteButtonClicked = { showAddressBottomSheet = false },
             )
+
+            FinishHandler(showToast = showToast)
         }
 
         composable(

@@ -10,18 +10,12 @@ import javax.inject.Inject
 class LoginViewModel @Inject constructor(
     private val authRepository: AuthRepository,
     private val userRepository: UserRepository,
-): ViewModel() {
+) : ViewModel() {
 
-    suspend fun login(id: String, password: String): Boolean {
-        return runCatching {
-            authRepository.login(
-                id = id,
-                password = password,
-            )
-        }.isSuccess
-    }
-
-    suspend fun signUp(id: String, password: String) {
-
+    suspend fun login(id: String, password: String) {
+        return authRepository.login(
+            id = id,
+            password = password,
+        )
     }
 }

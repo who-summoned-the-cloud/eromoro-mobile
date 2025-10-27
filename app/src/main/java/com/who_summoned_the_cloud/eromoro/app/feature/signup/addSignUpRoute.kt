@@ -17,6 +17,7 @@ import androidx.navigation.NavType
 import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
 import androidx.navigation.navigation
+import com.who_summoned_the_cloud.eromoro.app.model.ToastCallback
 import com.who_summoned_the_cloud.eromoro.app.util.createImageUri
 import com.who_summoned_the_cloud.eromoro.app.util.launch
 import com.who_summoned_the_cloud.eromoro.app.util.uriToFile
@@ -32,6 +33,7 @@ import kotlinx.coroutines.launch
 
 fun NavGraphBuilder.addSignUpRoute(
     navController: NavHostController,
+    showToast: ToastCallback,
 ) {
     navigation(
         route = "/sign-up", startDestination = "/sign-up/form"

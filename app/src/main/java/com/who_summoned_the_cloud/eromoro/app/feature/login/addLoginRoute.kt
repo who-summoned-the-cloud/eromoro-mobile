@@ -12,8 +12,11 @@ import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.navigation
+import com.who_summoned_the_cloud.eromoro.app.model.ToastCallback
+import com.who_summoned_the_cloud.eromoro.app.util.FinishHandler
 import com.who_summoned_the_cloud.eromoro.app.util.launch
 import com.who_summoned_the_cloud.eromoro.presentation.modal.LoadingModal
+import com.who_summoned_the_cloud.eromoro.presentation.model.ToastType
 import com.who_summoned_the_cloud.eromoro.presentation.screen.LoginFormScreen
 import com.who_summoned_the_cloud.eromoro.presentation.screen.LoginMethodScreen
 import kotlinx.coroutines.MainScope
@@ -21,12 +24,12 @@ import kotlinx.coroutines.launch
 
 fun NavGraphBuilder.addLoginRoute(
     navController: NavHostController,
+    showToast: ToastCallback,
 ) {
     navigation(
         route = "/login",
         startDestination = "/login/method",
     ) {
-
         composable(
             route = "/login/method"
         ) {
@@ -38,11 +41,15 @@ fun NavGraphBuilder.addLoginRoute(
                 },
                 onKakaoLoginButtonClicked = {
                     // TODO
+                    showToast("소셜 로그인은 준비중이에요!", ToastType.ERROR)
                 },
                 onGoogleLoginButtonClicked = {
                     // TODO
+                    showToast("소셜 로그인은 준비중이에요!", ToastType.ERROR)
                 },
             )
+
+            FinishHandler(showToast = showToast)
         }
 
         composable(
@@ -73,19 +80,20 @@ fun NavGraphBuilder.addLoginRoute(
                 onPasswordVisibilityButtonClicked = { isPasswordVisible = it },
                 onLoginButtonClicked = {
                     viewModel.launch {
-                        val isSucceed = viewModel.login(
-                            id = id.text.toString(),
-                            password = password.text.toString(),
-                        )
-
-                        if (isSucceed) {
+                        runCatching {
+                            viewModel.login(
+                                id = id.text.toString(),
+                                password = password.text.toString(),
+                            )
+                        }.onSuccess {
                             MainScope().launch {
                                 navController.navigate("/home") {
                                     popUpTo("/splash") { inclusive = false }
                                 }
                             }
-                        } else {
-                            // TODO
+                        }.onFailure {
+                            // FIXME: 세분화된 메시징
+                            showToast("로그인에 실패했습니다.", ToastType.ERROR)
                         }
                     }
                 },

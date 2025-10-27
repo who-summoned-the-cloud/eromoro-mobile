@@ -14,6 +14,8 @@ import androidx.navigation.NavType
 import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
 import androidx.navigation.navigation
+import com.who_summoned_the_cloud.eromoro.app.model.ToastCallback
+import com.who_summoned_the_cloud.eromoro.app.util.FinishHandler
 import com.who_summoned_the_cloud.eromoro.app.util.NavigationBarApp
 import com.who_summoned_the_cloud.eromoro.app.util.launch
 import com.who_summoned_the_cloud.eromoro.presentation.component.CustomConfirmPopup
@@ -21,6 +23,7 @@ import com.who_summoned_the_cloud.eromoro.presentation.modal.LoadingModal
 import com.who_summoned_the_cloud.eromoro.presentation.model.Fetch
 import com.who_summoned_the_cloud.eromoro.presentation.model.MyPageCourseListScreenCourse
 import com.who_summoned_the_cloud.eromoro.presentation.model.MyPageScreenLikedCourse
+import com.who_summoned_the_cloud.eromoro.presentation.model.ToastType
 import com.who_summoned_the_cloud.eromoro.presentation.screen.MyPageCourseListScreen
 import com.who_summoned_the_cloud.eromoro.presentation.screen.MyPageScreen
 import kotlinx.coroutines.MainScope
@@ -28,6 +31,7 @@ import kotlinx.coroutines.launch
 
 fun NavGraphBuilder.addMyPageRoute(
     navController: NavHostController,
+    showToast: ToastCallback,
 ) {
     navigation(
         route = "/my-page",
@@ -90,6 +94,7 @@ fun NavGraphBuilder.addMyPageRoute(
                     showLoadingAtTheEndOfLikedCourse = !isLikedCoursesFetchedAll,
                     onModifyProfileClicked = {
                         // TODO
+                        showToast("아직 준비중인 기능입니다!", ToastType.ERROR)
                     },
                     onUsedCourseCardClicked = {
                         MainScope().launch { navController.navigate("/my-page/course-list/used") }
@@ -103,6 +108,7 @@ fun NavGraphBuilder.addMyPageRoute(
                     onLogoutButtonClicked = { showLogoutPopup = true },
                     onLeaveButtonClicked = {
                         // TODO
+                        showToast("아직 준비중인 기능입니다!", ToastType.ERROR)
                     },
                 )
             }
@@ -128,12 +134,16 @@ fun NavGraphBuilder.addMyPageRoute(
                                     inclusive = false,
                                 )
                             }
+                        }.onFailure {
+                            showToast("로그아웃에 실패했습니다.", ToastType.ERROR)
                         }
 
                         showLoading = false
                     }
                 }
             )
+
+            FinishHandler(showToast = showToast)
         }
 
         composable(

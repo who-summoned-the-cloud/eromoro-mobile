@@ -42,7 +42,7 @@ fun NavigationBarApp(
 
                 MainScope().launch {
                     navController.navigate(route) {
-                        popUpTo(navController.graph.startDestinationId) {
+                        if (it != NavigationBarItem.MAP) popUpTo(navController.graph.startDestinationId) {
                             inclusive = false
                         }
                     }
