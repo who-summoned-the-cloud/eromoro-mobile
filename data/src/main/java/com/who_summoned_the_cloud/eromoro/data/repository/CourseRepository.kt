@@ -196,8 +196,8 @@ class CourseRepository @Inject constructor(
                 distance = (it.distance!! * 1000).toInt(),
                 positions = it.points?.map { point ->
                     Position(
-                        latitude = point.lat!!.toDouble(),
-                        longitude = point.lon!!.toDouble(),
+                        latitude = point.latitude!!.toDouble(),
+                        longitude = point.longitude!!.toDouble(),
                     )
                 } ?: emptyList(),
             )

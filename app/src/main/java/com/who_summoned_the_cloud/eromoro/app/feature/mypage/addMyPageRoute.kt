@@ -307,10 +307,13 @@ fun NavGraphBuilder.addMyPageRoute(
         val viewModel = getViewModel(backStackEntry)
         val courseId = backStackEntry.arguments?.getLong("courseId") ?: return@composable
 
+        var showLoading by remember { mutableStateOf(false) }
         var positions: List<Position>? by remember { mutableStateOf(null) }
 
         LaunchedEffect(courseId) {
             viewModel.launch {
+                showLoading = true
+
                 runCatching {
                     getCoursePositions(courseId = courseId)
                 }.onSuccess {
@@ -318,10 +321,13 @@ fun NavGraphBuilder.addMyPageRoute(
                 }.onFailure {
                     showToast("오류가 발생했습니다.", ToastType.ERROR)
                 }
+
+                showLoading = false
             }
         }
 
         MapScreen(
+            mainCourse = positions,
             onBackButtonClicked = {
                 MainScope().launch { navController.popBackStack() }
             }
@@ -340,5 +346,7 @@ fun NavGraphBuilder.addMyPageRoute(
                 }
             }
         }
+
+        if (showLoading) LoadingModal()
     }
 }

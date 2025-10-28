@@ -96,7 +96,7 @@ fun MyPageCourseListScreen(
                 }
             }
             Box(
-                modifier = Modifier.padding(horizontal = 16.dp),
+                modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
             ) {
                 CustomSingleLineInputField(
                     state = search,

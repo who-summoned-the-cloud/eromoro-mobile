@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import com.naver.maps.map.compose.NaverMapComposable
 import com.who_summoned_the_cloud.eromoro.common.model.ObstacleType
 import com.who_summoned_the_cloud.eromoro.common.model.Position
 import com.who_summoned_the_cloud.eromoro.presentation.component.CustomElevatedBackButton
@@ -23,9 +24,11 @@ fun MapScreen(
     end: Position? = mainCourse?.lastOrNull(),
     obstacles: List<Pair<Position, ObstacleType>>? = null,
     centerMarkerType: CenterMarkerType? = null,
-    onBackButtonClicked: () -> Unit,
     onPositionChanged: ((Position) -> Unit)? = null,
-    content: @Composable CustomMapScope.() -> Unit,
+    isInteracting: Boolean = true,
+    onClick: (() -> Unit)? = null,
+    onBackButtonClicked: () -> Unit,
+    content: @Composable @NaverMapComposable (CustomMapScope.() -> Unit)? = null,
 ) {
     Box(
         modifier = Modifier.fillMaxSize()
@@ -39,6 +42,8 @@ fun MapScreen(
             obstacles = obstacles,
             centerMarkerType = centerMarkerType,
             onPositionChanged = onPositionChanged,
+            isInteracting = isInteracting,
+            onClick = onClick,
             content = content,
         )
         Box(
