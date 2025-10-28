@@ -86,12 +86,9 @@ fun MapCourseViewerScreen(
             mainCourse = mainCourse,
             otherCourses = otherCourses,
         ) {
-            val density = LocalDensity.current
-            val statusBarPadding = SystemUiPadding.statusBarHeight
-
             LaunchedEffect(mainCourse) {
                 mainCourse?.let {
-                    val (start, end, top, bottom) = listOf(
+                    val (top, bottom, start, end) = listOf(
                         mainCourse.minOf { it.latitude },
                         mainCourse.maxOf { it.latitude },
                         mainCourse.minOf { it.longitude },
@@ -99,8 +96,8 @@ fun MapCourseViewerScreen(
                     )
 
                     val middle = Position(
-                        latitude = (start + end) / 2,
-                        longitude = (top + bottom) / 2,
+                        latitude = (top + bottom) / 2,
+                        longitude = (start + end) / 2,
                     )
 
                     val pivot = Offset(
@@ -113,11 +110,8 @@ fun MapCourseViewerScreen(
 
                             val totalY = screenCoordinates.size.height
                             val innerY = courseCardCoordinates.size.height
-                            val upperPadding = with(density) {
-                                (statusBarPadding + 60.dp).toPx()
-                            }
 
-                            (totalY - innerY + upperPadding) / 2f
+                            (innerY - totalY) / 2f
                         }
                     )
 
@@ -147,7 +141,7 @@ fun MapCourseViewerScreen(
                 ) {
                     when (courses) {
                         is Fetch.Loading -> {
-
+                            // TODO
                         }
 
                         is Fetch.Success -> {
@@ -244,7 +238,7 @@ fun MapCourseViewerScreen(
                                                 letterSpacing = (-0.3).sp,
                                             )
                                             Spacer(modifier = Modifier.height(6.dp))
-                                            Row(
+                                            if (course.rating != null) Row(
                                                 horizontalArrangement = Arrangement.spacedBy(8.dp),
                                                 verticalAlignment = Alignment.CenterVertically,
                                             ) {
@@ -260,7 +254,7 @@ fun MapCourseViewerScreen(
                                                 )
                                             }
                                             Spacer(modifier = Modifier.height(8.dp))
-                                            Text(
+                                            if (course.obstacles != null) Text(
                                                 text = ObstacleType.entries
                                                     .mapNotNull {
                                                         course.obstacles[it]

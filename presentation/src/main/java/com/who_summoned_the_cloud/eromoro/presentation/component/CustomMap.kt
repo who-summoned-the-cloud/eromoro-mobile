@@ -66,6 +66,8 @@ fun CustomMap(
     obstacles: List<Pair<Position, ObstacleType>>? = null,
     centerMarkerType: CenterMarkerType? = null,
     onPositionChanged: ((Position) -> Unit)? = null,
+    isInteracting: Boolean = true,
+    onClick: (() -> Unit)? = null,
     content: @Composable @NaverMapComposable (CustomMapScope.() -> Unit)? = null,
 ) {
     if (LocalInspectionMode.current) {
@@ -141,8 +143,13 @@ fun CustomMap(
 
     var map: NaverMap? by remember { mutableStateOf(null) }
 
-    val uiSettings = remember {
+    val uiSettings = remember(isInteracting) {
         MapUiSettings(
+            isScrollGesturesEnabled = isInteracting,
+            isZoomGesturesEnabled = isInteracting,
+            isRotateGesturesEnabled = isInteracting,
+            isTiltGesturesEnabled = isInteracting,
+            isStopGesturesEnabled = isInteracting,
             isCompassEnabled = false,
             isScaleBarEnabled = false,
             isZoomControlEnabled = false,
@@ -171,6 +178,7 @@ fun CustomMap(
             modifier = Modifier.fillMaxSize(),
             cameraPositionState = camera,
             uiSettings = uiSettings,
+            onMapClick = { _, _ -> onClick?.invoke() }
         ) {
             // 코스(음영 처리)
             otherCourses

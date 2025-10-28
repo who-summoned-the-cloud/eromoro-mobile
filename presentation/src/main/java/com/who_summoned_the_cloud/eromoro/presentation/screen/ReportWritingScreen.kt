@@ -3,7 +3,6 @@ package com.who_summoned_the_cloud.eromoro.presentation.screen
 import android.net.Uri
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -23,6 +22,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -39,13 +39,13 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil3.compose.rememberAsyncImagePainter
 import com.who_summoned_the_cloud.eromoro.common.model.ObstacleType
+import com.who_summoned_the_cloud.eromoro.common.model.Position
 import com.who_summoned_the_cloud.eromoro.presentation.R
 import com.who_summoned_the_cloud.eromoro.presentation.component.CustomButton
 import com.who_summoned_the_cloud.eromoro.presentation.component.CustomChip
+import com.who_summoned_the_cloud.eromoro.presentation.component.CustomMap
 import com.who_summoned_the_cloud.eromoro.presentation.component.CustomSingleLineInputField
 import com.who_summoned_the_cloud.eromoro.presentation.component.CustomToggle
-import com.who_summoned_the_cloud.eromoro.presentation.component.CustomMap
-import com.who_summoned_the_cloud.eromoro.common.model.Position
 import com.who_summoned_the_cloud.eromoro.presentation.theme.Colors
 import com.who_summoned_the_cloud.eromoro.presentation.util.SystemUiPadding
 import com.who_summoned_the_cloud.eromoro.presentation.util.drawUpperShadow
@@ -210,20 +210,25 @@ fun ReportWritingScreen(
                         color = Colors.gray[500],
                         modifier = Modifier.padding(start = 8.dp)
                     )
-                    if (currentPosition != null && address != null) Box(
+                    Box(
                         modifier = Modifier
                             .height(width - 32.dp)
                             .clip(RoundedCornerShape(14.dp))
-                            .clickable(
-                                indication = null,
-                                interactionSource = null,
-                                onClick = onMapClicked,
-                            )
                     ) {
                         CustomMap(
-                            currentPosition = currentPosition
-                        )
+                            currentPosition = currentPosition,
+                            onClick = onMapClicked,
+                        ) {
+                            LaunchedEffect(currentPosition) {
+                                currentPosition?.let { moveMap(it) }
+                            }
+                        }
                     }
+                    CustomSingleLineInputField(
+                        state = TextFieldState(address ?: ""),
+                        placeholder = "지도를 눌러 주소 정보를 남겨주세요.",
+                        isReadonly = true,
+                    )
                 }
                 Spacer(modifier = Modifier.height(160.dp))
             }
@@ -275,7 +280,7 @@ fun PreviewReportWritingScreen() {
             initialText = "주안역 2번출구 쪽 엘레베이터가 고장나서 이용하지 못했어요.\n" + "\n" + "안내 표지판 조차 설치되어있지 않네요 ㅜ"
         ),
         obstacleType = ObstacleType.NO_ELEVATOR,
-        currentPosition = Position( 37.12 to 126.99),
+        currentPosition = Position(37.12 to 126.99),
         address = "인천광역시 미추홀구 주안역 1호선",
         isUpdateMode = false,
         isForLocalGovernance = true,

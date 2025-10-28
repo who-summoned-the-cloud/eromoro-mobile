@@ -25,6 +25,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -42,20 +43,20 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil3.compose.rememberAsyncImagePainter
+import com.who_summoned_the_cloud.eromoro.common.model.Position
 import com.who_summoned_the_cloud.eromoro.common.model.ReportCategory
 import com.who_summoned_the_cloud.eromoro.presentation.R
-import com.who_summoned_the_cloud.eromoro.presentation.component.CustomButton
 import com.who_summoned_the_cloud.eromoro.presentation.component.CustomMap
-import com.who_summoned_the_cloud.eromoro.common.model.Position
+import com.who_summoned_the_cloud.eromoro.presentation.component.CustomProgressIndicator
 import com.who_summoned_the_cloud.eromoro.presentation.theme.Colors
 import com.who_summoned_the_cloud.eromoro.presentation.util.SystemUiPadding
 import java.time.LocalDate
 
 @Composable
 fun ReportDetailScreen(
-    imageUri: Uri?,
+    image: Uri?,
     like: Int?,
-    dislike: Int?,
+    // dislike: Int?,
     category: ReportCategory?,
     title: String?,
     position: Position?,
@@ -67,9 +68,9 @@ fun ReportDetailScreen(
     onEditButtonClicked: () -> Unit,
     onDeleteButtonClicked: () -> Unit,
     onLikeButtonClicked: () -> Unit,
-    onDislikeButtonClicked: () -> Unit,
+    // onDislikeButtonClicked: () -> Unit,  TODO: 싫어요 기능 활성화 시 주석 제거
     onMapClicked: () -> Unit,
-    onModifyLocationButtonClicked: () -> Unit,
+    // onModifyLocationButtonClicked: () -> Unit,  TODO: 위치 수정 기능 활성화 시 주석 해제
 ) {
     val density = LocalDensity.current
     var width by remember { mutableStateOf(400.dp) }
@@ -78,8 +79,7 @@ fun ReportDetailScreen(
         contentAlignment = Alignment.BottomCenter,
         modifier = Modifier
             .background(color = Colors.white)
-            .onGloballyPositioned { with(density) { width = it.size.width.toDp() } }
-    ) {
+            .onGloballyPositioned { with(density) { width = it.size.width.toDp() } }) {
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -91,7 +91,7 @@ fun ReportDetailScreen(
                     .height(400.dp)
             ) {
                 Image(
-                    painter = rememberAsyncImagePainter(model = imageUri),
+                    painter = rememberAsyncImagePainter(model = image),
                     contentDescription = "제보 이미지",
                     modifier = Modifier
                         .fillMaxWidth()
@@ -149,11 +149,15 @@ fun ReportDetailScreen(
                         ) {
                             listOf(
                                 Triple(
-                                    R.drawable.image_thumb_up, like, onLikeButtonClicked
+                                    R.drawable.image_thumb_up,
+                                    like ?: 0,
+                                    onLikeButtonClicked,
                                 ),
-                                Triple(
-                                    R.drawable.image_thumb_down, dislike, onDislikeButtonClicked
-                                ),
+                                // Triple(
+                                //     R.drawable.image_thumb_down,
+                                //     dislike ?: 0,
+                                //     onDislikeButtonClicked,
+                                // ),
                             ).forEach { (icon, count, onClick) ->
                                 Row(
                                     verticalAlignment = Alignment.CenterVertically,
@@ -183,7 +187,7 @@ fun ReportDetailScreen(
                         verticalArrangement = Arrangement.spacedBy(5.dp),
                         modifier = Modifier.padding(24.dp)
                     ) {
-                        Box(
+                        if (category != null) Box(
                             modifier = Modifier
                                 .border(
                                     width = 1.dp,
@@ -192,7 +196,7 @@ fun ReportDetailScreen(
                                 )
                                 .padding(horizontal = 10.dp, vertical = 4.dp),
                         ) {
-                            if (category != null) Text(
+                            Text(
                                 text = when (category) {
                                     ReportCategory.TO_COMMUNITY -> "제보"
                                     ReportCategory.TO_LOCAL_GOVERNANCE -> "신고"
@@ -215,7 +219,6 @@ fun ReportDetailScreen(
                 modifier = Modifier
                     .shadow(elevation = 8.dp, spotColor = Color.Black.copy(alpha = 0.2f))
                     .background(color = Colors.white)
-                    .clickable(indication = null, interactionSource = null, onClick = onMapClicked)
             ) {
                 Column(
                     verticalArrangement = Arrangement.spacedBy(8.dp),
@@ -226,7 +229,15 @@ fun ReportDetailScreen(
                             .clip(RoundedCornerShape(14.dp))
                             .height(width / 3)
                     ) {
-                        CustomMap(currentPosition = position)
+                        CustomMap(
+                            currentPosition = position,
+                            isInteracting = false,
+                            onClick = onMapClicked,
+                        ) {
+                            LaunchedEffect(position) {
+                                position?.let { moveMap(position) }
+                            }
+                        }
                     }
                     if (address != null) Column(
                         verticalArrangement = Arrangement.spacedBy(3.dp),
@@ -283,21 +294,31 @@ fun ReportDetailScreen(
                     fontWeight = FontWeight.Normal,
                     softWrap = true,
                     lineHeight = 24.sp,
-                )
+                ) else {
+                    Box(
+                        contentAlignment = Alignment.Center,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 50.dp)
+                    ) {
+                        CustomProgressIndicator()
+                    }
+                }
             }
             Spacer(modifier = Modifier.height(200.dp))
         }
-        Column {
-            Box(
-                modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
-            ) {
-                CustomButton(
-                    text = "위치 수정하기",
-                    onClick = onModifyLocationButtonClicked,
-                )
-            }
-            Spacer(modifier = Modifier.height(SystemUiPadding.navigationBarHeight))
-        }
+        // TODO: 위치 수정 기능 활성화 시 주석 제거
+        // Column {
+        //     Box(
+        //         modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
+        //     ) {
+        //         CustomButton(
+        //             text = "위치 수정하기",
+        //             onClick = onModifyLocationButtonClicked,
+        //         )
+        //     }
+        //     Spacer(modifier = Modifier.height(SystemUiPadding.navigationBarHeight))
+        // }
     }
 }
 
@@ -305,9 +326,8 @@ fun ReportDetailScreen(
 @Composable
 fun PreviewReportDetailScreen() {
     ReportDetailScreen(
-        imageUri = null,
+        image = null,
         like = 21,
-        dislike = 1,
         category = ReportCategory.TO_LOCAL_GOVERNANCE,
         title = "마포구청역 엘레베이터 고장",
         position = Position(37.566535 to 126.977969),
@@ -319,8 +339,6 @@ fun PreviewReportDetailScreen() {
         onEditButtonClicked = {},
         onDeleteButtonClicked = {},
         onLikeButtonClicked = {},
-        onDislikeButtonClicked = {},
         onMapClicked = {},
-        onModifyLocationButtonClicked = {},
     )
 }

@@ -38,30 +38,32 @@ class UserRepository @Inject constructor(
             .Builder()
             .setType(MultipartBody.FORM)
 
+        val requestJsonObject = ("{" + listOf(
+            "nickname" to request.nickname,
+            "username" to request.id,
+            "password" to request.password,
+            "userType" to when (request.userType) {
+                UserType.OTHER -> "USER"
+                UserType.INFANT -> "INFANT_GUARDIAN"
+                UserType.PHYSICAL_DISABILITY -> "DISABLED"
+                UserType.PREGNANT -> "PREGNANT"
+                UserType.SENIOR -> "SENIOR"
+            },
+        ).joinToString(",") {
+            "\"${it.first}\":\"${it.second}\""
+        } + "}")
+
         requestBodyBuilder.addFormDataPart(
             "request",
             null,
-            ("{" + listOf(
-                "nickname" to request.nickname,
-                "username" to request.id,
-                "password" to request.password,
-                "userType" to when (request.userType) {
-                    UserType.OTHER -> "USER"
-                    UserType.INFANT -> "INFANT_GUARDIAN"
-                    UserType.PHYSICAL_DISABILITY -> "DISABLED"
-                    UserType.PREGNANT -> "PREGNANT"
-                    UserType.SENIOR -> "SENIOR"
-                },
-            ).joinToString(",") {
-                    "\"${it.first}\":\"${it.second}\""
-                } + "}").toRequestBody("text/plain".toMediaType()),
+            requestJsonObject.toRequestBody("application/json".toMediaType()),
         )
 
         request.profileImage?.let {
             requestBodyBuilder.addFormDataPart(
                 "photo",
                 it.name,
-                it.asRequestBody("image/jpg".toMediaType()),
+                it.asRequestBody("image/jpeg".toMediaType()),
             )
         }
 
@@ -71,9 +73,11 @@ class UserRepository @Inject constructor(
             .post(requestBodyBuilder.build())
             .build()
 
-        client
+        val response = client
             .newCall(request)
             .execute()
+
+        if (!response.isSuccessful) throw Exception(response.message)
     }
 
     /**
@@ -90,9 +94,7 @@ class UserRepository @Inject constructor(
 
         return response.result?.let {
             User(
-                id = it.username!!,
-                nickname = it.nickname!!,
-                type = when (it.userType) {
+                id = it.username!!, nickname = it.nickname!!, type = when (it.userType) {
                     GetMyPageInfoResultDTO.UserType.DISABLED -> UserType.PHYSICAL_DISABILITY
                     GetMyPageInfoResultDTO.UserType.SENIOR -> UserType.SENIOR
                     GetMyPageInfoResultDTO.UserType.PREGNANT -> UserType.PREGNANT
@@ -100,9 +102,7 @@ class UserRepository @Inject constructor(
                     GetMyPageInfoResultDTO.UserType.CHILD -> UserType.INFANT
                     GetMyPageInfoResultDTO.UserType.USER -> UserType.OTHER
                     null -> UserType.OTHER
-                },
-                image = it.profileImage?.toUri(),
-                courseCount = it.courseCount ?: 0
+                }, image = it.profileImage?.toUri(), courseCount = it.courseCount ?: 0
             )
         } ?: throw IllegalStateException("response is null")
     }

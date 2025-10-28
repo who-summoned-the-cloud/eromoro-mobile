@@ -79,7 +79,7 @@ fun MyPageScreen(
             .fillMaxSize()
             .background(color = Colors.white)
             .verticalScroll(rememberScrollState())
-            .onGloballyPositioned { width = with(density) { it.size.width.toDp() } }
+            .onGloballyPositioned { width = with(density) { it.size.width.toDp() } },
     ) {
         Spacer(modifier = Modifier.height(SystemUiPadding.statusBarHeight))
         Text(
@@ -165,7 +165,7 @@ fun MyPageScreen(
                         .weight(1f)
                         .background(color = Colors.gray[100], shape = RoundedCornerShape(14.dp))
                         .clip(RoundedCornerShape(14.dp))
-                        .clickable { onClick() }
+                        .clickable { onClick() },
                 ) {
                     Column(
                         horizontalAlignment = Alignment.CenterHorizontally,
@@ -252,8 +252,21 @@ fun MyPageScreen(
             contentPadding = PaddingValues(horizontal = 16.dp)
         ) {
             when (likedCourseList) {
+                is Fetch.Loading -> {
+                    item {
+                        Box(
+                            contentAlignment = Alignment.Center,
+                            modifier = Modifier
+                                .padding(vertical = 50.dp)
+                                .width(width - 32.dp),
+                        ) {
+                            CustomProgressIndicator()
+                        }
+                    }
+                }
+
                 is Fetch.Success -> {
-                    items(count = likedCourseList.data.size) { index ->
+                    if (likedCourseList.data.isNotEmpty()) items(count = likedCourseList.data.size) { index ->
                         val likedCourse = likedCourseList.data[index]
 
                         LaunchedEffect(likedCourse.id) {
@@ -288,24 +301,34 @@ fun MyPageScreen(
                                 modifier = Modifier.padding(horizontal = 8.dp)
                             )
                         }
+                    } else item {
+                        Box(
+                            contentAlignment = Alignment.Center,
+                            modifier = Modifier
+                                .padding(vertical = 50.dp)
+                                .width(width - 32.dp),
+                        ) {
+                            Text(
+                                text = "좋아요한 코스가 없습니다.",
+                                fontSize = 12.sp,
+                                fontWeight = FontWeight.Normal,
+                                color = Colors.gray[400],
+                            )
+                        }
+                    }
+
+                    if (showLoadingAtTheEndOfLikedCourse) item {
+                        Box(
+                            contentAlignment = Alignment.Center,
+                            modifier = Modifier.size(max(width / 4f, 100.dp))
+                        ) {
+                            CustomProgressIndicator()
+                        }
                     }
                 }
 
                 is Fetch.Error -> {
                     // TODO
-                }
-
-                is Fetch.Loading -> {
-                    // TODO
-                }
-            }
-
-            if (showLoadingAtTheEndOfLikedCourse) item {
-                Box(
-                    contentAlignment = Alignment.Center,
-                    modifier = Modifier.size(max(width / 4f, 100.dp))
-                ) {
-                    CustomProgressIndicator()
                 }
             }
         }
@@ -361,7 +384,7 @@ fun PreviewMyPageScreen() {
                 ),
             ).let {
                 it + it + it + it
-            }
+            },
         ),
         showLoadingAtTheEndOfLikedCourse = true,
         onModifyProfileClicked = {},

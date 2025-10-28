@@ -37,7 +37,8 @@ fun AddressSelectModalBottomSheet(
     onSidoSelected: (String?) -> Unit,
     onSigunguSelected: (String?) -> Unit,
     isDoneButtonEnabled: Boolean = true,
-    onCompleteButtonClicked: () -> Unit
+    onCompleteButtonClicked: () -> Unit,
+    onDismissRequest: () -> Unit,
 ) {
     val sidoList = remember { KoreanAreas.getAllSido() }
     val sigunguList = remember(sido) {
@@ -50,7 +51,7 @@ fun AddressSelectModalBottomSheet(
 
     CustomModalBottomSheet(
         isSheetGestureEnabled = false,
-        onDismissRequest = {},
+        onDismissRequest = onDismissRequest,
     ) {
         Column(
             modifier = Modifier.padding(start = 24.dp, end = 24.dp, bottom = 10.dp)
@@ -185,5 +186,6 @@ fun PreviewAddressSelectModalBottomSheet() {
         onSidoSelected = {},
         onSigunguSelected = {},
         onCompleteButtonClicked = {},
+        onDismissRequest = {},
     )
 }

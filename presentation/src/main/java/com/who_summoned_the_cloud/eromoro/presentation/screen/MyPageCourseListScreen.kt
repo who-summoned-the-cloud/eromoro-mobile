@@ -120,16 +120,21 @@ fun MyPageCourseListScreen(
                 }
             }
         }
-        LazyColumn(
-
-        ) {
+        LazyColumn {
             when (courses) {
-                is Fetch.Loading -> {
-                    // TODO
+                is Fetch.Loading -> item {
+                    Box(
+                        contentAlignment = Alignment.Center,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 100.dp)
+                    ) {
+                        CustomProgressIndicator()
+                    }
                 }
 
                 is Fetch.Success -> {
-                    items(
+                    if (courses.data.isNotEmpty()) items(
                         count = courses.data.size
                     ) { index ->
                         val course = courses.data[index]
@@ -232,11 +237,16 @@ fun MyPageCourseListScreen(
                                         modifier = Modifier.width(18.dp),
                                     )
                                     Text(
-                                        text = course.obstacles
-                                            .filter { (_, count) -> count > 0 }
-                                            .map { (obstacle, count) -> "${obstacle.label} ${count}회" }
-                                            .joinToString(", ")
-                                                + " · ${course.date.year % 100}.${course.date.monthValue}.${course.date.dayOfMonth}",
+                                        text = listOfNotNull(
+                                            course.obstacles
+                                                .filter { (_, count) -> count > 0 }
+                                                .map { (obstacle, count) -> "${obstacle.label} ${count}회" }
+                                                .joinToString(", ")
+                                                .takeIf { it.isNotBlank() },
+                                            "${course.date.year % 100}.${course.date.monthValue}.${course.date.dayOfMonth}"
+                                        ).joinToString(
+                                            " · "
+                                        ),
                                         fontSize = 14.sp,
                                         fontWeight = FontWeight.Normal,
                                         color = Colors.gray[500],
@@ -266,6 +276,20 @@ fun MyPageCourseListScreen(
                             color = Colors.gray[100],
                             modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
                         )
+                    } else item {
+                        Box(
+                            contentAlignment = Alignment.Center,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(vertical = 100.dp)
+                        ) {
+                            Text(
+                                text = "코스가 없습니다.",
+                                fontSize = 12.sp,
+                                fontWeight = FontWeight.Normal,
+                                color = Colors.gray[400],
+                            )
+                        }
                     }
 
                     if (showLoadingAtBottomOfCourses) item {

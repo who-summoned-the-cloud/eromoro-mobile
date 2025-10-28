@@ -1,13 +1,14 @@
 package com.who_summoned_the_cloud.eromoro.app.feature.mypage
 
 import androidx.compose.foundation.text.input.rememberTextFieldState
+import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import androidx.navigation.NavBackStackEntry
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
@@ -17,13 +18,16 @@ import androidx.navigation.navigation
 import com.who_summoned_the_cloud.eromoro.app.model.ToastCallback
 import com.who_summoned_the_cloud.eromoro.app.util.FinishHandler
 import com.who_summoned_the_cloud.eromoro.app.util.NavigationBarApp
+import com.who_summoned_the_cloud.eromoro.app.util.getNavScopedViewModel
 import com.who_summoned_the_cloud.eromoro.app.util.launch
+import com.who_summoned_the_cloud.eromoro.common.model.Position
 import com.who_summoned_the_cloud.eromoro.presentation.component.CustomConfirmPopup
 import com.who_summoned_the_cloud.eromoro.presentation.modal.LoadingModal
 import com.who_summoned_the_cloud.eromoro.presentation.model.Fetch
 import com.who_summoned_the_cloud.eromoro.presentation.model.MyPageCourseListScreenCourse
 import com.who_summoned_the_cloud.eromoro.presentation.model.MyPageScreenLikedCourse
 import com.who_summoned_the_cloud.eromoro.presentation.model.ToastType
+import com.who_summoned_the_cloud.eromoro.presentation.screen.MapScreen
 import com.who_summoned_the_cloud.eromoro.presentation.screen.MyPageCourseListScreen
 import com.who_summoned_the_cloud.eromoro.presentation.screen.MyPageScreen
 import kotlinx.coroutines.MainScope
@@ -33,14 +37,23 @@ fun NavGraphBuilder.addMyPageRoute(
     navController: NavHostController,
     showToast: ToastCallback,
 ) {
+    @Composable
+    fun getViewModel(navBackStackEntry: NavBackStackEntry): MyPageViewModel {
+        return getNavScopedViewModel(
+            navBackStackEntry = navBackStackEntry,
+            navController = navController,
+            route = "/my-page",
+        )
+    }
+
     navigation(
         route = "/my-page",
         startDestination = "/my-page/overview",
     ) {
         composable(
             route = "/my-page/overview"
-        ) {
-            val viewModel = hiltViewModel<MyPageViewModel>()
+        ) { backStackEntry ->
+            val viewModel = getViewModel(backStackEntry)
 
             val user by viewModel.user.collectAsState()
 
@@ -48,18 +61,17 @@ fun NavGraphBuilder.addMyPageRoute(
             val isLikedCoursesFetchedAll by viewModel.isLikedCoursesFetchedAll.collectAsState()
             var likedCourseList: Fetch<List<MyPageScreenLikedCourse>, Unit> by remember(likedCourses) {
                 mutableStateOf(
-                    value = likedCourses?.let { likedCourses ->
-                        Fetch.Success(
-                            data = likedCourses.map {
-                                MyPageScreenLikedCourse(
-                                    id = it.id,
-                                    image = it.image,
-                                    title = it.title,
-                                    onClick = { /* TODO */ },
-                                )
-                            },
-                        )
-                    } ?: Fetch.Loading(),
+                    value = likedCourses
+                        ?.flatten()
+                        ?.map {
+                            MyPageScreenLikedCourse(
+                                id = it.id,
+                                image = it.image,
+                                title = it.title,
+                                onClick = { /* TODO */ },
+                            )
+                        }
+                        ?.let { Fetch.Success(it) } ?: Fetch.Loading(),
                 )
             }
 
@@ -68,7 +80,7 @@ fun NavGraphBuilder.addMyPageRoute(
 
             LaunchedEffect(Unit) {
                 viewModel.launch {
-                    loadMyInfo()
+                    runCatching { loadMyInfo() }
                 }
 
                 viewModel.launch {
@@ -125,22 +137,20 @@ fun NavGraphBuilder.addMyPageRoute(
                         showLoading = true
                         showLogoutPopup = false
 
-                        runCatching {
-                            logout()
-                        }.onSuccess {
-                            MainScope().launch {
-                                navController.popBackStack(
-                                    destinationId = navController.graph.startDestinationId,
-                                    inclusive = false,
-                                )
+                        runCatching { logout() }
+                            .onSuccess {
+                                MainScope().launch {
+                                    navController.popBackStack(
+                                        destinationId = navController.graph.startDestinationId,
+                                        inclusive = false,
+                                    )
+                                }
                             }
-                        }.onFailure {
-                            showToast("로그아웃에 실패했습니다.", ToastType.ERROR)
-                        }
+                            .onFailure { showToast("로그아웃에 실패했습니다.", ToastType.ERROR) }
 
                         showLoading = false
                     }
-                }
+                },
             )
 
             FinishHandler(showToast = showToast)
@@ -150,17 +160,26 @@ fun NavGraphBuilder.addMyPageRoute(
             route = "/my-page/course-list/{type}",
             arguments = listOf(navArgument("type") { type = NavType.StringType }),
         ) { backStackEntry ->
-            val type = backStackEntry.arguments?.getString("type")!!
-            val viewModel = hiltViewModel<MyPageViewModel>()
+            val type = backStackEntry.arguments?.getString("type") ?: return@composable
+            val viewModel = getViewModel(backStackEntry)
 
             val search = rememberTextFieldState()
 
             val likedCourses by viewModel.likedCourses.collectAsState()
-            var courseList: Fetch<List<MyPageCourseListScreenCourse>, Unit> by remember(likedCourses) {
+            val isLikedCoursesFetchedAll by viewModel.isLikedCoursesFetchedAll.collectAsState()
+            val usedCourses by viewModel.usedCourses.collectAsState()
+            val isUsedCoursesFetchedAll by viewModel.isUsedCoursesFetchedAll.collectAsState()
+
+            val courseList: Fetch<List<MyPageCourseListScreenCourse>, Unit> by remember(
+                type,
+                likedCourses,
+                usedCourses,
+            ) {
                 mutableStateOf(
-                    value = likedCourses?.let { likedCourses ->
-                        Fetch.Success(
-                            data = likedCourses.map {
+                    value = when (type) {
+                        "liked" -> likedCourses
+                            ?.flatten()
+                            ?.map {
                                 MyPageCourseListScreenCourse(
                                     id = it.id,
                                     image = it.image,
@@ -171,25 +190,82 @@ fun NavGraphBuilder.addMyPageRoute(
                                     distance = it.distance,
                                     duration = it.duration,
                                     date = it.date.toLocalDate(),
-                                    shareable = if (type == "used") {
-                                        MyPageCourseListScreenCourse.Shareable(
-                                            isShared = true,  // TODO
-                                            onShareToggleClicked = { /* TODO */ }
-                                        )
-                                    } else null,
-                                    onClick = { /* TODO */ },
+                                    shareable = null,
+                                    onClick = {
+                                        MainScope().launch {
+                                            navController.navigate("/my-page/course-view/${it.id}")
+                                        }
+                                    },
                                     onLikeButtonClicked = { isLiked ->
                                         viewModel.launch {
                                             runCatching {
                                                 modifyCourseLike(it.id, isLiked)
                                             }
                                         }
-                                    }
+                                    },
                                 )
-                            },
-                        )
-                    } ?: Fetch.Loading(),
+                            }
+
+                        "used" -> usedCourses
+                            ?.flatten()
+                            ?.map {
+                                MyPageCourseListScreenCourse(
+                                    id = it.id,
+                                    image = it.image,
+                                    title = it.title,
+                                    obstacles = it.obstacles,
+                                    like = it.like,
+                                    isLiked = it.isLiked,
+                                    distance = it.distance,
+                                    duration = it.duration,
+                                    date = it.date.toLocalDate(),
+                                    shareable = MyPageCourseListScreenCourse.Shareable(
+                                        isShared = false,  // TODO
+                                        onShareToggleClicked = {
+                                            // TODO
+                                            showToast("코스 공유 기능은 준비중입니다!", ToastType.ERROR)
+                                        },
+                                    ),
+                                    onClick = {
+                                        MainScope().launch {
+                                            navController.navigate("/my-page/course-view/${it.id}")
+                                        }
+                                    },
+                                    onLikeButtonClicked = { isLiked ->
+                                        viewModel.launch {
+                                            runCatching {
+                                                modifyCourseLike(it.id, isLiked)
+                                            }
+                                        }
+                                    },
+                                )
+                            }
+
+                        else -> throw IllegalArgumentException()
+                    }?.let { Fetch.Success(it) } ?: Fetch.Loading(),
                 )
+            }
+
+            LaunchedEffect(Unit) {
+                viewModel.launch {
+                    runCatching {
+                        when (type) {
+                            "liked" -> {
+                                viewModel.likedCourses.value = null
+                                viewModel.isLikedCoursesFetchedAll.value = false
+                                loadLikedCourse()
+                            }
+
+                            "used" -> {
+                                viewModel.usedCourses.value = null
+                                viewModel.isUsedCoursesFetchedAll.value = false
+                                loadUsedCourse()
+                            }
+
+                            else -> throw IllegalArgumentException()
+                        }
+                    }
+                }
             }
 
             MyPageCourseListScreen(
@@ -202,14 +278,67 @@ fun NavGraphBuilder.addMyPageRoute(
                 courses = courseList,
                 categoryChips = null,  // TODO
                 selectedChipIndex = null,  // TODO
-                showLoadingAtBottomOfCourses = true,  // TODO
+                showLoadingAtBottomOfCourses = when (type) {
+                    "liked" -> !isLikedCoursesFetchedAll
+                    "used" -> !isUsedCoursesFetchedAll
+                    else -> throw IllegalArgumentException()
+                },
                 onBackButtonClicked = {
                     MainScope().launch { navController.popBackStack() }
                 },
                 onNewCoursePageRequested = {
-                    // TODO
+                    viewModel.launch {
+                        runCatching {
+                            when (type) {
+                                "liked" -> loadLikedCourse()
+                                "used" -> loadUsedCourse()
+                            }
+                        }
+                    }
                 },
             )
+        }
+    }
+
+    composable(
+        route = "/my-page/course-view/{courseId}",
+        arguments = listOf(navArgument("courseId") { type = NavType.LongType }),
+    ) { backStackEntry ->
+        val viewModel = getViewModel(backStackEntry)
+        val courseId = backStackEntry.arguments?.getLong("courseId") ?: return@composable
+
+        var positions: List<Position>? by remember { mutableStateOf(null) }
+
+        LaunchedEffect(courseId) {
+            viewModel.launch {
+                runCatching {
+                    getCoursePositions(courseId = courseId)
+                }.onSuccess {
+                    positions = it
+                }.onFailure {
+                    showToast("오류가 발생했습니다.", ToastType.ERROR)
+                }
+            }
+        }
+
+        MapScreen(
+            onBackButtonClicked = {
+                MainScope().launch { navController.popBackStack() }
+            }
+        ) {
+            LaunchedEffect(positions) {
+                positions?.let { positions ->
+                    val (top, bottom, start, end) = listOf(
+                        positions.minOf { it.latitude },
+                        positions.maxOf { it.latitude },
+                        positions.minOf { it.longitude },
+                        positions.maxOf { it.longitude },
+                    )
+
+                    val middle = Position((bottom + top) / 2 to (start + end) / 2)
+                    moveMap(middle)
+                }
+            }
         }
     }
 }

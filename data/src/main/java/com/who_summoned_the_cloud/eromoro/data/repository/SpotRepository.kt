@@ -82,9 +82,9 @@ class SpotRepository @Inject constructor(
             Spot(
                 id = it.spotId!!,
                 name = it.title!!,
-                description = it.information!!,
+                description = it.information ?: "설명 없음",  // TODO: 적절한 예외 처리 필요
                 image = it.imageUrl?.toUri(),
-                address = it.address!!,
+                address = it.address ?: "경기도 성남시 분당구 판교역로 166",  // FIXME: 백엔드에서 수정 후 반영할 것
                 facilities = it.facilityInfo
                     ?.map { facility ->
                         when (facility) {

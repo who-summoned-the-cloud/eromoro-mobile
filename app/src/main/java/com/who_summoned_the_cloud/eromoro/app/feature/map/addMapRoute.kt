@@ -1,5 +1,7 @@
 package com.who_summoned_the_cloud.eromoro.app.feature.map
 
+import androidx.compose.foundation.text.input.rememberTextFieldState
+import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -8,37 +10,56 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.platform.LocalContext
-import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import androidx.navigation.NavBackStackEntry
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.composable
 import androidx.navigation.navigation
+import com.naver.maps.map.compose.ExperimentalNaverMapApi
 import com.who_summoned_the_cloud.eromoro.app.model.ToastCallback
 import com.who_summoned_the_cloud.eromoro.app.util.getLocation
+import com.who_summoned_the_cloud.eromoro.app.util.getNavScopedViewModel
 import com.who_summoned_the_cloud.eromoro.app.util.launch
 import com.who_summoned_the_cloud.eromoro.common.model.Position
+import com.who_summoned_the_cloud.eromoro.presentation.modal.LoadingModal
 import com.who_summoned_the_cloud.eromoro.presentation.model.Fetch
 import com.who_summoned_the_cloud.eromoro.presentation.model.MapCourseGeneratingScreenMode
 import com.who_summoned_the_cloud.eromoro.presentation.model.MapCourseViewerScreenCourse
+import com.who_summoned_the_cloud.eromoro.presentation.model.ToastType
 import com.who_summoned_the_cloud.eromoro.presentation.screen.MapCourseGeneratingScreen
+import com.who_summoned_the_cloud.eromoro.presentation.screen.MapCourseProgressScreen
 import com.who_summoned_the_cloud.eromoro.presentation.screen.MapCourseViewerScreen
+import com.who_summoned_the_cloud.eromoro.presentation.screen.SearchScreen
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.MainScope
+import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
+import kotlin.coroutines.coroutineContext
 
+@OptIn(ExperimentalNaverMapApi::class)
 fun NavGraphBuilder.addMapRoute(
     navController: NavHostController,
     showToast: ToastCallback,
 ) {
+    @Composable
+    fun getViewModel(navBackStackEntry: NavBackStackEntry): MapViewModel {
+        return getNavScopedViewModel(
+            navBackStackEntry = navBackStackEntry,
+            navController = navController,
+            route = "/map",
+        )
+    }
+
     navigation(
-        route = "/map", startDestination = "/map/new"
+        route = "/map",
+        startDestination = "/map/generate",
     ) {
         composable(
-            route = "/map/new",
-        ) {
-            val viewModel = hiltViewModel<MapViewModel>()
+            route = "/map/generate",
+        ) { backStackEntry ->
+            val viewModel = getViewModel(backStackEntry)
             val context = LocalContext.current
 
             val nickname by viewModel.nickname.collectAsState()
@@ -88,8 +109,8 @@ fun NavGraphBuilder.addMapRoute(
                         start = start,
                         end = end,
                         isNextButtonEnabled = true,  // TODO
-                        maxMinute = 120,  // TODO
-                        minMinute = 10,  // TODO
+                        maxMinute = 120,
+                        minMinute = 10,
                         minuteGap = 5,
                         selectedMinute = selectedMinute,
                         onNextButtonClicked = {
@@ -102,12 +123,22 @@ fun NavGraphBuilder.addMapRoute(
                                         duration = selectedMinute,
                                     )
                                 }
-                                    .onSuccess { navController.navigate("/map/course-select") }
-                                    .onFailure { if (step == 3) step-- }
+                                    .onSuccess {
+                                        if (coroutineContext.isActive) MainScope().launch {
+                                            navController.navigate("/map/generate/course-select")
+                                        }
+                                    }
+                                    .onFailure {
+                                        if (coroutineContext.isActive) {
+                                            showToast("경로 생성에 실패했습니다.", ToastType.ERROR)
+                                            step--
+                                        }
+                                    }
                             }
                         },
                         onPreviousButtonClicked = { step-- },
-                        onSelectedMinuteChanged = { selectedMinute = it })
+                        onSelectedMinuteChanged = { selectedMinute = it },
+                    )
 
                     3 -> MapCourseGeneratingScreenMode.Waiting(
                         start = start,
@@ -153,12 +184,38 @@ fun NavGraphBuilder.addMapRoute(
         }
 
         composable(
-            route = "/map/course-select",
-        ) {
-            val viewModel = hiltViewModel<MapViewModel>()
+            route = "/map/search",
+        ) { backStackEntry ->
+            val viewModel = getViewModel(backStackEntry)
+
+            val searchText = rememberTextFieldState()
+
+            SearchScreen(
+                searchText = searchText,
+                placeholder = "찾고 계신 장소를 입력해주세요.",
+                searchResults = listOf(),  // TODO
+                recentSearchTextChips = listOf(),  // TODO
+                onBackButtonClicked = {
+                    MainScope().launch { navController.popBackStack() }
+                },
+                onRecentSearchChipCloseClicked = {
+                    // TODO
+                },
+                onMoreButtonClicked = {
+                    // TODO
+                },
+            )
+        }
+
+        composable(
+            route = "/map/generate/course-select",
+        ) { backStackEntry ->
+            val viewModel = getViewModel(backStackEntry)
 
             val courses by viewModel.generatedCourses.collectAsState()
             var selectedCourseIndex by remember { mutableIntStateOf(0) }
+
+            var showLoading by remember { mutableStateOf(false) }
 
             MapCourseViewerScreen(
                 courses = Fetch.Success(
@@ -166,18 +223,17 @@ fun NavGraphBuilder.addMapRoute(
                         MapCourseViewerScreenCourse(
                             badge = MapCourseViewerScreenCourse.Badge.OPTIMIZED,  // TODO
                             name = it.name,
-                            rating = it.rating,
-                            coursePositions = Fetch.Success(
-                                data = it.positions
-                            ),
-                            isLiked = it.isLiked,
-                            obstacles = it.obstacles,
+                            rating = null,
+                            coursePositions = Fetch.Success(it.positions),
+                            isLiked = null,
+                            obstacles = null,
                             distance = it.distance,
                             duration = it.duration,
                             onLikeButtonClicked = {
                                 // TODO
                             },
-                            onClick = { selectedCourseIndex = index })
+                            onClick = { selectedCourseIndex = index },
+                        )
                     },
                 ),
                 selectedCourseIndex = selectedCourseIndex,
@@ -185,11 +241,63 @@ fun NavGraphBuilder.addMapRoute(
                     MainScope().launch { navController.popBackStack() }
                 },
                 onCourseStartButtonClicked = {
+                    viewModel.launch {
+                        showLoading = true
+
+                        runCatching { startCourse(courseId = courses[selectedCourseIndex].id) }
+                            .onSuccess {
+                                MainScope().launch {
+                                    navController.popBackStack(route = "/map/generate", inclusive = true)
+                                    navController.navigate("/map/progress")
+                                }
+                            }
+                            .onFailure {
+                                showToast("오류가 발생했습니다.", ToastType.ERROR)
+                            }
+
+                        showLoading = false
+                    }
+                },
+                content = { /* EMPTY */ },
+            )
+
+            if (showLoading) LoadingModal()
+        }
+
+        composable(
+            route = "/map/progress",
+        ) { backStackEntry ->
+            val viewModel = getViewModel(backStackEntry)
+            val currentProgressingCourse by viewModel.currentProgressingCourse.collectAsState()
+
+            var currentPosition: Position? by remember { mutableStateOf(null) }
+
+            LaunchedEffect(Unit) {
+                if (currentProgressingCourse == null) viewModel.launch {
+                    loadCurrentProgressingCourse()
+                }
+            }
+
+            MapCourseProgressScreen(
+                courseName = currentProgressingCourse?.name,
+                currentPosition = currentPosition,
+                coursePositions = currentProgressingCourse?.positions,
+                obstacles = emptyList(),
+                start = currentProgressingCourse?.positions?.firstOrNull(),
+                end = currentProgressingCourse?.positions?.lastOrNull(),
+                onBackButtonClicked = {
+                    MainScope().launch { navController.popBackStack() }
+                },
+                onReportButtonClicked = {
                     // TODO
                 },
-            ) {
-                // TODO
-            }
+                onEndCourseButtonClicked = {
+                    // TODO
+                },
+                onPositionChanged = {
+                    // TODO
+                },
+                content = { /* EMPTY */ })
         }
     }
 }

@@ -45,6 +45,7 @@ import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
@@ -55,6 +56,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil3.compose.rememberAsyncImagePainter
+import com.who_summoned_the_cloud.eromoro.common.model.SpotCategory
 import com.who_summoned_the_cloud.eromoro.common.model.UserType
 import com.who_summoned_the_cloud.eromoro.presentation.R
 import com.who_summoned_the_cloud.eromoro.presentation.component.CustomProgressIndicator
@@ -79,6 +81,7 @@ fun HomeScreen(
     showLoadingAtTheEndOfNearbyPlaces: Boolean,
     recommendingSido: String?,
     recommendingSigungu: String?,
+    recommendingCategory: SpotCategory,
     recommendedPlaces: Fetch<List<HomeScreenPlace>, Unit>,
     showLoadingAtTheEndOfRecommendedPlaces: Boolean,
     onSearchBarClicked: () -> Unit,
@@ -86,6 +89,7 @@ fun HomeScreen(
     onLatestCourseButtonClicked: () -> Unit,
     onGoToNearbyCourseListButtonClicked: () -> Unit,
     onAddressDropdownClicked: () -> Unit,
+    onCategoryDropdownClicked: () -> Unit,
     onNewNearbyPlacePageRequest: () -> Unit,
     onNewRecommendedPlacePageRequest: () -> Unit,
 ) {
@@ -120,7 +124,7 @@ fun HomeScreen(
         LazyColumn(
             contentPadding = PaddingValues(
                 top = SystemUiPadding.statusBarHeight + 16.dp,
-                bottom = SystemUiPadding.navigationBarHeight,
+                bottom = SystemUiPadding.navigationBarHeight + 100.dp,
             ),
         ) {
             item {
@@ -477,8 +481,11 @@ fun HomeScreen(
                         horizontalArrangement = Arrangement.spacedBy(6.dp)
                     ) {
                         listOf(
-                            recommendingSido to onAddressDropdownClicked,
-                            recommendingSigungu to onAddressDropdownClicked,
+                            listOf(
+                                recommendingSido,
+                                recommendingSigungu
+                            ).joinToString(" ") to onAddressDropdownClicked,
+                            recommendingCategory.label to onCategoryDropdownClicked,
                         ).forEach { (text, onClick) ->
                             Box(
                                 modifier = Modifier
@@ -492,14 +499,15 @@ fun HomeScreen(
                                         shape = RoundedCornerShape(percent = 50)
                                     )
                                     .clip(RoundedCornerShape(percent = 50))
-                                    .clickable { onClick() }) {
+                                    .clickable { onClick() },
+                            ) {
                                 Row(
                                     horizontalArrangement = Arrangement.spacedBy(8.dp),
                                     verticalAlignment = Alignment.CenterVertically,
                                     modifier = Modifier.padding(horizontal = 15.dp, vertical = 5.dp)
                                 ) {
                                     Text(
-                                        text = text ?: "선택",
+                                        text = text,
                                         fontSize = 14.sp,
                                         fontWeight = FontWeight.Medium,
                                         color = Colors.pink[100],
@@ -522,7 +530,14 @@ fun HomeScreen(
             when (recommendedPlaces) {
                 is Fetch.Loading -> {
                     item {
-                        // TODO
+                        Box(
+                            contentAlignment = Alignment.Center,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(vertical = 100.dp)
+                        ) {
+                            CustomProgressIndicator()
+                        }
                     }
                 }
 
@@ -569,8 +584,10 @@ fun HomeScreen(
                                                     model = place.image
                                                 ),
                                                 contentDescription = "${place.title}의 사진",
+                                                contentScale = ContentScale.Crop,
                                                 modifier = Modifier
                                                     .height(width / 3.4f)
+                                                    .fillMaxWidth()
                                                     .background(
                                                         color = Colors.gray[400],
                                                         shape = RoundedCornerShape(14.dp),
@@ -622,6 +639,7 @@ fun HomeScreen(
                                                     fontSize = 16.sp,
                                                     fontWeight = FontWeight.Medium,
                                                     letterSpacing = (-0.3).sp,
+                                                    modifier = Modifier.weight(1f),
                                                 )
                                                 Text(
                                                     text = getDistanceExpression(place.distance),
@@ -629,6 +647,7 @@ fun HomeScreen(
                                                     fontSize = 13.sp,
                                                     fontWeight = FontWeight.Normal,
                                                     letterSpacing = (-0.3).sp,
+                                                    maxLines = 1,
                                                 )
                                             }
                                             AvailableUserTypeListView(
@@ -640,24 +659,41 @@ fun HomeScreen(
                             }
                         }
                     }
+
+                    if (recommendedPlaces.data.isEmpty()) item {
+                        Box(
+                            contentAlignment = Alignment.Center,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(vertical = 50.dp)
+                        ) {
+                            Text(
+                                text = "추천 관광지가 없습니다.\n다른 지역/유형을 선택해보세요.",
+                                color = Colors.gray[300],
+                                fontSize = 16.sp,
+                                fontWeight = FontWeight.Normal,
+                                lineHeight = 24.sp,
+                            )
+                        }
+                    }
+
+                    if (showLoadingAtTheEndOfRecommendedPlaces) {
+                        item {
+                            Box(
+                                contentAlignment = Alignment.Center,
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(50.dp)
+                            ) {
+                                CustomProgressIndicator()
+                            }
+                        }
+                    }
                 }
 
                 is Fetch.Error -> {
                     item {
                         // TODO
-                    }
-                }
-            }
-
-            if (showLoadingAtTheEndOfRecommendedPlaces) {
-                item {
-                    Box(
-                        contentAlignment = Alignment.Center,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(50.dp)
-                    ) {
-                        CustomProgressIndicator()
                     }
                 }
             }
@@ -719,6 +755,7 @@ fun PreviewHomeScreen() {
         showLoadingAtTheEndOfNearbyPlaces = true,
         recommendingSido = "서울",
         recommendingSigungu = "종로구",
+        recommendingCategory = SpotCategory.TOURIST_ATTRACTION,
         recommendedPlaces = Fetch.Success(
             listOf(
                 HomeScreenPlace(
@@ -741,6 +778,7 @@ fun PreviewHomeScreen() {
         onLatestCourseButtonClicked = {},
         onGoToNearbyCourseListButtonClicked = {},
         onAddressDropdownClicked = {},
+        onCategoryDropdownClicked = {},
         onNewNearbyPlacePageRequest = {},
         onNewRecommendedPlacePageRequest = {},
     )

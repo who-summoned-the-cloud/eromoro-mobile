@@ -7,12 +7,18 @@ import com.who_summoned_the_cloud.eromoro.data.model.ListableReport
 import com.who_summoned_the_cloud.eromoro.data.model.Report
 import com.who_summoned_the_cloud.eromoro.data.model.ReportRequest
 import com.who_summoned_the_cloud.eromoro.data.preference.AuthPreference
+import okhttp3.MediaType.Companion.toMediaType
+import okhttp3.MultipartBody
+import okhttp3.OkHttpClient
+import okhttp3.Request
+import okhttp3.RequestBody.Companion.asRequestBody
+import okhttp3.RequestBody.Companion.toRequestBody
 import org.openapitools.client.apis.FeedbackControllerApi
 import org.openapitools.client.apis.UserControllerApi
-import org.openapitools.client.models.CreateDto
 import org.openapitools.client.models.DetailResultDto
 import org.openapitools.client.models.MyFeedbackDto
 import javax.inject.Inject
+import javax.inject.Named
 import javax.inject.Singleton
 
 @Singleton
@@ -20,6 +26,7 @@ class ReportRepository @Inject constructor(
     override val authPreference: AuthPreference,
     override val userControllerApi: UserControllerApi,
     private val feedbackControllerApi: FeedbackControllerApi,
+    @param:Named("serverUrl") private val serverUrl: String,
 ) : AuthorizedRepository {
 
     /**
@@ -101,29 +108,56 @@ class ReportRepository @Inject constructor(
     suspend fun report(
         request: ReportRequest,
     ) {
-        val dto = CreateDto(
-            latitude = request.position.latitude.toBigDecimal(),
-            longitude = request.position.longitude.toBigDecimal(),
-            title = request.title,
-            content = request.content,
-            type = when (request.type) {
-                ObstacleType.STAIR -> CreateDto.Type.STAIR
-                ObstacleType.NO_ELEVATOR -> CreateDto.Type.ELEVATOR
-                ObstacleType.HILL -> CreateDto.Type.SLOPE
-                ObstacleType.THRESHOLD -> CreateDto.Type.CURB
-                ObstacleType.NARROW_WAY -> CreateDto.Type.NARROW_ROAD
-                ObstacleType.OTHER -> CreateDto.Type.OTHER
-            },
-            address = "서울시 금천구 옥련동 12",  // TODO
-            isReport = request.isForLocalGovernance,
+        val client = OkHttpClient()
+
+        val requestBodyBuilder = MultipartBody
+            .Builder()
+            .setType(MultipartBody.FORM)
+
+        val requestJsonObject = ("{" + listOf(
+            "latitude" to request.position.latitude,
+            "longitude" to request.position.longitude,
+            "title" to "\"" + request.title + "\"",
+            "content" to "\"" + request.content + "\"",
+            "type" to "\"" + when (request.type) {
+                ObstacleType.STAIR -> "STAIR"
+                ObstacleType.NO_ELEVATOR -> "ELEVATOR"
+                ObstacleType.HILL -> "SLOPE"
+                ObstacleType.THRESHOLD -> "CURB"
+                ObstacleType.NARROW_WAY -> "NARROW_ROAD"
+                ObstacleType.OTHER -> "OTHER"
+            } + "\"",
+            "address" to "\"" + request.address + "\"",
+            "isReport" to request.isForLocalGovernance.toString(),
+        ).joinToString(",") {
+            "\"${it.first}\":${it.second}"
+        } + "}")
+
+        requestBodyBuilder.addFormDataPart(
+            "request",
+            null,
+            requestJsonObject.toRequestBody("application/json".toMediaType()),
         )
 
-        feedbackControllerApi.withAuth {
-            create(
-                request = dto,
-                photo = request.image,
-            )
-        }
+        requestBodyBuilder.addFormDataPart(
+            "photo",
+            request.image.name,
+            request.image.asRequestBody("image/jpeg".toMediaType()),
+        )
+
+        val request = Request
+            .Builder()
+            .url(serverUrl.removeSuffix("/") + "/feedbacks")
+            .header("Authorization", "Bearer ${authPreference.accessToken}")
+            .header("Content-Type", "multipart/form-data")
+            .post(requestBodyBuilder.build())
+            .build()
+
+        val response = client
+            .newCall(request)
+            .execute()
+
+        if (!response.isSuccessful) throw Exception(response.message)
     }
 
     /**

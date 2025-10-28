@@ -12,6 +12,7 @@ import com.who_summoned_the_cloud.eromoro.data.model.CourseSaveAndFinishRequest
 import com.who_summoned_the_cloud.eromoro.data.model.GeneratedCourse
 import com.who_summoned_the_cloud.eromoro.data.model.LikedCourse
 import com.who_summoned_the_cloud.eromoro.data.model.RegionalCourse
+import com.who_summoned_the_cloud.eromoro.data.model.UsedCourse
 import com.who_summoned_the_cloud.eromoro.data.preference.AuthPreference
 import org.openapitools.client.apis.CourseControllerApi
 import org.openapitools.client.apis.UserControllerApi
@@ -44,8 +45,13 @@ class CourseRepository @Inject constructor(
         size: Int,
         spotId: Long,
     ): List<RegionalCourse> {
+        if (page > 0) return emptyList()  // FIXME: 백엔드 페이징 구현 시 적용
+
         val response = courseControllerApi.withAuth {
-            getCourseList(courseType = CourseControllerApi.CourseTypeGetCourseList.SPOT, spotId = spotId)
+            getCourseList(
+                courseType = CourseControllerApi.CourseTypeGetCourseList.SPOT,
+                spotId = spotId
+            )
         }
 
         val courses = response.result?.courseList?.map {
@@ -87,6 +93,8 @@ class CourseRepository @Inject constructor(
         page: Int,
         size: Int,
     ): List<LikedCourse> {
+        if (page > 0) return emptyList()  // FIXME: 백엔드 페이징 구현 시 적용
+
         val response = courseControllerApi.withAuth {
             getCourseList(courseType = CourseControllerApi.CourseTypeGetCourseList.LIKE)
         }
@@ -105,6 +113,48 @@ class CourseRepository @Inject constructor(
                 distance = (it.distance!! * 1000).toInt(),
                 duration = it.duration!!,
                 rating = it.rating!!.toFloat(),
+                availableUserTypes = setOfNotNull(
+                    when (it.userType) {
+                        GetCourseResultDto.UserType.INFANT_GUARDIAN -> UserType.INFANT
+                        GetCourseResultDto.UserType.USER -> UserType.OTHER
+                        GetCourseResultDto.UserType.DISABLED -> UserType.PHYSICAL_DISABILITY
+                        GetCourseResultDto.UserType.SENIOR -> UserType.SENIOR
+                        GetCourseResultDto.UserType.PREGNANT -> UserType.PREGNANT
+                        GetCourseResultDto.UserType.CHILD -> UserType.INFANT
+                        null -> null
+                    },
+                ),
+                date = it.createdAt!!.toLocalDateTime(),
+            )
+        } ?: emptyList()
+
+        return courses
+    }
+
+    suspend fun getUserCourseList(
+        page: Int,
+        size: Int,
+    ): List<UsedCourse> {
+        if (page > 0) return emptyList()  // FIXME: 백엔드 페이징 구현 시 적용
+
+        val response = courseControllerApi.withAuth {
+            getCourseList(courseType = CourseControllerApi.CourseTypeGetCourseList.ALL)
+        }
+
+        val courses = response.result?.courseList?.map {
+            UsedCourse(
+                id = it.courseId!!,
+                image = it.photo?.toUri(),
+                title = it.title!!,
+                like = it.likeCount ?: 0,
+                isLiked = it.liked ?: false,
+                obstacles = mapOf(
+                    ObstacleType.HILL to (it.rampCount ?: 0),
+                    ObstacleType.STAIR to (it.stepCount ?: 0),
+                ),
+                distance = (it.distance!! * 1000).toInt(),
+                duration = it.duration!!,
+                rating = it.rating?.toFloat() ?: 0f,
                 availableUserTypes = setOfNotNull(
                     when (it.userType) {
                         GetCourseResultDto.UserType.INFANT_GUARDIAN -> UserType.INFANT
@@ -143,11 +193,11 @@ class CourseRepository @Inject constructor(
                     ObstacleType.STAIR to (it.stepCount ?: 0),
                 ),
                 duration = it.duration!!,
-                distance = it.distance!!.toInt(),
+                distance = (it.distance!! * 1000).toInt(),
                 positions = it.points?.map { point ->
                     Position(
-                        latitude = point.latitude!!.toDouble(),
-                        longitude = point.longitude!!.toDouble(),
+                        latitude = point.lat!!.toDouble(),
+                        longitude = point.lon!!.toDouble(),
                     )
                 } ?: emptyList(),
             )
@@ -176,21 +226,14 @@ class CourseRepository @Inject constructor(
             GeneratedCourse(
                 id = it.id!!,
                 name = it.title!!,
-                like = it.likeCount!!,
-                isLiked = false,  //  TODO
-                rating = it.rating!!.toFloat(),
-                obstacles = mapOf(
-                    ObstacleType.HILL to (it.rampCount ?: 0),
-                    ObstacleType.STAIR to (it.stepCount ?: 0),
-                ),
                 duration = it.duration!!,
-                distance = it.distance!!.toInt(),
-                positions = it.coursePointList!!.map { position ->
+                distance = (it.distance!! * 1000).toInt(),
+                positions = it.points?.map { position ->
                     Position(
-                        latitude = position.latitude!!.toDouble(),
-                        longitude = position.longitude!!.toDouble(),
+                        latitude = position.lat!!.toDouble(),
+                        longitude = position.lon!!.toDouble(),
                     )
-                },
+                } ?: emptyList(),
             )
         } ?: emptyList()
 
@@ -203,6 +246,16 @@ class CourseRepository @Inject constructor(
     suspend fun startCourse(courseId: Long) {
         courseControllerApi.withAuth { startCourse() }
         prefs.edit { putLong(RUNNING_COURSE_ID, courseId) }
+    }
+
+    /**
+     * 현재 진행중인 코스의 아이디 조회
+     * 코스를 진행중이지 않다면 null 반환
+     */
+    suspend fun getCurrentCourseId(): Long? {
+        return prefs
+            .getLong(RUNNING_COURSE_ID, -1)
+            .takeIf { it > 0 }
     }
 
     /**

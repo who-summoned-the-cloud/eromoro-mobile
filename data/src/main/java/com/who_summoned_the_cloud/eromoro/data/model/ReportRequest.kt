@@ -7,6 +7,7 @@ import java.io.File
 data class ReportRequest(
     val image: File,
     val position: Position,
+    val address: String,
     val title: String,
     val content: String,
     val type: ObstacleType,

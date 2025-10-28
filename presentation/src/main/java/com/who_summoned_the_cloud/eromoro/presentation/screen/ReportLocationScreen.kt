@@ -25,12 +25,13 @@ import com.who_summoned_the_cloud.eromoro.presentation.component.CustomSingleLin
 import com.who_summoned_the_cloud.eromoro.presentation.component.CustomMap
 import com.who_summoned_the_cloud.eromoro.presentation.model.CustomMapScope
 import com.who_summoned_the_cloud.eromoro.common.model.Position
+import com.who_summoned_the_cloud.eromoro.presentation.model.CenterMarkerType
 import com.who_summoned_the_cloud.eromoro.presentation.theme.Colors
 import com.who_summoned_the_cloud.eromoro.presentation.util.SystemUiPadding
 
 @Composable
 fun ReportLocationScreen(
-    currentLocation: String?,
+    currentAddress: String?,
     currentPosition: Position?,
     onBackButtonClicked: () -> Unit,
     onAddressFieldClicked: () -> Unit,
@@ -44,6 +45,7 @@ fun ReportLocationScreen(
     ) {
         CustomMap(
             currentPosition = currentPosition,
+            centerMarkerType = CenterMarkerType.PIN,
             onPositionChanged = onPositionChanged,
             content = content,
         )
@@ -93,8 +95,8 @@ fun ReportLocationScreen(
                         ) {
                             CustomSingleLineInputField(
                                 state = TextFieldState(
-                                    initialText = if (currentLocation != null) {
-                                        "현위치: $currentLocation"
+                                    initialText = if (currentAddress != null) {
+                                        "현위치: $currentAddress"
                                     } else {
                                         "지도를 움직여 위치를 선택해주세요."
                                     }
@@ -123,7 +125,7 @@ fun ReportLocationScreen(
 @Composable
 fun PreviewReportLocationScreen() {
     ReportLocationScreen(
-        currentLocation = "마포구청역 2번 출구",
+        currentAddress = "마포구청역 2번 출구",
         currentPosition = Position(37.566535 to 126.977969),
         onBackButtonClicked = {},
         onAddressFieldClicked = {},

@@ -1,7 +1,9 @@
 package com.who_summoned_the_cloud.eromoro.app.feature.mypage
 
 import androidx.lifecycle.ViewModel
+import com.who_summoned_the_cloud.eromoro.common.model.Position
 import com.who_summoned_the_cloud.eromoro.data.model.LikedCourse
+import com.who_summoned_the_cloud.eromoro.data.model.UsedCourse
 import com.who_summoned_the_cloud.eromoro.data.model.User
 import com.who_summoned_the_cloud.eromoro.data.repository.AuthRepository
 import com.who_summoned_the_cloud.eromoro.data.repository.CourseRepository
@@ -22,8 +24,12 @@ class MyPageViewModel @Inject constructor(
     }
 
     val user: MutableStateFlow<User?> = MutableStateFlow(null)
-    val likedCourses: MutableStateFlow<List<LikedCourse>?> = MutableStateFlow(null)
-    val isLikedCoursesFetchedAll: MutableStateFlow<Boolean> = MutableStateFlow(false)
+
+    val likedCourses = MutableStateFlow<List<List<LikedCourse>>?>(null)
+    val isLikedCoursesFetchedAll = MutableStateFlow(false)
+
+    val usedCourses = MutableStateFlow<List<List<UsedCourse>>?>(null)
+    val isUsedCoursesFetchedAll = MutableStateFlow(false)
 
     suspend fun loadMyInfo() {
         user.value = userRepository.getUserInfo()
@@ -31,13 +37,28 @@ class MyPageViewModel @Inject constructor(
 
     suspend fun loadLikedCourse() {
         val currentLikedCourses = likedCourses.value ?: emptyList()
-        val page = currentLikedCourses.size / PAGE_SIZE
-        val fetchedLikedCourses = courseRepository.getLikedCourseList(page = page, size = PAGE_SIZE)
+        val fetchedLikedCourses =
+            courseRepository.getLikedCourseList(page = currentLikedCourses.size, size = PAGE_SIZE)
 
-        likedCourses.value = currentLikedCourses + fetchedLikedCourses
-        if (fetchedLikedCourses.isEmpty()) {
+        likedCourses.value = currentLikedCourses.plus<List<LikedCourse>>(fetchedLikedCourses)
+        if (fetchedLikedCourses.size < PAGE_SIZE) {
             isLikedCoursesFetchedAll.value = true
         }
+    }
+
+    suspend fun loadUsedCourse() {
+        val currentUsedCourses = usedCourses.value ?: emptyList()
+        val fetchedUsedCourses =
+            courseRepository.getUserCourseList(page = currentUsedCourses.size, size = PAGE_SIZE)
+
+        usedCourses.value = currentUsedCourses.plus<List<UsedCourse>>(fetchedUsedCourses)
+        if (fetchedUsedCourses.size < PAGE_SIZE) {
+            isUsedCoursesFetchedAll.value = true
+        }
+    }
+
+    suspend fun getCoursePositions(courseId: Long): List<Position> {
+        return courseRepository.getCourse(courseId = courseId).positions
     }
 
     suspend fun modifyCourseLike(courseId: Long, isLiked: Boolean) {

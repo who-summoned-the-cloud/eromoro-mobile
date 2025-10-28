@@ -147,12 +147,9 @@ fun NavGraphBuilder.addSignUpRoute(
 
         composable(
             route = "/sign-up/success/{nickname}",
-            arguments = listOf(
-                navArgument("nickname") { type = NavType.StringType }),
+            arguments = listOf(navArgument("nickname") { type = NavType.StringType }),
         ) { backStackEntry ->
-            val nickname = remember {
-                backStackEntry.arguments?.getString("nickname") ?: "회원"
-            }
+            val nickname = backStackEntry.arguments?.getString("nickname") ?: "회원"
 
             SignUpSuccessScreen(
                 nickname = nickname,

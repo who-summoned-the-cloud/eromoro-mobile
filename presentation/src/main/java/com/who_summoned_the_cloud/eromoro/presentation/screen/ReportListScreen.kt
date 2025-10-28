@@ -8,6 +8,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
@@ -47,7 +48,6 @@ import androidx.compose.ui.unit.sp
 import coil3.compose.rememberAsyncImagePainter
 import com.who_summoned_the_cloud.eromoro.common.model.ReportCategory
 import com.who_summoned_the_cloud.eromoro.presentation.R
-import com.who_summoned_the_cloud.eromoro.presentation.component.CustomChip
 import com.who_summoned_the_cloud.eromoro.presentation.component.CustomProgressIndicator
 import com.who_summoned_the_cloud.eromoro.presentation.model.Fetch
 import com.who_summoned_the_cloud.eromoro.presentation.model.ReportListScreenTab
@@ -156,7 +156,7 @@ fun ReportListScreen(
             contentAlignment = Alignment.BottomEnd,
             modifier = Modifier
                 .fillMaxSize()
-                .padding(end = 16.dp, bottom = 22.dp)
+                .padding(end = 16.dp, bottom = SystemUiPadding.navigationBarHeight + 100.dp)
         ) {
             Box(
                 contentAlignment = Alignment.Center,
@@ -169,7 +169,8 @@ fun ReportListScreen(
                     )
                     .background(color = Colors.pink[100], shape = CircleShape)
                     .clip(CircleShape)
-                    .clickable { onCameraButtonClicked() }) {
+                    .clickable { onCameraButtonClicked() },
+            ) {
                 Icon(
                     painter = painterResource(R.drawable.icon_camera),
                     contentDescription = "사진으로 제보하기 버튼",
@@ -185,35 +186,44 @@ fun ReportListScreen(
 private fun MyReportsTab(
     prop: ReportListScreenTab.MyReports,
 ) {
-    LazyColumn {
-        item {
-            Row(
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
-                modifier = Modifier.padding(start = 16.dp, end = 16.dp, top = 18.dp, bottom = 4.dp)
-            ) {
-                listOf(
-                    null,
-                    ReportCategory.TO_COMMUNITY,
-                    ReportCategory.TO_LOCAL_GOVERNANCE,
-                ).forEach { category ->
-                    val isSelected = category == prop.category
-
-                    CustomChip(
-                        text = when (category) {
-                            null -> "전체"
-                            ReportCategory.TO_COMMUNITY -> "제보"
-                            ReportCategory.TO_LOCAL_GOVERNANCE -> "신고"
-                        },
-                        isSelected = isSelected,
-                        onClick = { prop.onCategoryChipClicked(category) },
-                    )
-                }
-            }
-        }
+    LazyColumn(
+        contentPadding = PaddingValues(top = 10.dp),
+    ) {
+        // item {
+        //     Row(
+        //         horizontalArrangement = Arrangement.spacedBy(8.dp),
+        //         modifier = Modifier.padding(start = 16.dp, end = 16.dp, top = 18.dp, bottom = 4.dp)
+        //     ) {
+        //         listOf(
+        //             null,
+        //             ReportCategory.TO_COMMUNITY,
+        //             ReportCategory.TO_LOCAL_GOVERNANCE,
+        //         ).forEach { category ->
+        //             val isSelected = category == prop.category
+        //
+        //             CustomChip(
+        //                 text = when (category) {
+        //                     null -> "전체"
+        //                     ReportCategory.TO_COMMUNITY -> "제보"
+        //                     ReportCategory.TO_LOCAL_GOVERNANCE -> "신고"
+        //                 },
+        //                 isSelected = isSelected,
+        //                 onClick = { prop.onCategoryChipClicked(category) },
+        //             )
+        //         }
+        //     }
+        // }
 
         when (prop.reports) {
             is Fetch.Loading -> item {
-                // TODO
+                Box(
+                    contentAlignment = Alignment.Center,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 100.dp)
+                ) {
+                    CustomProgressIndicator()
+                }
             }
 
             is Fetch.Success -> {
@@ -288,20 +298,20 @@ private fun MyReportsTab(
                                             maxLines = 1,
                                         )
                                     }
-                                    Box(
-                                        modifier = Modifier
-                                            .clip(CircleShape)
-                                            .clickable { report.onMenuButtonClicked() },
-                                    ) {
-                                        Icon(
-                                            painter = painterResource(R.drawable.icon_kebab_menu),
-                                            contentDescription = "메뉴 버튼",
-                                            tint = Colors.gray[400],
-                                            modifier = Modifier
-                                                .padding(6.dp)
-                                                .size(12.dp),
-                                        )
-                                    }
+                                    // Box(
+                                    //     modifier = Modifier
+                                    //         .clip(CircleShape)
+                                    //         .clickable { report.onMenuButtonClicked() },
+                                    // ) {
+                                    //     Icon(
+                                    //         painter = painterResource(R.drawable.icon_kebab_menu),
+                                    //         contentDescription = "메뉴 버튼",
+                                    //         tint = Colors.gray[400],
+                                    //         modifier = Modifier
+                                    //             .padding(6.dp)
+                                    //             .size(12.dp),
+                                    //     )
+                                    // }
                                 }
                                 Row(
                                     horizontalArrangement = Arrangement.SpaceBetween,
@@ -328,11 +338,11 @@ private fun MyReportsTab(
                                                 report.like,
                                                 report.onLikeButtonClicked
                                             ),
-                                            Triple(
-                                                R.drawable.image_thumb_down,
-                                                report.dislike,
-                                                report.onDislikeButtonClicked
-                                            ),
+                                            // Triple(
+                                            //     R.drawable.image_thumb_down,
+                                            //     report.dislike,
+                                            //     report.onDislikeButtonClicked
+                                            // ),
                                         ).forEach { (icon, count, onClick) ->
                                             Row(
                                                 verticalAlignment = Alignment.CenterVertically,
@@ -368,6 +378,23 @@ private fun MyReportsTab(
                                 modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
                             )
                         }
+                    }
+                }
+
+                if (prop.reports.data.isEmpty()) item {
+                    Box(
+                        contentAlignment = Alignment.Center,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 50.dp)
+                    ) {
+                        Text(
+                            text = "등록한 제보가 없습니다.\n장애물을 제보해보세요.",
+                            color = Colors.gray[300],
+                            fontSize = 16.sp,
+                            fontWeight = FontWeight.Normal,
+                            lineHeight = 24.sp,
+                        )
                     }
                 }
 
@@ -624,13 +651,11 @@ private fun RankingTab(
 @Preview
 @Composable
 fun PreviewReportListScreen() {
-    var currentTab: Class<out ReportListScreenTab> by remember { mutableStateOf(ReportListScreenTab.Ranking::class.java) }
+    var currentTab: Class<out ReportListScreenTab> by remember { mutableStateOf(ReportListScreenTab.MyReports::class.java) }
 
     ReportListScreen(
         currentTab = currentTab,
         reportTab = ReportListScreenTab.MyReports(
-            category = null,
-            sort = ReportListScreenTab.MyReports.Sort.NEWEST,
             reports = Fetch.Success(
                 listOf(
                     ReportListScreenTab.MyReports.Report(
@@ -644,9 +669,7 @@ fun PreviewReportListScreen() {
                         date = LocalDate.now(),
                         like = 7,
                         dislike = 1,
-                        onMenuButtonClicked = {},
                         onLikeButtonClicked = {},
-                        onDislikeButtonClicked = {},
                         onClick = {},
                     ), ReportListScreenTab.MyReports.Report(
                         id = 2,
@@ -659,9 +682,7 @@ fun PreviewReportListScreen() {
                         date = LocalDate.now(),
                         like = 7,
                         dislike = 1,
-                        onMenuButtonClicked = {},
                         onLikeButtonClicked = {},
-                        onDislikeButtonClicked = {},
                         onClick = {},
                     )
                 ).let {
@@ -669,8 +690,6 @@ fun PreviewReportListScreen() {
                 },
             ),
             showLoadingAtBottom = true,
-            menuExpandedReportId = null,
-            onCategoryChipClicked = {},
             onNewPageRequest = {},
         ),
         rankingTab = ReportListScreenTab.Ranking(

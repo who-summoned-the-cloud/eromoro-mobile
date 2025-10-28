@@ -28,6 +28,7 @@ import com.who_summoned_the_cloud.eromoro.app.model.ToastCallback
 import com.who_summoned_the_cloud.eromoro.presentation.component.CustomToast
 import com.who_summoned_the_cloud.eromoro.presentation.model.ToastType
 import com.who_summoned_the_cloud.eromoro.presentation.util.SystemUiPadding
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 
 @Composable
@@ -37,9 +38,11 @@ fun App() {
 
     val snackBarHostState = remember { SnackbarHostState() }
     var snackBarType: ToastType? by remember { mutableStateOf(null) }
+    var latestSnackBarJob: Job? by remember { mutableStateOf(null) }
     val showToast: ToastCallback = remember {
         { message, type ->
-            scope.launch {
+            latestSnackBarJob?.cancel()
+            latestSnackBarJob = scope.launch {
                 snackBarType = type
                 snackBarHostState.showSnackbar(message = message, duration = SnackbarDuration.Short)
             }
@@ -58,8 +61,8 @@ fun App() {
                     type = snackBarType,
                 )
             }
-        }) { padding ->
-
+        },
+    ) { padding ->
         NavHost(
             navController = navController,
             startDestination = "/splash",

@@ -49,6 +49,7 @@ import com.who_summoned_the_cloud.eromoro.common.model.Position
 import com.who_summoned_the_cloud.eromoro.presentation.R
 import com.who_summoned_the_cloud.eromoro.presentation.component.CustomButton
 import com.who_summoned_the_cloud.eromoro.presentation.component.CustomMap
+import com.who_summoned_the_cloud.eromoro.presentation.component.CustomProgressIndicator
 import com.who_summoned_the_cloud.eromoro.presentation.model.CustomMapScope
 import com.who_summoned_the_cloud.eromoro.presentation.model.SpotInformationScreenTab
 import com.who_summoned_the_cloud.eromoro.presentation.theme.Colors
@@ -63,7 +64,7 @@ fun SpotInformationScreen(
     description: String?,
     address: String?,
     position: Position?,
-    facilities: Set<Facility>,
+    facilities: Set<Facility>?,
     currentTab: SpotInformationScreenTab,
     onBackButtonClicked: () -> Unit,
     onSearchFieldClicked: () -> Unit,
@@ -175,7 +176,7 @@ fun SpotInformationScreen(
                 listOf(
                     SpotInformationScreenTab.DESCRIPTION to "상세정보",
                     SpotInformationScreenTab.FACILITY to "시설정보",
-                    SpotInformationScreenTab.LOCATION to "시설정보",
+                    SpotInformationScreenTab.LOCATION to "위치",
                 ).forEach { (tab, text) ->
                     val isSelected = tab == currentTab
 
@@ -238,6 +239,7 @@ fun SpotInformationScreen(
                                 shape = RoundedCornerShape(14.dp),
                             )
                             .heightIn(min = 200.dp)
+                            .fillMaxWidth()
                     ) {
                         if (description != null) Text(
                             text = description,
@@ -247,7 +249,16 @@ fun SpotInformationScreen(
                             softWrap = true,
                             lineHeight = 22.sp,
                             modifier = Modifier.padding(16.dp),
-                        )
+                        ) else {
+                            Box(
+                                contentAlignment = Alignment.Center,
+                                modifier = Modifier
+                                    .height(200.dp)
+                                    .fillMaxWidth(),
+                            ) {
+                                CustomProgressIndicator()
+                            }
+                        }
                     }
                 }
             }
@@ -288,13 +299,25 @@ fun SpotInformationScreen(
                         verticalArrangement = Arrangement.spacedBy(12.dp),
                         modifier = Modifier.fillMaxWidth(),
                     ) {
-                        Facility.entries.forEach iter@{
+                        if (facilities == null) Box(
+                            Modifier.padding(16.dp)
+                        ) {
+                            CustomProgressIndicator()
+                        } else if (facilities.isNotEmpty()) Facility.entries.forEach iter@{
                             if (!facilities.contains(it)) return@iter
 
                             Image(
                                 bitmap = rememberBitmap(getFacilityIconRes(it)).single(),
                                 contentDescription = null,
                                 modifier = Modifier.size(50.dp)
+                            )
+                        } else {
+                            Text(
+                                text = "시설 정보 없음",
+                                fontSize = 12.sp,
+                                fontWeight = FontWeight.Normal,
+                                color = Colors.gray[400],
+                                modifier = Modifier.padding(vertical = 8.dp)
                             )
                         }
                     }
@@ -333,12 +356,12 @@ fun SpotInformationScreen(
                         modifier = Modifier
                             .clip(RoundedCornerShape(14.dp))
                             .height(width / 3)
-                            .clickable(
-                                indication = null,
-                                interactionSource = null,
-                            ) { onMapClicked() },
                     ) {
-                        CustomMap(currentPosition = position, content = content)
+                        CustomMap(
+                            currentPosition = position,
+                            onClick = onMapClicked,
+                            content = content,
+                        )
                     }
                     if (address != null) Column(
                         verticalArrangement = Arrangement.spacedBy(3.dp),

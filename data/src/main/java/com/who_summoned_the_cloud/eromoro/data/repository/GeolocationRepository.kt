@@ -136,7 +136,7 @@ class GeolocationRepository @Inject constructor(
                             val result = geocodingResponse.addresses
                                 .firstOrNull()
                                 ?.let {
-                                    Position(it.x.toDouble() to it.y.toDouble())
+                                    Position(it.y.toDouble() to it.x.toDouble())
                                 } ?: throw Exception("주소를 찾을 수 없습니다.")
 
                             continuation.resume(result)

@@ -7,12 +7,12 @@ import java.time.LocalDate
 sealed class ReportListScreenTab {
 
     data class MyReports(
-        val category: ReportCategory?,
-        val sort: Sort,
+        // val category: ReportCategory?,
+        // val sort: Sort,
         val reports: Fetch<List<Report>, Unit>,
         val showLoadingAtBottom: Boolean,
-        val menuExpandedReportId: Long?,
-        val onCategoryChipClicked: (ReportCategory?) -> Unit,
+        // val menuExpandedReportId: Long?,
+        // val onCategoryChipClicked: (ReportCategory?) -> Unit,
         val onNewPageRequest: () -> Unit,
     ) : ReportListScreenTab() {
 
@@ -32,9 +32,9 @@ sealed class ReportListScreenTab {
             val date: LocalDate,
             val like: Int,
             val dislike: Int,
-            val onMenuButtonClicked: () -> Unit,
+            // val onMenuButtonClicked: () -> Unit,
             val onLikeButtonClicked: () -> Unit,
-            val onDislikeButtonClicked: () -> Unit,
+            // val onDislikeButtonClicked: () -> Unit,
             val onClick: () -> Unit,
         ) {
             enum class State {

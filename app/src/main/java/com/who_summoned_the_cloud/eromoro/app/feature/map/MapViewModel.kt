@@ -2,6 +2,7 @@ package com.who_summoned_the_cloud.eromoro.app.feature.map
 
 import androidx.lifecycle.ViewModel
 import com.who_summoned_the_cloud.eromoro.common.model.Position
+import com.who_summoned_the_cloud.eromoro.data.model.Course
 import com.who_summoned_the_cloud.eromoro.data.model.CourseGenerationRequest
 import com.who_summoned_the_cloud.eromoro.data.model.GeneratedCourse
 import com.who_summoned_the_cloud.eromoro.data.repository.CourseRepository
@@ -18,8 +19,9 @@ class MapViewModel @Inject constructor(
     private val userRepository: UserRepository,
 ): ViewModel() {
 
-    val nickname: MutableStateFlow<String?> = MutableStateFlow(null)
-    val generatedCourses: MutableStateFlow<List<GeneratedCourse>> = MutableStateFlow(emptyList())
+    val nickname = MutableStateFlow<String?>(null)
+    val generatedCourses = MutableStateFlow<List<GeneratedCourse>>(emptyList())
+    val currentProgressingCourse = MutableStateFlow<Course?>(null)
 
     suspend fun loadNickname() {
         nickname.value = userRepository.getUserInfo().nickname
@@ -43,5 +45,20 @@ class MapViewModel @Inject constructor(
         )
 
         generatedCourses.value = result
+    }
+
+    suspend fun startCourse(courseId: Long) {
+        courseRepository.startCourse(courseId = courseId)
+        currentProgressingCourse.value = courseRepository.getCourse(courseId = courseId)
+    }
+
+    suspend fun endCourse() {
+        // TODO
+    }
+
+    suspend fun loadCurrentProgressingCourse() {
+        val courseId = courseRepository.getCurrentCourseId()
+        if (courseId == null) throw Exception("No current course")
+        currentProgressingCourse.value = courseRepository.getCourse(courseId = courseId)
     }
 }
