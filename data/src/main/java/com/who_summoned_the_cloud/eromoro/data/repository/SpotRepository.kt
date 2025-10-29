@@ -63,7 +63,7 @@ class SpotRepository @Inject constructor(
                     UserType.PHYSICAL_DISABILITY.takeIf { spot.userType?.disabled == true },
                     UserType.PREGNANT.takeIf { spot.userType?.pregnant == true },
                     UserType.SENIOR.takeIf { spot.userType?.senior == true },
-                    UserType.INFANT.takeIf { spot.userType?.child == true },
+                    UserType.INFANT.takeIf { spot.userType?.infantGuardian == true },
                 ),
             )
         } ?: emptyList()

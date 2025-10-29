@@ -1,5 +1,7 @@
 package com.who_summoned_the_cloud.eromoro.app.feature.mypage
 
+import androidx.compose.animation.EnterTransition
+import androidx.compose.animation.ExitTransition
 import androidx.compose.foundation.text.input.rememberTextFieldState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -306,6 +308,8 @@ fun NavGraphBuilder.addMyPageRoute(
 
     composable(
         route = "/my-page/course-view/{courseId}",
+        enterTransition = { EnterTransition.None },
+        exitTransition = { ExitTransition.None },
         arguments = listOf(navArgument("courseId") { type = NavType.LongType }),
     ) { backStackEntry ->
         val viewModel = getViewModel(backStackEntry)

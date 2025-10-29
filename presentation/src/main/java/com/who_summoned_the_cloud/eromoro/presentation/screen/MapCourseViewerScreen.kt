@@ -56,7 +56,8 @@ import com.who_summoned_the_cloud.eromoro.presentation.util.getDistanceExpressio
 @Composable
 fun MapCourseViewerScreen(
     courses: Fetch<List<MapCourseViewerScreenCourse>, Unit>,
-    selectedCourseIndex: Int,
+    selectedCourseIndex: Int?,
+    buttonLabel: String = "코스 시작",
     onBackButtonClicked: () -> Unit,
     onCourseStartButtonClicked: () -> Unit,
     content: @Composable CustomMapScope.() -> Unit,
@@ -69,7 +70,7 @@ fun MapCourseViewerScreen(
             else null
         }
 
-        coursePositions[selectedCourseIndex] to coursePositions
+        selectedCourseIndex?.let { coursePositions[selectedCourseIndex] } to coursePositions
             .filterIndexed { index, _ -> index != selectedCourseIndex }
             .filterNotNull()
     }
@@ -100,7 +101,7 @@ fun MapCourseViewerScreen(
                             val innerY = courseCardCoordinates.size.height
 
                             (innerY - totalY) / 2f
-                        }
+                        },
                     )
 
                     moveToMainCourseView(pivot)
@@ -290,7 +291,7 @@ fun MapCourseViewerScreen(
                         showShadow = true,
                     ) {
                         Text(
-                            text = "코스 시작",
+                            text = buttonLabel,
                             color = Colors.white,
                             fontSize = 15.sp,
                             fontWeight = FontWeight.Bold,

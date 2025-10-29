@@ -1,6 +1,9 @@
 package com.who_summoned_the_cloud.eromoro.app.feature.home
 
+import android.Manifest
 import android.annotation.SuppressLint
+import androidx.compose.animation.EnterTransition
+import androidx.compose.animation.ExitTransition
 import androidx.compose.foundation.text.input.rememberTextFieldState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -31,9 +34,11 @@ import com.who_summoned_the_cloud.eromoro.presentation.modal.AddressSelectModalB
 import com.who_summoned_the_cloud.eromoro.presentation.modal.CategorySelectModalBottomSheet
 import com.who_summoned_the_cloud.eromoro.presentation.model.Fetch
 import com.who_summoned_the_cloud.eromoro.presentation.model.HomeScreenPlace
+import com.who_summoned_the_cloud.eromoro.presentation.model.MapCourseViewerScreenCourse
 import com.who_summoned_the_cloud.eromoro.presentation.model.SpotInformationScreenTab
 import com.who_summoned_the_cloud.eromoro.presentation.model.ToastType
 import com.who_summoned_the_cloud.eromoro.presentation.screen.HomeScreen
+import com.who_summoned_the_cloud.eromoro.presentation.screen.MapCourseViewerScreen
 import com.who_summoned_the_cloud.eromoro.presentation.screen.MapScreen
 import com.who_summoned_the_cloud.eromoro.presentation.screen.SpotInformationScreen
 import kotlinx.coroutines.MainScope
@@ -66,8 +71,8 @@ fun NavGraphBuilder.addHomeRoute(
 
             val locationPermission = rememberMultiplePermissionsState(
                 permissions = listOf(
-                    android.Manifest.permission.ACCESS_FINE_LOCATION,
-                    android.Manifest.permission.ACCESS_COARSE_LOCATION,
+                    Manifest.permission.ACCESS_FINE_LOCATION,
+                    Manifest.permission.ACCESS_COARSE_LOCATION,
                 )
             )
 
@@ -238,8 +243,8 @@ fun NavGraphBuilder.addHomeRoute(
             val viewModel = getViewModel(backStackEntry)
 
             val spot by viewModel.spot.collectAsState()
+            val spotPosition by viewModel.spotPosition.collectAsState()
             var currentTab by remember { mutableStateOf(SpotInformationScreenTab.DESCRIPTION) }
-            var position: Position? by remember { mutableStateOf(null) }
 
             LaunchedEffect(spotId) {
                 if (spot?.id != spotId) viewModel.launch {
@@ -252,24 +257,12 @@ fun NavGraphBuilder.addHomeRoute(
                 }
             }
 
-            LaunchedEffect(spot?.address) {
-                spot?.address?.let { address ->
-                    viewModel.launch {
-                        runCatching {
-                            getPosition(address = address)
-                        }.onSuccess {
-                            position = it
-                        }
-                    }
-                }
-            }
-
             SpotInformationScreen(
                 image = spot?.image,
                 name = spot?.name,
                 description = spot?.description,
                 address = spot?.address,
-                position = position,
+                position = spotPosition,
                 facilities = spot?.facilities,
                 currentTab = currentTab,
                 onBackButtonClicked = {
@@ -283,44 +276,141 @@ fun NavGraphBuilder.addHomeRoute(
                 },
                 onTabClicked = { currentTab = it },
                 onMapClicked = {
-                    MainScope().launch { navController.navigate(route = "/home/map") }
+                    MainScope().launch { navController.navigate(route = "/home/map/${spotId}") }
                 },
                 onGoToCourseButtonClicked = {
-                    // TODO
+                    MainScope().launch {
+                        navController.navigate(route = "/home/course-view/${spotId}")
+                    }
                 },
             ) {
-                LaunchedEffect(position) {
-                    position?.let { moveMap(it) }
+                LaunchedEffect(spotPosition) {
+                    spotPosition?.let { moveMap(it) }
                 }
             }
         }
 
         composable(
-            route = "/home/map"
+            route = "/home/map/{spotId}",
+            enterTransition = { EnterTransition.None },
+            exitTransition = { ExitTransition.None },
+            arguments = listOf(navArgument("spotId") { type = NavType.LongType }),
         ) { backStackEntry ->
             val viewModel = getViewModel(backStackEntry)
-            val spot by viewModel.spot.collectAsState()
-            var position by remember { mutableStateOf<Position?>(null) }
+            val spotId = backStackEntry.arguments?.getLong("spotId") ?: return@composable
 
-            LaunchedEffect(spot) {
-                spot?.address?.let { address ->
-                    viewModel.launch {
-                        runCatching {
-                            getPosition(address = address)
-                        }.onSuccess {
-                            position = it
-                        }
+            val spot by viewModel.spot.collectAsState()
+            val spotPosition by viewModel.spotPosition.collectAsState()
+
+            LaunchedEffect(spotId) {
+                if (spot?.id == spotId) return@LaunchedEffect
+                viewModel.launch {
+                    runCatching { loadSpot(spotId = spotId) }.onFailure {
+                        showToast("정보를 불러오지 못했습니다.", ToastType.ERROR)
                     }
                 }
             }
 
             MapScreen(
-                currentPosition = position,
+                currentPosition = spotPosition,
                 onBackButtonClicked = { MainScope().launch { navController.popBackStack() } },
             ) {
-                LaunchedEffect(position) {
-                    position?.let { moveMap(it) }
+                LaunchedEffect(spotPosition) {
+                    spotPosition?.let { moveMap(it) }
                 }
+            }
+        }
+
+        composable(
+            route = "/home/course-view/{spotId}",
+            enterTransition = { EnterTransition.None },
+            exitTransition = { ExitTransition.None },
+        ) { backStackEntry ->
+            val viewModel = getViewModel(backStackEntry)
+            val spotId = backStackEntry.arguments?.getLong("spotId") ?: return@composable
+
+            val spot by viewModel.spot.collectAsState()
+            val spotCourseList by viewModel.spotCourseList.collectAsState()
+
+            var selectedCourseIndex: Int? by remember { mutableStateOf(null) }
+
+            val spotCourses: Fetch<List<MapCourseViewerScreenCourse>, Unit> =
+                remember(spotCourseList) {
+                    spotCourseList
+                        ?.flatten()
+                        ?.map {
+                            MapCourseViewerScreenCourse(
+                                badge = null,
+                                name = it.title,
+                                rating = it.rating,
+                                coursePositions = Fetch.Loading(),
+                                isLiked = it.isLiked,
+                                obstacles = it.obstacles,
+                                distance = it.distance,
+                                duration = it.duration,
+                                onLikeButtonClicked = {
+                                    // TODO
+                                },
+                                onClick = {
+                                    // TODO
+                                },
+                            )
+                        }
+                        ?.let { Fetch.Success(it) } ?: Fetch.Loading()
+                }
+
+            LaunchedEffect(spotId) {
+                if (spot?.id == spotId) return@LaunchedEffect
+                viewModel.launch {
+                    runCatching { loadSpot(spotId = spotId) }
+                }
+            }
+
+            LaunchedEffect(spot) {
+                if (spot == null) return@LaunchedEffect
+                viewModel.launch {
+                    runCatching { loadCurrentSpotCourse() }
+                }
+            }
+
+            MapCourseViewerScreen(
+                courses = spotCourses,
+                selectedCourseIndex = selectedCourseIndex,
+                buttonLabel = if (selectedCourseIndex == null) "코스 생성하기" else "코스 시작",
+                onBackButtonClicked = {
+                    MainScope().launch { navController.popBackStack() }
+                },
+                onCourseStartButtonClicked = {
+                    viewModel.launch {
+                        val selectedCourseIndex = selectedCourseIndex ?: run {
+                            MainScope().launch {
+                                navController.navigate(route = "/map/generate") {
+                                    popUpTo(route = "/home/main") { inclusive = false }
+                                }
+                            }
+                            return@launch
+                        }
+
+                        val course = spotCourseList
+                            ?.flatten()
+                            ?.getOrNull(selectedCourseIndex)
+                        if (course == null) return@launch
+
+                        runCatching { startCourse(courseId = course.id) }
+                            .onSuccess {
+                                MainScope().launch {
+                                    navController.navigate(route = "/map/progress") {
+                                        popUpTo("/home/main") { inclusive = false }
+                                    }
+                                }
+                            }
+                            .onFailure {
+                                showToast("코스를 시작할 수 없습니다.", ToastType.ERROR)
+                            }
+                    }
+                },
+            ) {
+                // EMPTY
             }
         }
     }

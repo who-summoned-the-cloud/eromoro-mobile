@@ -3,6 +3,8 @@ package com.who_summoned_the_cloud.eromoro.app.feature.map
 import android.Manifest
 import android.annotation.SuppressLint
 import android.util.Log
+import androidx.compose.animation.EnterTransition
+import androidx.compose.animation.ExitTransition
 import androidx.compose.foundation.text.input.delete
 import androidx.compose.foundation.text.input.rememberTextFieldState
 import androidx.compose.runtime.Composable
@@ -69,6 +71,8 @@ fun NavGraphBuilder.addMapRoute(
     ) {
         composable(
             route = "/map/generate",
+            enterTransition = { EnterTransition.None },
+            exitTransition = { ExitTransition.None },
         ) { backStackEntry ->
             val viewModel = getViewModel(backStackEntry)
             val context = LocalContext.current
@@ -262,6 +266,8 @@ fun NavGraphBuilder.addMapRoute(
 
         composable(
             route = "/map/generate/course-select",
+            enterTransition = { EnterTransition.None },
+            exitTransition = { ExitTransition.None },
         ) { backStackEntry ->
             val viewModel = getViewModel(backStackEntry)
 
@@ -321,6 +327,8 @@ fun NavGraphBuilder.addMapRoute(
 
         composable(
             route = "/map/progress",
+            enterTransition = { EnterTransition.None },
+            exitTransition = { ExitTransition.None },
         ) { backStackEntry ->
             val viewModel = getViewModel(backStackEntry)
             val context = LocalContext.current
@@ -415,7 +423,9 @@ fun NavGraphBuilder.addMapRoute(
         }
 
         composable(
-            route = "/map/finish"
+            route = "/map/finish",
+            enterTransition = { EnterTransition.None },
+            exitTransition = { ExitTransition.None },
         ) { backStackEntry ->
             val viewModel = getViewModel(backStackEntry)
             val currentProcessingCourse by viewModel.currentProgressingCourse.collectAsState()

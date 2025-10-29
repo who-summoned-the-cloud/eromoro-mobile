@@ -245,7 +245,7 @@ class CourseRepository @Inject constructor(
      * 코스 시작
      */
     suspend fun startCourse(courseId: Long) {
-        courseControllerApi.withAuth { startCourse() }
+        courseControllerApi.withAuth { startCourse(courseId = courseId) }
         coursePreference.initialize(courseId = courseId)
     }
 

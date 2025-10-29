@@ -5,6 +5,8 @@ import android.net.Uri
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.animation.EnterTransition
+import androidx.compose.animation.ExitTransition
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -330,6 +332,8 @@ fun NavGraphBuilder.addReportRoute(
 
         composable(
             route = "/report/create/select-location",
+            enterTransition = { EnterTransition.None },
+            exitTransition = { ExitTransition.None },
         ) { backStackEntry ->
             val viewModel = getViewModel(backStackEntry)
             val context = LocalContext.current
@@ -387,11 +391,15 @@ fun NavGraphBuilder.addReportRoute(
             val point = backStackEntry.arguments?.getInt("point") ?: 1
             val nickname by viewModel.nickname.collectAsState()
 
-            ReportRewardScreen(nickname = nickname, point = point, onBackButtonClicked = {
-                MainScope().launch { navController.popBackStack() }
-            }, onGoToMainButtonClicked = {
-                MainScope().launch { navController.popBackStack() }
-            })
+            ReportRewardScreen(
+                nickname = nickname, point = point,
+                onBackButtonClicked = {
+                    MainScope().launch { navController.popBackStack() }
+                },
+                onGoToMainButtonClicked = {
+                    MainScope().launch { navController.popBackStack() }
+                },
+            )
         }
     }
 }
