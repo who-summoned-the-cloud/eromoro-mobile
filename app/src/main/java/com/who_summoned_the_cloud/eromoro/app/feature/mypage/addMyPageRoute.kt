@@ -68,7 +68,11 @@ fun NavGraphBuilder.addMyPageRoute(
                                 id = it.id,
                                 image = it.image,
                                 title = it.title,
-                                onClick = { /* TODO */ },
+                                onClick = {
+                                    MainScope().launch {
+                                        navController.navigate("/my-page/course-view/${it.id}")
+                                    }
+                                },
                             )
                         }
                         ?.let { Fetch.Success(it) } ?: Fetch.Loading(),
@@ -316,11 +320,13 @@ fun NavGraphBuilder.addMyPageRoute(
 
                 runCatching {
                     getCoursePositions(courseId = courseId)
-                }.onSuccess {
-                    positions = it
-                }.onFailure {
-                    showToast("오류가 발생했습니다.", ToastType.ERROR)
                 }
+                    .onSuccess {
+                        positions = it
+                    }
+                    .onFailure {
+                        showToast("오류가 발생했습니다.", ToastType.ERROR)
+                    }
 
                 showLoading = false
             }
@@ -333,17 +339,7 @@ fun NavGraphBuilder.addMyPageRoute(
             }
         ) {
             LaunchedEffect(positions) {
-                positions?.let { positions ->
-                    val (top, bottom, start, end) = listOf(
-                        positions.minOf { it.latitude },
-                        positions.maxOf { it.latitude },
-                        positions.minOf { it.longitude },
-                        positions.maxOf { it.longitude },
-                    )
-
-                    val middle = Position((bottom + top) / 2 to (start + end) / 2)
-                    moveMap(middle)
-                }
+                moveToMainCourseView()
             }
         }
 

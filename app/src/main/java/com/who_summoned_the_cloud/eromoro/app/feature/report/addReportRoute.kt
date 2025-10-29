@@ -1,5 +1,6 @@
 package com.who_summoned_the_cloud.eromoro.app.feature.report
 
+import android.annotation.SuppressLint
 import android.net.Uri
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -20,6 +21,8 @@ import androidx.navigation.NavType
 import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
 import androidx.navigation.navigation
+import com.google.accompanist.permissions.ExperimentalPermissionsApi
+import com.google.accompanist.permissions.rememberMultiplePermissionsState
 import com.who_summoned_the_cloud.eromoro.app.model.ToastCallback
 import com.who_summoned_the_cloud.eromoro.app.util.FinishHandler
 import com.who_summoned_the_cloud.eromoro.app.util.NavigationBarApp
@@ -44,6 +47,8 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.launch
 
+@SuppressLint("MissingPermission")
+@OptIn(ExperimentalPermissionsApi::class)
 fun NavGraphBuilder.addReportRoute(
     navController: NavHostController,
     showToast: ToastCallback,
@@ -83,7 +88,7 @@ fun NavGraphBuilder.addReportRoute(
                                 id = it.id,
                                 image = it.image,
                                 category = if (it.isForLocalGovernance) ReportCategory.TO_LOCAL_GOVERNANCE else ReportCategory.TO_COMMUNITY,
-                                state = ReportListScreenTab.MyReports.Report.State.APPROVED,  // TODO
+                                state = ReportListScreenTab.MyReports.Report.State.BEFORE_APPROVAL,  // TODO
                                 title = it.title,
                                 address = it.address,
                                 type = it.type.label,
@@ -228,6 +233,13 @@ fun NavGraphBuilder.addReportRoute(
             val viewModel = getViewModel(backStackEntry)
             val context = LocalContext.current
 
+            val locationPermission = rememberMultiplePermissionsState(
+                permissions = listOf(
+                    android.Manifest.permission.ACCESS_FINE_LOCATION,
+                    android.Manifest.permission.ACCESS_COARSE_LOCATION,
+                )
+            )
+
             val image by viewModel.reportingImage.collectAsState()
             val title = viewModel.title
             val content = viewModel.content
@@ -243,7 +255,12 @@ fun NavGraphBuilder.addReportRoute(
             var showExitConfirmPopup by remember { mutableStateOf(false) }
             var showLoading by remember { mutableStateOf(false) }
 
-            LaunchedEffect(Unit) {
+            LaunchedEffect(locationPermission.allPermissionsGranted) {
+                if (!locationPermission.allPermissionsGranted) {
+                    locationPermission.launchMultiplePermissionRequest()
+                    return@LaunchedEffect
+                }
+
                 if (currentPosition == null) viewModel.launch {
                     runCatching {
                         val location = getLocation(context)
@@ -256,9 +273,7 @@ fun NavGraphBuilder.addReportRoute(
 
             LaunchedEffect(Unit) {
                 // 미리 로드
-                viewModel.launch {
-                    runCatching { loadNickname() }
-                }
+                viewModel.launch { runCatching { loadNickname() } }
             }
 
             ReportWritingScreen(

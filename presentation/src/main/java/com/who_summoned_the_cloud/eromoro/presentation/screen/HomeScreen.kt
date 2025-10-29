@@ -481,10 +481,9 @@ fun HomeScreen(
                         horizontalArrangement = Arrangement.spacedBy(6.dp)
                     ) {
                         listOf(
-                            listOf(
-                                recommendingSido,
-                                recommendingSigungu
-                            ).joinToString(" ") to onAddressDropdownClicked,
+                            (if (recommendingSido == recommendingSigungu) recommendingSido else listOfNotNull(
+                                recommendingSido, recommendingSigungu
+                            ).joinToString(" ")) to onAddressDropdownClicked,
                             recommendingCategory.label to onCategoryDropdownClicked,
                         ).forEach { (text, onClick) ->
                             Box(
@@ -507,7 +506,7 @@ fun HomeScreen(
                                     modifier = Modifier.padding(horizontal = 15.dp, vertical = 5.dp)
                                 ) {
                                     Text(
-                                        text = text,
+                                        text = text ?: "",
                                         fontSize = 14.sp,
                                         fontWeight = FontWeight.Medium,
                                         color = Colors.pink[100],
@@ -708,24 +707,26 @@ private fun AvailableUserTypeListView(
     Row(
         horizontalArrangement = Arrangement.spacedBy(5.dp),
     ) {
-        UserType.entries.forEach { userType ->
-            val icon = getUserTypeIconRes(userType)
-            val isAvailable = userType in availableUserType
+        UserType.entries
+            .filter { it != UserType.OTHER }
+            .forEach { userType ->
+                val icon = getUserTypeIconRes(userType)
+                val isAvailable = userType in availableUserType
 
-            Box(
-                contentAlignment = Alignment.Center, modifier = Modifier.background(
-                    color = if (isAvailable) Colors.pink[200] else Colors.pink[600],
-                    shape = CircleShape
-                )
-            ) {
-                Icon(
-                    painter = painterResource(icon),
-                    tint = Colors.white,
-                    modifier = Modifier.size(28.dp),
-                    contentDescription = "${userType.label} ${if (isAvailable) "친화적인 코스 함유" else "친화적인 코스 미함유"}"
-                )
+                Box(
+                    contentAlignment = Alignment.Center, modifier = Modifier.background(
+                        color = if (isAvailable) Colors.pink[200] else Colors.pink[600],
+                        shape = CircleShape
+                    )
+                ) {
+                    Icon(
+                        painter = painterResource(icon),
+                        tint = Colors.white,
+                        modifier = Modifier.size(28.dp),
+                        contentDescription = "${userType.label} ${if (isAvailable) "친화적인 코스 함유" else "친화적인 코스 미함유"}"
+                    )
+                }
             }
-        }
     }
 }
 

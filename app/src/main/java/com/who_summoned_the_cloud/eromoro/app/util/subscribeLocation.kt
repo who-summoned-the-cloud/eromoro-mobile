@@ -15,11 +15,13 @@ import com.who_summoned_the_cloud.eromoro.common.model.Position
 fun subscribeLocation(context: Context, callback: (Position) -> Unit): () -> Unit {
     val locationService = LocationServices.getFusedLocationProviderClient(context)
 
-    val locationRequest = LocationRequest.Builder(
-        Priority.PRIORITY_HIGH_ACCURACY,
-        10000,
-    ).build()
-
+    val locationRequest = LocationRequest
+        .Builder(
+            Priority.PRIORITY_HIGH_ACCURACY,
+            60 * 1000,
+        )
+        .apply { setMinUpdateDistanceMeters(3f) }
+        .build()
 
     val callback = object : LocationCallback() {
         override fun onLocationResult(result: LocationResult) {
@@ -35,7 +37,7 @@ fun subscribeLocation(context: Context, callback: (Position) -> Unit): () -> Uni
         Looper.getMainLooper()
     )
 
-    return {
+    return { ->
         locationService.removeLocationUpdates(callback)
     }
 }

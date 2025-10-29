@@ -199,6 +199,7 @@ fun CustomMap(
         ) {
             // 코스(음영 처리)
             otherCourses
+                ?.filter { it.size > 1 }
                 ?.map { it.map { p -> p.toLatLng() } }
                 ?.let { courses ->
                     courses.forEach { course ->
@@ -222,6 +223,7 @@ fun CustomMap(
 
             // 코스(메인)
             mainCourse
+                ?.takeIf { it.size > 1 }
                 ?.map { p -> p.toLatLng() }
                 ?.let { course ->
                     PolylineOverlay(
@@ -341,21 +343,21 @@ fun CustomMap(
                 }
 
                 override fun moveToMainCourseView(pivot: PointF) {
-                    mainCourse?.let {
-                        val (top, bottom, start, end) = listOf(
-                            mainCourse.minOf { it.latitude },
-                            mainCourse.maxOf { it.latitude },
-                            mainCourse.minOf { it.longitude },
-                            mainCourse.maxOf { it.longitude },
-                        )
+                    if (mainCourse == null || mainCourse.isEmpty()) return
 
-                        val middle = Position(
-                            latitude = (top + bottom) / 2,
-                            longitude = (start + end) / 2,
-                        )
+                    val (top, bottom, start, end) = listOf(
+                        mainCourse.minOf { it.latitude },
+                        mainCourse.maxOf { it.latitude },
+                        mainCourse.minOf { it.longitude },
+                        mainCourse.maxOf { it.longitude },
+                    )
 
-                        moveMap(middle, pivot)
-                    }
+                    val middle = Position(
+                        latitude = (top + bottom) / 2,
+                        longitude = (start + end) / 2,
+                    )
+
+                    moveMap(middle, pivot)
                 }
 
                 override fun moveToMainCourseView(pivot: Offset) {

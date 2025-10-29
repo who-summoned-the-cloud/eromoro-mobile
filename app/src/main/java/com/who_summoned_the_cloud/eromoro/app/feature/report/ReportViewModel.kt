@@ -115,7 +115,7 @@ class ReportViewModel @Inject constructor(
 
         val likeCount = reportRepository.modifyReportLike(
             reportId = currentReport.id,
-            isLike = !currentReport.isLiked
+            isLike = !currentReport.isLiked,
         )
 
         report.value = currentReport.copy(isLiked = !currentReport.isLiked, like = likeCount)

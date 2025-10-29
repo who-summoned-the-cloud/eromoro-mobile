@@ -80,6 +80,8 @@ fun NavGraphBuilder.addLoginRoute(
                 onPasswordVisibilityButtonClicked = { isPasswordVisible = it },
                 onLoginButtonClicked = {
                     viewModel.launch {
+                        showLoading = true
+
                         runCatching {
                             viewModel.login(
                                 id = id.text.toString(),
@@ -92,9 +94,10 @@ fun NavGraphBuilder.addLoginRoute(
                                 }
                             }
                         }.onFailure {
-                            // FIXME: 세분화된 메시징
                             showToast("로그인에 실패했습니다.", ToastType.ERROR)
                         }
+
+                        showLoading = false
                     }
                 },
                 onSignUpButtonClicked = {

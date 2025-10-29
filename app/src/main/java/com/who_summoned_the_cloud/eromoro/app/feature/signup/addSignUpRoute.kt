@@ -5,10 +5,12 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.text.input.rememberTextFieldState
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.platform.LocalContext
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.navigation.NavGraphBuilder
@@ -26,6 +28,7 @@ import com.who_summoned_the_cloud.eromoro.data.model.SignUpRequest
 import com.who_summoned_the_cloud.eromoro.presentation.modal.LoadingModal
 import com.who_summoned_the_cloud.eromoro.presentation.modal.PictureSelectModalPopup
 import com.who_summoned_the_cloud.eromoro.presentation.model.SignUpScreenField
+import com.who_summoned_the_cloud.eromoro.presentation.model.ToastType
 import com.who_summoned_the_cloud.eromoro.presentation.screen.SignUpFormScreen
 import com.who_summoned_the_cloud.eromoro.presentation.screen.SignUpSuccessScreen
 import kotlinx.coroutines.MainScope
@@ -36,7 +39,8 @@ fun NavGraphBuilder.addSignUpRoute(
     showToast: ToastCallback,
 ) {
     navigation(
-        route = "/sign-up", startDestination = "/sign-up/form"
+        route = "/sign-up",
+        startDestination = "/sign-up/form",
     ) {
         composable(
             route = "/sign-up/form"
@@ -48,8 +52,23 @@ fun NavGraphBuilder.addSignUpRoute(
             val id = rememberTextFieldState()
             val password = rememberTextFieldState()
             val passwordCheck = rememberTextFieldState()
-
             var userType: UserType? by remember { mutableStateOf(null) }
+
+            val passwordCheckValidation by snapshotFlow {
+                if (passwordCheck.text.isEmpty()) null
+                else if (password.text == passwordCheck.text) SignUpScreenField.Validation.PASS
+                else SignUpScreenField.Validation.ERROR
+            }.collectAsState(null)
+
+            val isSignUpButtonEnabled by snapshotFlow {
+                listOf(
+                    nickname.text.isNotEmpty(),
+                    id.text.isNotEmpty(),
+                    password.text.isNotEmpty(),
+                    passwordCheckValidation == SignUpScreenField.Validation.PASS,
+                    userType != null,
+                ).all { it }
+            }.collectAsState(false)
 
             var tempImage: Uri? by remember { mutableStateOf(null) }
             var image: Uri? by remember { mutableStateOf(null) }
@@ -89,26 +108,34 @@ fun NavGraphBuilder.addSignUpRoute(
                 passwordCheck = SignUpScreenField(
                     state = passwordCheck,
                     underText = null,  // TODO
-                    validation = null,  // TODO
+                    validation = passwordCheckValidation,
                 ),
                 userType = userType,
-                isSignUpButtonEnabled = true,  // TODO
+                isSignUpButtonEnabled = isSignUpButtonEnabled,
                 onBackButtonClicked = { navController.popBackStack() },
                 onProfilePictureClicked = { showPictureSelectPopup = true },
                 onUserTypeButtonClicked = { userType = it },
                 onSignUpButtonClicked = {
-                    viewModel
-                        .launch {
-                            showLoading = true
+                    viewModel.launch {
+                        showLoading = true
 
+                        runCatching {
+                            val id = id.text.toString()
                             val nickname = nickname.text.toString()
+                            val password = password.text.toString()
                             val userType = userType ?: return@launch
+
+                            val isIdAvailable = checkIdAvailable(id = id)
+                            if (!isIdAvailable) {
+                                showToast("이미 존재하는 아이디입니다.", ToastType.ERROR)
+                                return@runCatching
+                            }
 
                             val isSucceed = signUp(
                                 request = SignUpRequest(
-                                    id = id.text.toString(),
+                                    id = id,
                                     nickname = nickname,
-                                    password = id.text.toString(),
+                                    password = password,
                                     userType = userType,
                                     profileImage = image?.let { uriToFile(context, it) },
                                 ),
@@ -120,9 +147,13 @@ fun NavGraphBuilder.addSignUpRoute(
                                         popUpTo("/sign-up/form") { inclusive = true }
                                     }
                                 }
+                            } else {
+                                showToast("회원가입에 실패하였습니다.", ToastType.ERROR)
                             }
                         }
-                        .invokeOnCompletion { showLoading = false }
+
+                        showLoading = false
+                    }
                 },
             )
 

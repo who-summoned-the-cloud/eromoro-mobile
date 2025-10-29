@@ -1,5 +1,6 @@
 package com.who_summoned_the_cloud.eromoro.app.feature.home
 
+import android.annotation.SuppressLint
 import androidx.compose.foundation.text.input.rememberTextFieldState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -16,6 +17,8 @@ import androidx.navigation.NavType
 import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
 import androidx.navigation.navigation
+import com.google.accompanist.permissions.ExperimentalPermissionsApi
+import com.google.accompanist.permissions.rememberMultiplePermissionsState
 import com.who_summoned_the_cloud.eromoro.app.model.ToastCallback
 import com.who_summoned_the_cloud.eromoro.app.util.FinishHandler
 import com.who_summoned_the_cloud.eromoro.app.util.NavigationBarApp
@@ -32,11 +35,12 @@ import com.who_summoned_the_cloud.eromoro.presentation.model.SpotInformationScre
 import com.who_summoned_the_cloud.eromoro.presentation.model.ToastType
 import com.who_summoned_the_cloud.eromoro.presentation.screen.HomeScreen
 import com.who_summoned_the_cloud.eromoro.presentation.screen.MapScreen
-import com.who_summoned_the_cloud.eromoro.presentation.screen.SearchScreen
 import com.who_summoned_the_cloud.eromoro.presentation.screen.SpotInformationScreen
 import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.launch
 
+@SuppressLint("MissingPermission")
+@OptIn(ExperimentalPermissionsApi::class)
 fun NavGraphBuilder.addHomeRoute(
     navController: NavHostController,
     showToast: ToastCallback,
@@ -59,6 +63,13 @@ fun NavGraphBuilder.addHomeRoute(
         ) { backStackEntry ->
             val context = LocalContext.current
             val viewModel = getViewModel(backStackEntry)
+
+            val locationPermission = rememberMultiplePermissionsState(
+                permissions = listOf(
+                    android.Manifest.permission.ACCESS_FINE_LOCATION,
+                    android.Manifest.permission.ACCESS_COARSE_LOCATION,
+                )
+            )
 
             val search = rememberTextFieldState()
             val nickname by viewModel.nickname.collectAsState()
@@ -98,7 +109,12 @@ fun NavGraphBuilder.addHomeRoute(
             var showAddressBottomSheet by remember { mutableStateOf(false) }
             var showCategoryBottomSheet by remember { mutableStateOf(false) }
 
-            LaunchedEffect(Unit) {
+            LaunchedEffect(locationPermission.allPermissionsGranted) {
+                if (!locationPermission.allPermissionsGranted) {
+                    locationPermission.launchMultiplePermissionRequest()
+                    return@LaunchedEffect
+                }
+
                 val location = runCatching { getLocation(context) }.getOrNull()
 
                 if (location == null) {
@@ -212,30 +228,6 @@ fun NavGraphBuilder.addHomeRoute(
             }
 
             FinishHandler(showToast = showToast)
-        }
-
-        composable(
-            route = "/home/search",
-        ) { backStackEntry ->
-            val viewModel = getViewModel(backStackEntry)
-
-            val searchText = rememberTextFieldState()
-
-            SearchScreen(
-                searchText = searchText,
-                placeholder = "찾고 계신 장소를 입력해주세요.",
-                searchResults = listOf(),  // TODO
-                recentSearchTextChips = listOf(),  // TODO
-                onBackButtonClicked = {
-                    MainScope().launch { navController.popBackStack() }
-                },
-                onRecentSearchChipCloseClicked = {
-                    // TODO
-                },
-                onMoreButtonClicked = {
-                    // TODO
-                },
-            )
         }
 
         composable(

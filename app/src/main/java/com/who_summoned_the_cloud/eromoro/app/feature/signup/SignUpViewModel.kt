@@ -21,4 +21,8 @@ class SignUpViewModel @Inject constructor(
             Log.e("SignUpViewModel", "error: $it")
         }.isSuccess
     }
+
+    suspend fun checkIdAvailable(id: String): Boolean {
+        return userRepository.checkIsIdAvailable(id)
+    }
 }
