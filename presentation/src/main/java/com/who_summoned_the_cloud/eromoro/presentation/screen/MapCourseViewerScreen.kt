@@ -88,18 +88,6 @@ fun MapCourseViewerScreen(
         ) {
             LaunchedEffect(mainCourse) {
                 mainCourse?.let {
-                    val (top, bottom, start, end) = listOf(
-                        mainCourse.minOf { it.latitude },
-                        mainCourse.maxOf { it.latitude },
-                        mainCourse.minOf { it.longitude },
-                        mainCourse.maxOf { it.longitude },
-                    )
-
-                    val middle = Position(
-                        latitude = (top + bottom) / 2,
-                        longitude = (start + end) / 2,
-                    )
-
                     val pivot = Offset(
                         x = 0f,
                         y = run {
@@ -115,7 +103,7 @@ fun MapCourseViewerScreen(
                         }
                     )
 
-                    moveMap(middle, pivot)
+                    moveToMainCourseView(pivot)
                 }
             }
 

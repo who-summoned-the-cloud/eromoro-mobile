@@ -7,6 +7,8 @@ import com.who_summoned_the_cloud.eromoro.data.model.ListableReport
 import com.who_summoned_the_cloud.eromoro.data.model.Report
 import com.who_summoned_the_cloud.eromoro.data.model.ReportRequest
 import com.who_summoned_the_cloud.eromoro.data.preference.AuthPreference
+import com.who_summoned_the_cloud.eromoro.data.preference.CoursePreference
+import com.who_summoned_the_cloud.eromoro.data.util.AuthorizedRepository
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.MultipartBody
 import okhttp3.OkHttpClient
@@ -27,6 +29,7 @@ class ReportRepository @Inject constructor(
     override val userControllerApi: UserControllerApi,
     private val feedbackControllerApi: FeedbackControllerApi,
     @param:Named("serverUrl") private val serverUrl: String,
+    private val coursePreference: CoursePreference,
 ) : AuthorizedRepository {
 
     /**
@@ -107,7 +110,7 @@ class ReportRepository @Inject constructor(
      */
     suspend fun report(
         request: ReportRequest,
-    ) {
+    ): Int {
         val client = OkHttpClient()
 
         val requestBodyBuilder = MultipartBody
@@ -158,6 +161,19 @@ class ReportRepository @Inject constructor(
             .execute()
 
         if (!response.isSuccessful) throw Exception(response.message)
+
+        if (coursePreference.currentCourseId != null) {
+            coursePreference.reportCount = (coursePreference.reportCount ?: 0) + 1
+        }
+
+        return 1  // TODO: 받은 포인트를 반환하도록 수정
+    }
+
+    /**
+     * 코스 진행 중 신고 횟수 조회
+     */
+    suspend fun getReportCountDuringCourse(): Int {
+        return coursePreference.reportCount ?: 0
     }
 
     /**

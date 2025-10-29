@@ -91,4 +91,7 @@ dependencies {
     // Google Location
     implementation(libs.play.services.location)
     implementation(libs.kotlinx.coroutines.play.services)
+
+    // Google Accompanist Permissions
+    implementation(libs.accompanist.permissions)
 }

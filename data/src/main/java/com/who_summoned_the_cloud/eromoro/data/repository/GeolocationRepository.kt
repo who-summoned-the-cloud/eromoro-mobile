@@ -1,9 +1,14 @@
 package com.who_summoned_the_cloud.eromoro.data.repository
 
+import androidx.core.net.toUri
+import com.who_summoned_the_cloud.eromoro.common.model.ObstacleType
 import com.who_summoned_the_cloud.eromoro.common.model.Position
 import com.who_summoned_the_cloud.eromoro.data.BuildConfig
 import com.who_summoned_the_cloud.eromoro.data.model.NaverGeocodingResponse
 import com.who_summoned_the_cloud.eromoro.data.model.NaverReverseGeocodingResponse
+import com.who_summoned_the_cloud.eromoro.data.model.Obstacle
+import com.who_summoned_the_cloud.eromoro.data.preference.AuthPreference
+import com.who_summoned_the_cloud.eromoro.data.util.AuthorizedRepository
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.serialization.json.Json
@@ -13,16 +18,26 @@ import okhttp3.HttpUrl.Companion.toHttpUrl
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.Response
+import org.openapitools.client.apis.BarrierControllerApi
+import org.openapitools.client.apis.UserControllerApi
+import org.openapitools.client.models.CoordinateDto
+import org.openapitools.client.models.FeedbackDto
+import org.openapitools.client.models.GetPagingBarrierDto
 import java.io.IOException
 import javax.inject.Inject
 import javax.inject.Singleton
 import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
+import kotlin.math.max
+import kotlin.math.min
 
 @Singleton
 class GeolocationRepository @Inject constructor(
+    override val authPreference: AuthPreference,
+    override val userControllerApi: UserControllerApi,
+    private val barrierControllerApi: BarrierControllerApi,
     private val okHttpClient: OkHttpClient,
-) {
+) : AuthorizedRepository {
     companion object {
         private const val NAVER_GEOCODING_URL =
             "https://maps.apigw.ntruss.com/map-geocode/v2/geocode"
@@ -31,6 +46,9 @@ class GeolocationRepository @Inject constructor(
         private val jsonParser = Json { ignoreUnknownKeys = true }
     }
 
+    /**
+     * 좌표로 주소 조회
+     */
     suspend fun getAddressFromPosition(position: Position): String {
         val coords = "${position.longitude},${position.latitude}"
 
@@ -96,6 +114,9 @@ class GeolocationRepository @Inject constructor(
         }
     }
 
+    /**
+     * 주소로 좌표 조회
+     */
     @OptIn(ExperimentalCoroutinesApi::class)
     suspend fun getPositionFromAddress(address: String): Position {
         val url = NAVER_GEOCODING_URL
@@ -151,5 +172,60 @@ class GeolocationRepository @Inject constructor(
 
             continuation.invokeOnCancellation { call.cancel() }
         }
+    }
+
+    /**
+     * 범위 내 장애물 목록 조회
+     */
+    suspend fun getObstacles(
+        topLeft: Position,
+        bottomRight: Position,
+    ): List<Obstacle> {
+        val (north, south, west, east) = listOf(
+            max(topLeft.latitude, bottomRight.latitude),
+            min(topLeft.latitude, bottomRight.latitude),
+            min(topLeft.longitude, bottomRight.longitude),
+            max(topLeft.longitude, bottomRight.longitude),
+        ).map {
+            it.toBigDecimal()
+        }
+
+        val dto = GetPagingBarrierDto(
+            sw = CoordinateDto(latitude = south, longitude = west),
+            se = CoordinateDto(latitude = south, longitude = east),
+            ne = CoordinateDto(latitude = north, longitude = east),
+            nw = CoordinateDto(latitude = north, longitude = west),
+        )
+
+        val response = barrierControllerApi.withAuth {
+            getPagingBarrier(getPagingBarrierDto = dto)
+        }
+
+        val resultFromReport = response.result?.feedbacks?.map {
+            Obstacle(
+                type = when (it.type!!) {
+                    FeedbackDto.Type.STAIR -> ObstacleType.STAIR
+                    FeedbackDto.Type.ELEVATOR -> ObstacleType.NO_ELEVATOR
+                    FeedbackDto.Type.SLOPE -> ObstacleType.HILL
+                    FeedbackDto.Type.CURB -> ObstacleType.THRESHOLD
+                    FeedbackDto.Type.NARROW_ROAD -> ObstacleType.NARROW_WAY
+                    FeedbackDto.Type.OTHER -> ObstacleType.OTHER
+                },
+                position = Position(it.latitude!!.toDouble() to it.longitude!!.toDouble()),
+                image = null,
+                reportId = it.feedbackId,
+            )
+        } ?: emptyList()
+
+        val resultFromBarrier = response.result?.barriers?.map {
+            Obstacle(
+                type = ObstacleType.STAIR,
+                position = Position(it.latitude!!.toDouble() to it.longitude!!.toDouble()),
+                image = it.imageUrl?.toUri(),
+                reportId = null,
+            )
+        } ?: emptyList()
+
+        return resultFromReport + resultFromBarrier
     }
 }

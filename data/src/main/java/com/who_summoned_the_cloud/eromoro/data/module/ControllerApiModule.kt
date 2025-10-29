@@ -1,11 +1,11 @@
 package com.who_summoned_the_cloud.eromoro.data.module
 
-import com.who_summoned_the_cloud.eromoro.data.BuildConfig
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
 import okhttp3.OkHttpClient
+import org.openapitools.client.apis.BarrierControllerApi
 import org.openapitools.client.apis.CourseControllerApi
 import org.openapitools.client.apis.FeedbackControllerApi
 import org.openapitools.client.apis.SpotControllerApi
@@ -16,13 +16,6 @@ import javax.inject.Singleton
 @Module
 @InstallIn(SingletonComponent::class)
 object ControllerApiModule {
-    @Provides
-    @Singleton
-    @Named("serverUrl")
-    fun providesServerUrl(): String {
-        return BuildConfig.SERVER_URL
-    }
-
     @Provides
     @Singleton
     fun providesUserControllerApi(
@@ -66,6 +59,18 @@ object ControllerApiModule {
         okHttpClient: OkHttpClient,
     ): SpotControllerApi {
         return SpotControllerApi(
+            basePath = serverUrl,
+            client = okHttpClient,
+        )
+    }
+
+    @Provides
+    @Singleton
+    fun providesBarrierControllerApi(
+        @Named("serverUrl") serverUrl: String,
+        okHttpClient: OkHttpClient,
+    ): BarrierControllerApi {
+        return BarrierControllerApi(
             basePath = serverUrl,
             client = okHttpClient,
         )

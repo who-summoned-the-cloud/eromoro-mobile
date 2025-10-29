@@ -141,9 +141,10 @@ fun NavGraphBuilder.addHomeRoute(
                     recommendedPlaces = recommendedPlaces,
                     showLoadingAtTheEndOfRecommendedPlaces = !isHomeSpotListFetchedAll,
                     onSearchBarClicked = {
-                        MainScope().launch {
-                            navController.navigate("/home/search")
-                        }
+                        // MainScope().launch {
+                        //     navController.navigate("/home/search")
+                        // }
+                        showToast("해당 기능은 준비중입니다!", ToastType.ERROR)
                     },
                     onMyLikedCourseButtonClicked = {
                         MainScope().launch {
@@ -151,7 +152,9 @@ fun NavGraphBuilder.addHomeRoute(
                         }
                     },
                     onLatestCourseButtonClicked = {
-                        // TODO
+                        MainScope().launch {
+                            navController.navigate("/my-page/course-list/used")
+                        }
                     },
                     onGoToNearbyCourseListButtonClicked = {
                         // TODO
@@ -168,8 +171,8 @@ fun NavGraphBuilder.addHomeRoute(
             }
 
             if (showAddressBottomSheet) {
-                var nullableSido: String? by remember { mutableStateOf(sido) }
-                var nullableSigungu: String? by remember { mutableStateOf(sigungu) }
+                var nullableSido: String? by remember { mutableStateOf(null) }
+                var nullableSigungu: String? by remember { mutableStateOf(null) }
 
                 AddressSelectModalBottomSheet(
                     sido = nullableSido,
@@ -192,7 +195,7 @@ fun NavGraphBuilder.addHomeRoute(
             }
 
             if (showCategoryBottomSheet) {
-                var nullableCategory: SpotCategory? by remember { mutableStateOf(category) }
+                var nullableCategory: SpotCategory? by remember { mutableStateOf(null) }
 
                 CategorySelectModalBottomSheet(
                     category = nullableCategory,
@@ -281,9 +284,10 @@ fun NavGraphBuilder.addHomeRoute(
                     MainScope().launch { navController.popBackStack() }
                 },
                 onSearchFieldClicked = {
-                    MainScope().launch {
-                        navController.navigate(route = "/home/search")
-                    }
+                    // MainScope().launch {
+                    //     navController.navigate(route = "/home/search")
+                    // }
+                    showToast("해당 기능은 준비중입니다!", ToastType.ERROR)
                 },
                 onTabClicked = { currentTab = it },
                 onMapClicked = {

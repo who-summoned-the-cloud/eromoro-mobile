@@ -268,6 +268,7 @@ fun MyPageScreen(
                 is Fetch.Success -> {
                     if (likedCourseList.data.isNotEmpty()) items(count = likedCourseList.data.size) { index ->
                         val likedCourse = likedCourseList.data[index]
+                        val width = max(width / 3f, 150.dp)
 
                         LaunchedEffect(likedCourse.id) {
                             if (index == likedCourseList.data.size - 1) {
@@ -283,7 +284,7 @@ fun MyPageScreen(
                                 painter = rememberAsyncImagePainter(model = likedCourse.image),
                                 contentDescription = "좋아요 코스 이미지",
                                 modifier = Modifier
-                                    .width(max(width / 3f, 150.dp))
+                                    .width(width)
                                     .height(max(width / 4f, 100.dp))
                                     .clip(RoundedCornerShape(14.dp))
                                     .background(
@@ -298,7 +299,9 @@ fun MyPageScreen(
                                 color = Colors.gray[500],
                                 maxLines = 1,
                                 overflow = TextOverflow.Ellipsis,
-                                modifier = Modifier.padding(horizontal = 8.dp)
+                                modifier = Modifier
+                                    .width(width)
+                                    .padding(horizontal = 8.dp)
                             )
                         }
                     } else item {

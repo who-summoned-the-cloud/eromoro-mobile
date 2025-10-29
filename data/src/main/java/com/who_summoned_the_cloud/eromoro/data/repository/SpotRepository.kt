@@ -7,6 +7,7 @@ import com.who_summoned_the_cloud.eromoro.common.model.UserType
 import com.who_summoned_the_cloud.eromoro.data.model.ListableSpot
 import com.who_summoned_the_cloud.eromoro.data.model.Spot
 import com.who_summoned_the_cloud.eromoro.data.preference.AuthPreference
+import com.who_summoned_the_cloud.eromoro.data.util.AuthorizedRepository
 import org.openapitools.client.apis.SpotControllerApi
 import org.openapitools.client.apis.UserControllerApi
 import org.openapitools.client.models.GetSpotDetailDto

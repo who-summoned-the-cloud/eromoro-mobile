@@ -12,6 +12,7 @@ import com.who_summoned_the_cloud.eromoro.data.model.Report
 import com.who_summoned_the_cloud.eromoro.data.model.ReportRequest
 import com.who_summoned_the_cloud.eromoro.data.repository.GeolocationRepository
 import com.who_summoned_the_cloud.eromoro.data.repository.ReportRepository
+import com.who_summoned_the_cloud.eromoro.data.repository.UserRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -22,24 +23,31 @@ class ReportViewModel @Inject constructor(
     @param:ApplicationContext private val context: Context,
     private val reportRepository: ReportRepository,
     private val geolocationRepository: GeolocationRepository,
+    private val userRepository: UserRepository,
 ) : ViewModel() {
 
     companion object {
         private const val PAGE_SIZE = 10
     }
 
-    val myReportList: MutableStateFlow<List<List<ListableReport>>?> = MutableStateFlow(null)
-    val isReportsFetchedAll: MutableStateFlow<Boolean> = MutableStateFlow(false)
+    val nickname = MutableStateFlow("고객")
 
-    val reportingImage: MutableStateFlow<Uri?> = MutableStateFlow(null)
+    val myReportList = MutableStateFlow<List<List<ListableReport>>?>(null)
+    val isReportsFetchedAll = MutableStateFlow(false)
+
+    val reportingImage = MutableStateFlow<Uri?>(null)
     val title = TextFieldState()
     val content = TextFieldState()
-    val obstacleType: MutableStateFlow<ObstacleType?> = MutableStateFlow(null)
-    val currentPosition: MutableStateFlow<Position?> = MutableStateFlow(null)
-    val address: MutableStateFlow<String?> = MutableStateFlow(null)
-    val isForLocalGovernance: MutableStateFlow<Boolean> = MutableStateFlow(false)
+    val obstacleType = MutableStateFlow<ObstacleType?>(null)
+    val currentPosition = MutableStateFlow<Position?>(null)
+    val address = MutableStateFlow<String?>(null)
+    val isForLocalGovernance = MutableStateFlow(false)
 
     val report = MutableStateFlow<Report?>(null)
+
+    suspend fun loadNickname() {
+        nickname.value = userRepository.getUserInfo().nickname
+    }
 
     suspend fun loadMyReports() {
         val currentReports = myReportList.value ?: emptyList()
@@ -54,7 +62,7 @@ class ReportViewModel @Inject constructor(
         }
     }
 
-    suspend fun createReport() {
+    suspend fun createReport(): Int {
         val image = reportingImage.value?.let { uriToFile(context, it) }
         val position = currentPosition.value
         val type = obstacleType.value
@@ -64,7 +72,7 @@ class ReportViewModel @Inject constructor(
             throw IllegalStateException("image or position is null")
         }
 
-        reportRepository.report(
+        val point = reportRepository.report(
             request = ReportRequest(
                 image = image,
                 position = position,
@@ -75,6 +83,8 @@ class ReportViewModel @Inject constructor(
                 isForLocalGovernance = isForLocalGovernance.value
             )
         )
+
+        return point
     }
 
     suspend fun loadReport(reportId: Long) {

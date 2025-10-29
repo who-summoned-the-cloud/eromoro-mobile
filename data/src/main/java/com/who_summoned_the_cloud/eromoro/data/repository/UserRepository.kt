@@ -6,6 +6,7 @@ import com.who_summoned_the_cloud.eromoro.data.model.SignUpRequest
 import com.who_summoned_the_cloud.eromoro.data.model.User
 import com.who_summoned_the_cloud.eromoro.data.model.UserInfoModificationRequest
 import com.who_summoned_the_cloud.eromoro.data.preference.AuthPreference
+import com.who_summoned_the_cloud.eromoro.data.util.AuthorizedRepository
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.MultipartBody
 import okhttp3.OkHttpClient

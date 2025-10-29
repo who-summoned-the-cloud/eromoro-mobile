@@ -1,7 +1,5 @@
 package com.who_summoned_the_cloud.eromoro.data.repository
 
-import android.content.SharedPreferences
-import androidx.core.content.edit
 import androidx.core.net.toUri
 import com.who_summoned_the_cloud.eromoro.common.model.ObstacleType
 import com.who_summoned_the_cloud.eromoro.common.model.Position
@@ -13,7 +11,10 @@ import com.who_summoned_the_cloud.eromoro.data.model.GeneratedCourse
 import com.who_summoned_the_cloud.eromoro.data.model.LikedCourse
 import com.who_summoned_the_cloud.eromoro.data.model.RegionalCourse
 import com.who_summoned_the_cloud.eromoro.data.model.UsedCourse
+import com.who_summoned_the_cloud.eromoro.data.model.UserRouteScope
 import com.who_summoned_the_cloud.eromoro.data.preference.AuthPreference
+import com.who_summoned_the_cloud.eromoro.data.preference.CoursePreference
+import com.who_summoned_the_cloud.eromoro.data.util.AuthorizedRepository
 import org.openapitools.client.apis.CourseControllerApi
 import org.openapitools.client.apis.UserControllerApi
 import org.openapitools.client.models.CourseInfoDto
@@ -22,6 +23,7 @@ import org.openapitools.client.models.CoursePointListDto
 import org.openapitools.client.models.GenerateDto
 import org.openapitools.client.models.GetCourseResultDto
 import org.openapitools.client.models.LatLon
+import java.time.Instant
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -30,12 +32,8 @@ class CourseRepository @Inject constructor(
     override val authPreference: AuthPreference,
     override val userControllerApi: UserControllerApi,
     private val courseControllerApi: CourseControllerApi,
-    private val prefs: SharedPreferences,
+    private val coursePreference: CoursePreference,
 ) : AuthorizedRepository {
-
-    companion object {
-        private const val RUNNING_COURSE_ID = "running_course_id"
-    }
 
     /**
      * 관광지별 코스 목록 조회
@@ -104,15 +102,15 @@ class CourseRepository @Inject constructor(
                 id = it.courseId!!,
                 image = it.photo?.toUri(),
                 title = it.title!!,
-                like = it.likeCount!!,
-                isLiked = it.liked!!,
+                like = it.likeCount ?: 0,
+                isLiked = it.liked ?: false,
                 obstacles = mapOf(
                     ObstacleType.HILL to (it.rampCount ?: 0),
                     ObstacleType.STAIR to (it.stepCount ?: 0),
                 ),
                 distance = (it.distance!! * 1000).toInt(),
                 duration = it.duration!!,
-                rating = it.rating!!.toFloat(),
+                rating = it.rating?.toFloat() ?: 0f,
                 availableUserTypes = setOfNotNull(
                     when (it.userType) {
                         GetCourseResultDto.UserType.INFANT_GUARDIAN -> UserType.INFANT
@@ -131,6 +129,9 @@ class CourseRepository @Inject constructor(
         return courses
     }
 
+    /**
+     * 사용자 코스 목록 조회
+     */
     suspend fun getUserCourseList(
         page: Int,
         size: Int,
@@ -245,7 +246,7 @@ class CourseRepository @Inject constructor(
      */
     suspend fun startCourse(courseId: Long) {
         courseControllerApi.withAuth { startCourse() }
-        prefs.edit { putLong(RUNNING_COURSE_ID, courseId) }
+        coursePreference.initialize(courseId = courseId)
     }
 
     /**
@@ -253,17 +254,19 @@ class CourseRepository @Inject constructor(
      * 코스를 진행중이지 않다면 null 반환
      */
     suspend fun getCurrentCourseId(): Long? {
-        return prefs
-            .getLong(RUNNING_COURSE_ID, -1)
-            .takeIf { it > 0 }
+        return coursePreference.currentCourseId
     }
 
     /**
      * 코스 저장 및 완료 처리
      */
     suspend fun saveCourseAndFinish(request: CourseSaveAndFinishRequest) {
-        val courseId = prefs.getLong(RUNNING_COURSE_ID, -1)
-        if (courseId == -1L) throw IllegalStateException("Course is not running")
+        val now = Instant.now()
+
+        val courseId = coursePreference.currentCourseId ?: 1
+        val userRoute = coursePreference.userRoute ?: emptyList()
+        val courseStartedAt = coursePreference.courseStartedAt ?: now
+        val distance = coursePreference.courseDistance ?: 10
 
         val infoDto = CourseInfoDto(
             title = request.title,
@@ -272,9 +275,9 @@ class CourseRepository @Inject constructor(
         )
 
         val routeDto = CoursePointListDto(
-            duration = request.duration,
-            distance = request.distance.toFloat(),
-            coursePointList = request.positions.map {
+            duration = ((now.toEpochMilli() - courseStartedAt.toEpochMilli()) / (1000 * 60f)).toInt(),
+            distance = distance / 1000f,
+            coursePointList = userRoute.map {
                 CoursePointDto(
                     latitude = it.latitude.toBigDecimal(),
                     longitude = it.longitude.toBigDecimal(),
@@ -282,18 +285,26 @@ class CourseRepository @Inject constructor(
             },
         )
 
-        courseControllerApi.withAuth {
-            saveCourseInfo(
-                courseId = courseId,
-                courseInfoDto = infoDto,
-            )
-
-            saveCoursePointList(
-                coursePointListDto = routeDto,
-            )
+        if (
+            courseControllerApi.withAuth {
+                saveCoursePointList(coursePointListDto = routeDto)
+            }.isSuccess != true
+        ) {
+            throw Exception("Failed to save course route")
         }
 
-        prefs.edit { remove(RUNNING_COURSE_ID) }
+        if (
+            courseControllerApi.withAuth {
+                saveCourseInfo(
+                    courseId = courseId,
+                    courseInfoDto = infoDto,
+                )
+            }.isSuccess != true
+        ) {
+            throw Exception("Failed to save course info")
+        }
+
+        coursePreference.clear()
     }
 
     /**
@@ -305,5 +316,21 @@ class CourseRepository @Inject constructor(
         }
 
         return response.result?.likeCount ?: 0
+    }
+
+    /**
+     * 지나오고 있는 코스 경로 조작하기
+     * 조작된 경로는 saveCourseAndFinish 메소드를 통해 사용자의 경로로서 서버로 보내진다.
+     */
+    suspend fun modifyUserRoute(action: UserRouteScope.() -> Unit) {
+        action.invoke(
+            object : UserRouteScope {
+                override var userRoute: List<Position>?
+                    get() = coursePreference.userRoute
+                    set(value) {
+                        coursePreference.userRoute = value
+                    }
+            },
+        )
     }
 }

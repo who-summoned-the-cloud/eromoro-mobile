@@ -28,6 +28,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
@@ -66,14 +67,7 @@ fun MapCourseStatisticsScreen(
             mainCourse = coursePositions
         ) {
             LaunchedEffect(coursePositions) {
-                val (left, right, top, bottom) = listOf(
-                    coursePositions?.minOf { it.latitude },
-                    coursePositions?.maxOf { it.latitude },
-                    coursePositions?.minOf { it.longitude },
-                    coursePositions?.maxOf { it.longitude },
-                )
-
-                // TODO
+                moveToMainCourseView()
             }
         }
         Column(
@@ -85,6 +79,10 @@ fun MapCourseStatisticsScreen(
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
+                    .shadow(
+                        elevation = 8.dp,
+                        shape = RoundedCornerShape(bottomStart = 20.dp, bottomEnd = 20.dp)
+                    )
                     .background(
                         color = Colors.white,
                         shape = RoundedCornerShape(bottomStart = 20.dp, bottomEnd = 20.dp)

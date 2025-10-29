@@ -37,6 +37,7 @@ import com.who_summoned_the_cloud.eromoro.presentation.model.ToastType
 import com.who_summoned_the_cloud.eromoro.presentation.screen.ReportDetailScreen
 import com.who_summoned_the_cloud.eromoro.presentation.screen.ReportListScreen
 import com.who_summoned_the_cloud.eromoro.presentation.screen.ReportLocationScreen
+import com.who_summoned_the_cloud.eromoro.presentation.screen.ReportRewardScreen
 import com.who_summoned_the_cloud.eromoro.presentation.screen.ReportWritingScreen
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -101,8 +102,7 @@ fun NavGraphBuilder.addReportRoute(
                                 },
                             )
                         }
-                        ?.let { Fetch.Success(it) }
-                        ?: Fetch.Loading()
+                        ?.let { Fetch.Success(it) } ?: Fetch.Loading()
                 }
 
             var tempImage: Uri? by remember { mutableStateOf(null) }
@@ -254,6 +254,13 @@ fun NavGraphBuilder.addReportRoute(
                 }
             }
 
+            LaunchedEffect(Unit) {
+                // 미리 로드
+                viewModel.launch {
+                    runCatching { loadNickname() }
+                }
+            }
+
             ReportWritingScreen(
                 image = image,
                 title = title,
@@ -275,7 +282,15 @@ fun NavGraphBuilder.addReportRoute(
                         showLoading = true
 
                         runCatching { createReport() }
-                            .onSuccess { MainScope().launch { navController.navigateUp() } }
+                            .onSuccess {
+                                MainScope().launch {
+                                    navController.navigate(route = "/report/success?point=${it}") {
+                                        popUpTo(route = "/report/list") {
+                                            inclusive = false
+                                        }
+                                    }
+                                }
+                            }
                             .onFailure { showToast("오류가 발생했습니다.", ToastType.ERROR) }
 
                         showLoading = false
@@ -347,6 +362,21 @@ fun NavGraphBuilder.addReportRoute(
                     }
                 }
             }
+        }
+
+        composable(
+            route = "/report/success?point={point}",
+            arguments = listOf(navArgument("point") { type = NavType.IntType }),
+        ) { backStackEntry ->
+            val viewModel = getViewModel(backStackEntry)
+            val point = backStackEntry.arguments?.getInt("point") ?: 1
+            val nickname by viewModel.nickname.collectAsState()
+
+            ReportRewardScreen(nickname = nickname, point = point, onBackButtonClicked = {
+                MainScope().launch { navController.popBackStack() }
+            }, onGoToMainButtonClicked = {
+                MainScope().launch { navController.popBackStack() }
+            })
         }
     }
 }

@@ -1,7 +1,7 @@
 package com.who_summoned_the_cloud.eromoro.data.repository
 
 import com.who_summoned_the_cloud.eromoro.data.preference.AuthPreference
-import com.who_summoned_the_cloud.eromoro.data.repository.AuthorizedRepository
+import com.who_summoned_the_cloud.eromoro.data.util.AuthorizedRepository
 import javax.inject.Inject
 import org.openapitools.client.apis.UserControllerApi
 import org.openapitools.client.models.SignInDto

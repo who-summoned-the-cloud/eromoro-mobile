@@ -1,7 +1,12 @@
 package com.who_summoned_the_cloud.eromoro.app.feature.map
 
+import android.Manifest
+import android.annotation.SuppressLint
+import android.util.Log
+import androidx.compose.foundation.text.input.delete
 import androidx.compose.foundation.text.input.rememberTextFieldState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -15,12 +20,16 @@ import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.composable
 import androidx.navigation.navigation
-import com.naver.maps.map.compose.ExperimentalNaverMapApi
+import com.google.accompanist.permissions.ExperimentalPermissionsApi
+import com.google.accompanist.permissions.rememberMultiplePermissionsState
 import com.who_summoned_the_cloud.eromoro.app.model.ToastCallback
 import com.who_summoned_the_cloud.eromoro.app.util.getLocation
 import com.who_summoned_the_cloud.eromoro.app.util.getNavScopedViewModel
 import com.who_summoned_the_cloud.eromoro.app.util.launch
+import com.who_summoned_the_cloud.eromoro.app.util.subscribeLocation
+import com.who_summoned_the_cloud.eromoro.common.model.ObstacleType
 import com.who_summoned_the_cloud.eromoro.common.model.Position
+import com.who_summoned_the_cloud.eromoro.presentation.component.CustomConfirmPopup
 import com.who_summoned_the_cloud.eromoro.presentation.modal.LoadingModal
 import com.who_summoned_the_cloud.eromoro.presentation.model.Fetch
 import com.who_summoned_the_cloud.eromoro.presentation.model.MapCourseGeneratingScreenMode
@@ -28,6 +37,7 @@ import com.who_summoned_the_cloud.eromoro.presentation.model.MapCourseViewerScre
 import com.who_summoned_the_cloud.eromoro.presentation.model.ToastType
 import com.who_summoned_the_cloud.eromoro.presentation.screen.MapCourseGeneratingScreen
 import com.who_summoned_the_cloud.eromoro.presentation.screen.MapCourseProgressScreen
+import com.who_summoned_the_cloud.eromoro.presentation.screen.MapCourseStatisticsScreen
 import com.who_summoned_the_cloud.eromoro.presentation.screen.MapCourseViewerScreen
 import com.who_summoned_the_cloud.eromoro.presentation.screen.SearchScreen
 import kotlinx.coroutines.CoroutineScope
@@ -38,7 +48,8 @@ import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlin.coroutines.coroutineContext
 
-@OptIn(ExperimentalNaverMapApi::class)
+@OptIn(ExperimentalPermissionsApi::class)
+@SuppressLint("MissingPermission")
 fun NavGraphBuilder.addMapRoute(
     navController: NavHostController,
     showToast: ToastCallback,
@@ -62,6 +73,13 @@ fun NavGraphBuilder.addMapRoute(
             val viewModel = getViewModel(backStackEntry)
             val context = LocalContext.current
 
+            val locationPermission = rememberMultiplePermissionsState(
+                permissions = listOf(
+                    Manifest.permission.ACCESS_FINE_LOCATION,
+                    Manifest.permission.ACCESS_COARSE_LOCATION,
+                )
+            )
+
             val nickname by viewModel.nickname.collectAsState()
             var step by remember { mutableIntStateOf(0) }
             var currentPosition: Position? by remember { mutableStateOf(null) }
@@ -72,12 +90,45 @@ fun NavGraphBuilder.addMapRoute(
             var moveMapToCurrentPosition: (() -> Unit)? by remember { mutableStateOf(null) }
             var courseGeneratingJob: Job? by remember { mutableStateOf(null) }
 
+            var showLoading by remember { mutableStateOf(false) }
+
             LaunchedEffect(Unit) {
                 viewModel.launch { loadNickname() }
             }
 
             LaunchedEffect(moveMapToCurrentPosition) {
                 moveMapToCurrentPosition?.invoke()
+            }
+
+            LaunchedEffect(Unit) {
+                if (locationPermission.allPermissionsGranted) {
+                    subscribeLocation(context = context) { currentPosition = it }
+                } else {
+                    locationPermission.launchMultiplePermissionRequest()
+                }
+            }
+
+            LaunchedEffect(Unit) {
+                viewModel.launch {
+                    showLoading = true
+
+                    runCatching {
+                        loadCurrentProgressingCourse()
+                    }
+                        .onSuccess { isCourseRunning ->
+                            if (isCourseRunning) MainScope().launch {
+                                navController.navigate("/map/progress") {
+                                    popUpTo(route = "/map/generate") { inclusive = true }
+                                }
+                            }
+                        }
+                        .onFailure {
+                            showToast("오류가 발생했습니다.", ToastType.ERROR)
+                            MainScope().launch { navController.popBackStack() }
+                        }
+
+                    showLoading = false
+                }
             }
 
             MapCourseGeneratingScreen(
@@ -181,6 +232,8 @@ fun NavGraphBuilder.addMapRoute(
                     }
                 }
             }
+
+            if (showLoading) LoadingModal()
         }
 
         composable(
@@ -247,7 +300,9 @@ fun NavGraphBuilder.addMapRoute(
                         runCatching { startCourse(courseId = courses[selectedCourseIndex].id) }
                             .onSuccess {
                                 MainScope().launch {
-                                    navController.popBackStack(route = "/map/generate", inclusive = true)
+                                    navController.popBackStack(
+                                        route = "/map/generate", inclusive = true
+                                    )
                                     navController.navigate("/map/progress")
                                 }
                             }
@@ -268,9 +323,34 @@ fun NavGraphBuilder.addMapRoute(
             route = "/map/progress",
         ) { backStackEntry ->
             val viewModel = getViewModel(backStackEntry)
+            val context = LocalContext.current
             val currentProgressingCourse by viewModel.currentProgressingCourse.collectAsState()
 
+            val locationPermission = rememberMultiplePermissionsState(
+                permissions = listOf(
+                    Manifest.permission.ACCESS_FINE_LOCATION,
+                    Manifest.permission.ACCESS_COARSE_LOCATION,
+                )
+            )
+
             var currentPosition: Position? by remember { mutableStateOf(null) }
+            var obstacles: List<Pair<Position, ObstacleType>> by remember { mutableStateOf(emptyList()) }
+            var showCourseFinishConfirmPopup by remember { mutableStateOf(false) }
+
+            DisposableEffect(locationPermission.allPermissionsGranted) {
+                val isGranted = locationPermission.allPermissionsGranted
+
+                val dispose = if (isGranted) {
+                    subscribeLocation(context = context) { currentPosition = it }
+                } else {
+                    locationPermission.launchMultiplePermissionRequest()
+                    null
+                }
+
+                onDispose {
+                    dispose?.invoke()
+                }
+            }
 
             LaunchedEffect(Unit) {
                 if (currentProgressingCourse == null) viewModel.launch {
@@ -282,22 +362,142 @@ fun NavGraphBuilder.addMapRoute(
                 courseName = currentProgressingCourse?.name,
                 currentPosition = currentPosition,
                 coursePositions = currentProgressingCourse?.positions,
-                obstacles = emptyList(),
+                obstacles = obstacles,
                 start = currentProgressingCourse?.positions?.firstOrNull(),
                 end = currentProgressingCourse?.positions?.lastOrNull(),
                 onBackButtonClicked = {
                     MainScope().launch { navController.popBackStack() }
                 },
                 onReportButtonClicked = {
-                    // TODO
+                    MainScope().launch {
+                        navController.navigate("/report") {
+                            popUpTo(route = "/map/progress") { inclusive = true }
+                        }
+                    }
                 },
-                onEndCourseButtonClicked = {
-                    // TODO
+                onEndCourseButtonClicked = { showCourseFinishConfirmPopup = true },
+                onPositionChanged = { position ->
+                    viewModel.launch {
+                        runCatching {
+                            getObstacles(
+                                topLeft = Position(position.latitude + 0.03 to position.longitude - 0.03),
+                                bottomRight = Position(position.latitude - 0.03 to position.longitude + 0.03),
+                            )
+                        }.onSuccess {
+                            obstacles = it.map { obstacle ->
+                                obstacle.position to obstacle.type
+                            }
+                        }
+                    }
                 },
-                onPositionChanged = {
-                    // TODO
+            ) {
+                LaunchedEffect(currentProgressingCourse) {
+                    if (currentProgressingCourse != null) {
+                        moveToMainCourseView()
+                    }
+                }
+            }
+
+            if (showCourseFinishConfirmPopup) CustomConfirmPopup(
+                title = "코스를 종료하시겠어요?",
+                content = "지금까지의 코스 진행 사항을 저장할 수 있습니다.",
+                confirmButtonText = "코스 종료",
+                onDismissRequest = { showCourseFinishConfirmPopup = false },
+                onConfirmButtonClicked = {
+                    MainScope().launch {
+                        navController.navigate(route = "/map/finish") {
+                            popUpTo(route = "/map/progress") { inclusive = true }
+                        }
+                    }
+                    showCourseFinishConfirmPopup = false
                 },
-                content = { /* EMPTY */ })
+            )
+        }
+
+        composable(
+            route = "/map/finish"
+        ) { backStackEntry ->
+            val viewModel = getViewModel(backStackEntry)
+            val currentProcessingCourse by viewModel.currentProgressingCourse.collectAsState()
+
+            val courseName = rememberTextFieldState()
+            var courseRating by remember { mutableIntStateOf(5) }
+            var isSharingEnabled by remember { mutableStateOf(false) }
+            var reportCount by remember { mutableIntStateOf(0) }
+
+            var showBackWithoutSaveConfirmPopup by remember { mutableStateOf(false) }
+            var showLoading by remember { mutableStateOf(false) }
+
+            LaunchedEffect(currentProcessingCourse) {
+                courseName.edit {
+                    delete(0, length)
+                    append(currentProcessingCourse?.name)
+                }
+            }
+
+            LaunchedEffect(Unit) {
+                viewModel.launch {
+                    runCatching {
+                        getReportCountDuringCourse()
+                    }.onSuccess {
+                        reportCount = it
+                    }
+                }
+            }
+
+            MapCourseStatisticsScreen(
+                courseName = courseName,
+                coursePositions = currentProcessingCourse?.positions,
+                distance = currentProcessingCourse?.distance,
+                duration = currentProcessingCourse?.duration,
+                reportCount = reportCount,
+                courseRating = courseRating,
+                isShareEnabled = isSharingEnabled,
+                onBackButtonClicked = { showBackWithoutSaveConfirmPopup = true },
+                onShareButtonClicked = { isSharingEnabled = it },
+                onSaveButtonClicked = {
+                    viewModel.launch {
+                        showLoading = true
+
+                        runCatching {
+                            endCourse(
+                                title = courseName.text.toString(),
+                                rating = courseRating,
+                                isShared = isSharingEnabled,
+                            )
+                        }
+                            .onSuccess {
+                                MainScope().launch {
+                                    navController.popBackStack(
+                                        destinationId = navController.graph.startDestinationId,
+                                        inclusive = false,
+                                    )
+                                }
+
+                                showToast("코스가 저장되었습니다!", ToastType.SUCCESS)
+                            }
+                            .onFailure {
+                                Log.e("MapCourseFinishScreen", it.stackTraceToString())
+                                showToast("오류가 발생했습니다.", ToastType.ERROR)
+                            }
+
+                        showLoading = false
+                    }
+                },
+                onCourseRatingChanged = { courseRating = it },
+            )
+
+            if (showLoading) LoadingModal()
+
+            if (showBackWithoutSaveConfirmPopup) CustomConfirmPopup(
+                title = "저장하지 않고 나가시겠습니까?",
+                content = "진행한 코스 내역이 사라집니다.",
+                confirmButtonText = "나가기",
+                onDismissRequest = { showBackWithoutSaveConfirmPopup = false },
+                onConfirmButtonClicked = {
+                    MainScope().launch { navController.popBackStack() }
+                },
+            )
         }
     }
 }

@@ -1,6 +1,5 @@
 package com.who_summoned_the_cloud.eromoro.presentation.component
 
-import android.graphics.BitmapFactory
 import android.graphics.PointF
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
@@ -25,7 +24,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asAndroidBitmap
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalInspectionMode
-import androidx.compose.ui.platform.LocalResources
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.core.graphics.scale
@@ -45,15 +43,14 @@ import com.naver.maps.map.compose.rememberCameraPositionState
 import com.naver.maps.map.compose.rememberUpdatedMarkerState
 import com.naver.maps.map.overlay.OverlayImage
 import com.who_summoned_the_cloud.eromoro.common.model.ObstacleType
+import com.who_summoned_the_cloud.eromoro.common.model.Position
 import com.who_summoned_the_cloud.eromoro.presentation.R
 import com.who_summoned_the_cloud.eromoro.presentation.model.CenterMarkerType
-import com.who_summoned_the_cloud.eromoro.common.model.Position
 import com.who_summoned_the_cloud.eromoro.presentation.model.CustomMapScope
-import com.who_summoned_the_cloud.eromoro.presentation.util.toLatLng
 import com.who_summoned_the_cloud.eromoro.presentation.theme.Colors
 import com.who_summoned_the_cloud.eromoro.presentation.util.rememberBitmap
+import com.who_summoned_the_cloud.eromoro.presentation.util.toLatLng
 import com.who_summoned_the_cloud.eromoro.presentation.util.toPosition
-import kotlin.math.roundToInt
 
 @OptIn(ExperimentalNaverMapApi::class)
 @Composable
@@ -81,46 +78,41 @@ fun CustomMap(
     }
 
     val density = LocalDensity.current
-    val resources = LocalResources.current
 
     val markerBitmaps = rememberBitmap(
         R.raw.image_marker_speech_bubble_start,
         R.raw.image_marker_speech_bubble_end,
         R.raw.image_marker_course_start,
         R.raw.image_marker_course_end,
+        R.raw.image_current_position_marker,
+        R.raw.image_marker_stair,
+        R.raw.image_marker_hill,
+        R.raw.image_marker_elevator,
+        R.raw.image_marker_narrow_way,
     )
 
     val (startSpeechBubbleMarker, endSpeechBubbleMarker) = remember {
+        val (width, height) = listOf(82.dp, 70.5.dp).map {
+            with(density) { it.roundToPx() }
+        }
+
         markerBitmaps
             .slice(0..1)
             .map {
-                val bitmap = with(density) {
-                    it
-                        .asAndroidBitmap()
-                        .scale(
-                            width = 82.dp
-                                .toPx()
-                                .roundToInt(),
-                            height = 70.5.dp
-                                .toPx()
-                                .roundToInt(),
-                        )
-                }
+                val bitmap = it
+                    .asAndroidBitmap()
+                    .scale(width, height)
 
                 OverlayImage.fromBitmap(bitmap)
             }
     }
 
     val (startMarker, endMarker) = remember {
+        val size = with(density) { 50.dp.roundToPx() }
+
         markerBitmaps
             .slice(2..3)
             .map {
-                val size = with(density) {
-                    50.dp
-                        .toPx()
-                        .roundToInt()
-                }
-
                 val bitmap = it
                     .asAndroidBitmap()
                     .scale(width = size, height = size)
@@ -132,11 +124,36 @@ fun CustomMap(
     val currentPositionMarker = remember {
         val size = with(density) { 25.dp.roundToPx() }
 
-        val bitmap = BitmapFactory
-            .decodeResource(resources, R.raw.image_current_position_marker)
+        val bitmap = markerBitmaps[4]
+            .asAndroidBitmap()
             .scale(size, size)
 
         OverlayImage.fromBitmap(bitmap)
+    }
+
+    val obstacleMarkers = remember {
+        val (width, height) = listOf(60.dp, 64.5.dp).map {
+            with(density) { it.roundToPx() }
+        }
+
+        val bitmaps = markerBitmaps
+            .slice(5 until 9)
+            .map { it ->
+                val bitmap = it
+                    .asAndroidBitmap()
+                    .scale(width, height)
+
+                OverlayImage.fromBitmap(bitmap)
+            }
+
+        mapOf(
+            ObstacleType.STAIR to bitmaps[0],
+            ObstacleType.HILL to bitmaps[1],
+            ObstacleType.NO_ELEVATOR to bitmaps[2],
+            ObstacleType.NARROW_WAY to bitmaps[3],
+            ObstacleType.THRESHOLD to bitmaps[0],  // TODO: 전용 아이콘 제작 시 적용
+            ObstacleType.OTHER to bitmaps[0],  // TODO: 전용 아이콘 제작 시 적용
+        )
     }
 
     val camera = rememberCameraPositionState()
@@ -178,7 +195,7 @@ fun CustomMap(
             modifier = Modifier.fillMaxSize(),
             cameraPositionState = camera,
             uiSettings = uiSettings,
-            onMapClick = { _, _ -> onClick?.invoke() }
+            onMapClick = { _, _ -> onClick?.invoke() },
         ) {
             // 코스(음영 처리)
             otherCourses
@@ -242,6 +259,17 @@ fun CustomMap(
                 )
             }
 
+            // 장애물 마커
+            obstacles?.forEach { (position, obstacle) ->
+                val marker = obstacleMarkers[obstacle]!!
+
+                Marker(
+                    state = rememberUpdatedMarkerState(position = position.toLatLng()),
+                    icon = marker,
+                    anchor = Offset(0.5f, 0.8f),
+                )
+            }
+
             // 코스 시작 마커
             start
                 ?.toLatLng()
@@ -292,34 +320,55 @@ fun CustomMap(
 
             content?.invoke(object : CustomMapScope {
                 override fun moveMap(position: Position) {
-                    move(position, PointF(0.5f, 0.5f))
+                    moveMap(position, PointF(0.5f, 0.5f))
                 }
 
                 override fun moveMap(position: Position, pivot: PointF) {
-                    move(position, pivot)
-                }
-
-                override fun moveMap(position: Position, pivot: Offset) {
-                    val (width, height) = map?.width to map?.height
-
-                    if (width == null || height == null) {
-                        moveMap(position)
-                        return
-                    }
-
-                    move(
-                        position,
-                        PointF(((width + pivot.x) / (width * 2)), (height + pivot.y) / (height * 2))
-                    )
-                }
-
-                private fun move(position: Position, pivot: PointF) {
                     val cameraUpdate = CameraUpdate
                         .scrollTo(position.toLatLng())
                         .animate(CameraAnimation.Easing, 500)
                         .pivot(pivot)
 
                     map?.moveCamera(cameraUpdate)
+                }
+
+                override fun moveMap(position: Position, pivot: Offset) {
+                    moveMap(position, offsetToPointF(pivot))
+                }
+
+                override fun moveToMainCourseView() {
+                    moveToMainCourseView(PointF(0.5f, 0.5f))
+                }
+
+                override fun moveToMainCourseView(pivot: PointF) {
+                    mainCourse?.let {
+                        val (top, bottom, start, end) = listOf(
+                            mainCourse.minOf { it.latitude },
+                            mainCourse.maxOf { it.latitude },
+                            mainCourse.minOf { it.longitude },
+                            mainCourse.maxOf { it.longitude },
+                        )
+
+                        val middle = Position(
+                            latitude = (top + bottom) / 2,
+                            longitude = (start + end) / 2,
+                        )
+
+                        moveMap(middle, pivot)
+                    }
+                }
+
+                override fun moveToMainCourseView(pivot: Offset) {
+                    moveToMainCourseView(offsetToPointF(pivot))
+                }
+
+                private fun offsetToPointF(offset: Offset): PointF {
+                    val (width, height) = map?.width to map?.height
+                    return if (width == null || height == null) {
+                        PointF(0.5f, 0.5f)
+                    } else PointF(
+                        ((width + offset.x) / (width * 2)), (height + offset.y) / (height * 2)
+                    )
                 }
             })
         }

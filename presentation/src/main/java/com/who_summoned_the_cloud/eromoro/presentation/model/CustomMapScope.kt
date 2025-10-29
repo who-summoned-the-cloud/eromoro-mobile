@@ -8,4 +8,8 @@ interface CustomMapScope {
     fun moveMap(position: Position)
     fun moveMap(position: Position, pivot: PointF)
     fun moveMap(position: Position, pivot: Offset)
+
+    fun moveToMainCourseView()
+    fun moveToMainCourseView(pivot: PointF)
+    fun moveToMainCourseView(pivot: Offset)
 }

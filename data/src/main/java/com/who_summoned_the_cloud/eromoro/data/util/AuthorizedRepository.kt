@@ -1,4 +1,4 @@
-package com.who_summoned_the_cloud.eromoro.data.repository
+package com.who_summoned_the_cloud.eromoro.data.util
 
 import com.who_summoned_the_cloud.eromoro.data.preference.AuthPreference
 import org.openapitools.client.apis.UserControllerApi

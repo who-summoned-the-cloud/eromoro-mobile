@@ -193,7 +193,9 @@ fun MyPageCourseListScreen(
                                         text = course.title,
                                         fontSize = 18.sp,
                                         fontWeight = FontWeight.Bold,
+                                        modifier = Modifier.weight(1f),
                                     )
+                                    Spacer(modifier = Modifier.width(8.dp))
                                     Box(
                                         modifier = Modifier
                                             .clip(RoundedCornerShape(percent = 50))

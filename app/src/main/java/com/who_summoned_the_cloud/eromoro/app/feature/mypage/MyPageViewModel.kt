@@ -62,7 +62,33 @@ class MyPageViewModel @Inject constructor(
     }
 
     suspend fun modifyCourseLike(courseId: Long, isLiked: Boolean) {
-        courseRepository.modifyCourseLike(courseId, isLiked)
+        val likeCount = courseRepository.modifyCourseLike(courseId = courseId, like = isLiked)
+
+        likedCourses.value = likedCourses.value?.map {
+            it.map { likedCourse ->
+                if (likedCourse.id == courseId) {
+                    likedCourse.copy(
+                        isLiked = isLiked,
+                        like = likeCount,
+                    )
+                } else {
+                    likedCourse
+                }
+            }
+        }
+
+        usedCourses.value = usedCourses.value?.map {
+            it.map { usedCourse ->
+                if (usedCourse.id == courseId) {
+                    usedCourse.copy(
+                        isLiked = isLiked,
+                        like = likeCount,
+                    )
+                } else {
+                    usedCourse
+                }
+            }
+        }
     }
 
     suspend fun logout() {
