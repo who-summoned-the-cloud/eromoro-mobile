@@ -2,6 +2,7 @@ package com.who_summoned_the_cloud.eromoro.app.feature.home
 
 import android.Manifest
 import android.annotation.SuppressLint
+import android.content.Intent
 import androidx.compose.animation.EnterTransition
 import androidx.compose.animation.ExitTransition
 import androidx.compose.foundation.text.input.rememberTextFieldState
@@ -23,6 +24,7 @@ import androidx.navigation.navigation
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.rememberMultiplePermissionsState
 import com.who_summoned_the_cloud.eromoro.app.model.ToastCallback
+import com.who_summoned_the_cloud.eromoro.app.service.RouteRecordingService
 import com.who_summoned_the_cloud.eromoro.app.util.FinishHandler
 import com.who_summoned_the_cloud.eromoro.app.util.NavigationBarApp
 import com.who_summoned_the_cloud.eromoro.app.util.getLocation
@@ -327,6 +329,7 @@ fun NavGraphBuilder.addHomeRoute(
             exitTransition = { ExitTransition.None },
         ) { backStackEntry ->
             val viewModel = getViewModel(backStackEntry)
+            val context = LocalContext.current
             val spotId = backStackEntry.arguments?.getLong("spotId") ?: return@composable
 
             val spot by viewModel.spot.collectAsState()
@@ -398,6 +401,10 @@ fun NavGraphBuilder.addHomeRoute(
 
                         runCatching { startCourse(courseId = course.id) }
                             .onSuccess {
+                                Intent(context, RouteRecordingService::class.java)
+                                    .apply { action = RouteRecordingService.ACTION_START_SERVICE }
+                                    .let { context.startService(it) }
+
                                 MainScope().launch {
                                     navController.navigate(route = "/map/progress") {
                                         popUpTo("/home/main") { inclusive = false }

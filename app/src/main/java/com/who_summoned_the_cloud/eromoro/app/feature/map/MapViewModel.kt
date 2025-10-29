@@ -1,6 +1,7 @@
 package com.who_summoned_the_cloud.eromoro.app.feature.map
 
 import androidx.lifecycle.ViewModel
+import com.who_summoned_the_cloud.eromoro.app.model.MapViewModelUserRouteScope
 import com.who_summoned_the_cloud.eromoro.common.model.Position
 import com.who_summoned_the_cloud.eromoro.data.model.Course
 import com.who_summoned_the_cloud.eromoro.data.model.CourseGenerationRequest
@@ -44,7 +45,7 @@ class MapViewModel @Inject constructor(
             request = CourseGenerationRequest(
                 start = start,
                 end = end,
-                duration = duration
+                duration = duration,
             )
         )
 
@@ -63,6 +64,17 @@ class MapViewModel @Inject constructor(
             topLeft = topLeft,
             bottomRight = bottomRight,
         )
+    }
+
+    suspend fun getUserRoute(action: MapViewModelUserRouteScope.() -> Unit) {
+        courseRepository.modifyUserRoute {
+            action.invoke(
+                object : MapViewModelUserRouteScope {
+                    override val userRoute: List<Position>
+                        get() = this@modifyUserRoute.userRoute ?: emptyList()
+                },
+            )
+        }
     }
 
     suspend fun startCourse(courseId: Long) {

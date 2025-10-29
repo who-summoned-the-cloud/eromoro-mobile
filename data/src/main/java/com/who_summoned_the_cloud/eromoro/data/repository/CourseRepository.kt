@@ -251,6 +251,7 @@ class CourseRepository @Inject constructor(
 
     /**
      * 현재 진행중인 코스의 아이디 조회
+     *
      * 코스를 진행중이지 않다면 null 반환
      */
     suspend fun getCurrentCourseId(): Long? {
@@ -320,6 +321,7 @@ class CourseRepository @Inject constructor(
 
     /**
      * 지나오고 있는 코스 경로 조작하기
+     *
      * 조작된 경로는 saveCourseAndFinish 메소드를 통해 사용자의 경로로서 서버로 보내진다.
      */
     suspend fun modifyUserRoute(action: UserRouteScope.() -> Unit) {

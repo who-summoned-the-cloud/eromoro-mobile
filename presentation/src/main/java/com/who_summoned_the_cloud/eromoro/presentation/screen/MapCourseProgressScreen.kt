@@ -31,6 +31,7 @@ fun MapCourseProgressScreen(
     courseName: String?,
     currentPosition: Position?,
     coursePositions: List<Position>?,
+    userRoute: List<Position>?,
     obstacles: List<Pair<Position, ObstacleType>>?,
     start: Position?,
     end: Position?,
@@ -46,6 +47,7 @@ fun MapCourseProgressScreen(
         CustomMap(
             currentPosition = currentPosition,
             mainCourse = coursePositions,
+            otherCourses = listOfNotNull(userRoute),
             obstacles = obstacles,
             start = start,
             end = end,
@@ -119,6 +121,7 @@ fun PreviewMapCourseProgressScreen() {
         courseName = "경복궁 코스",
         currentPosition = null,
         coursePositions = null,
+        userRoute = null,
         obstacles = null,
         start = null,
         end = null,

@@ -20,7 +20,7 @@ fun subscribeLocation(context: Context, callback: (Position) -> Unit): () -> Uni
             Priority.PRIORITY_HIGH_ACCURACY,
             60 * 1000,
         )
-        .apply { setMinUpdateDistanceMeters(3f) }
+        .apply { setMinUpdateDistanceMeters(30f) }
         .build()
 
     val callback = object : LocationCallback() {
