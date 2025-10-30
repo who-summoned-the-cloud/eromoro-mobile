@@ -1,11 +1,11 @@
 package com.who_summoned_the_cloud.eromoro.app.feature.map
 
 import androidx.lifecycle.ViewModel
-import com.who_summoned_the_cloud.eromoro.app.model.MapViewModelUserRouteScope
 import com.who_summoned_the_cloud.eromoro.common.model.Position
 import com.who_summoned_the_cloud.eromoro.data.model.Course
 import com.who_summoned_the_cloud.eromoro.data.model.CourseGenerationRequest
 import com.who_summoned_the_cloud.eromoro.data.model.CourseSaveAndFinishRequest
+import com.who_summoned_the_cloud.eromoro.data.model.CurrentCourseState
 import com.who_summoned_the_cloud.eromoro.data.model.GeneratedCourse
 import com.who_summoned_the_cloud.eromoro.data.model.Obstacle
 import com.who_summoned_the_cloud.eromoro.data.repository.CourseRepository
@@ -26,7 +26,7 @@ class MapViewModel @Inject constructor(
 
     val nickname = MutableStateFlow<String?>(null)
     val generatedCourses = MutableStateFlow<List<GeneratedCourse>>(emptyList())
-    val currentProgressingCourse = MutableStateFlow<Course?>(null)
+    val originalRunningCourse = MutableStateFlow<Course?>(null)
 
     suspend fun loadNickname() {
         nickname.value = userRepository.getUserInfo().nickname
@@ -66,20 +66,18 @@ class MapViewModel @Inject constructor(
         )
     }
 
-    suspend fun getUserRoute(action: MapViewModelUserRouteScope.() -> Unit) {
-        courseRepository.modifyUserRoute {
-            action.invoke(
-                object : MapViewModelUserRouteScope {
-                    override val userRoute: List<Position>
-                        get() = this@modifyUserRoute.userRoute ?: emptyList()
-                },
-            )
-        }
+    suspend fun getCurrentCourseState(): CurrentCourseState? {
+        return courseRepository.getCurrentCourseState()
     }
 
     suspend fun startCourse(courseId: Long) {
         courseRepository.startCourse(courseId = courseId)
-        currentProgressingCourse.value = courseRepository.getCourse(courseId = courseId)
+        originalRunningCourse.value = courseRepository.getCourse(courseId = courseId)
+    }
+
+    suspend fun truncateCourseProgress() {
+        courseRepository.truncateCourseProgress()
+        originalRunningCourse.value = null
     }
 
     suspend fun endCourse(
@@ -97,9 +95,9 @@ class MapViewModel @Inject constructor(
     }
 
     suspend fun loadCurrentProgressingCourse(): Boolean {
-        val courseId = courseRepository.getCurrentCourseId()
-        if (courseId == null) return false
-        currentProgressingCourse.value = courseRepository.getCourse(courseId = courseId)
+        val course = courseRepository.getCurrentCourseState()
+        if (course == null) return false
+        originalRunningCourse.value = courseRepository.getCourse(courseId = course.id)
         return true
     }
 }

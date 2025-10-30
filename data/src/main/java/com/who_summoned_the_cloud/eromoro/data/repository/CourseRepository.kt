@@ -7,6 +7,7 @@ import com.who_summoned_the_cloud.eromoro.common.model.UserType
 import com.who_summoned_the_cloud.eromoro.data.model.Course
 import com.who_summoned_the_cloud.eromoro.data.model.CourseGenerationRequest
 import com.who_summoned_the_cloud.eromoro.data.model.CourseSaveAndFinishRequest
+import com.who_summoned_the_cloud.eromoro.data.model.CurrentCourseState
 import com.who_summoned_the_cloud.eromoro.data.model.GeneratedCourse
 import com.who_summoned_the_cloud.eromoro.data.model.LikedCourse
 import com.who_summoned_the_cloud.eromoro.data.model.RegionalCourse
@@ -47,8 +48,7 @@ class CourseRepository @Inject constructor(
 
         val response = courseControllerApi.withAuth {
             getCourseList(
-                courseType = CourseControllerApi.CourseTypeGetCourseList.SPOT,
-                spotId = spotId
+                courseType = CourseControllerApi.CourseTypeGetCourseList.SPOT, spotId = spotId
             )
         }
 
@@ -213,9 +213,13 @@ class CourseRepository @Inject constructor(
     suspend fun generateCourse(request: CourseGenerationRequest): List<GeneratedCourse> {
         val dto = GenerateDto(
             start = LatLon(
-                request.start.latitude.toBigDecimal(), request.start.longitude.toBigDecimal()
+                request.start.latitude.toBigDecimal(),
+                request.start.longitude.toBigDecimal(),
             ),
-            end = LatLon(request.end.latitude.toBigDecimal(), request.end.longitude.toBigDecimal()),
+            end = LatLon(
+                request.end.latitude.toBigDecimal(),
+                request.end.longitude.toBigDecimal(),
+            ),
             targetDurationMin = request.duration,
         )
 
@@ -250,12 +254,21 @@ class CourseRepository @Inject constructor(
     }
 
     /**
-     * 현재 진행중인 코스의 아이디 조회
+     * 현재 진행중인 코스의 상태 조회
      *
-     * 코스를 진행중이지 않다면 null 반환
+     * 코스를 진행중이지 않다면 null을 반환
      */
-    suspend fun getCurrentCourseId(): Long? {
-        return coursePreference.currentCourseId
+    suspend fun getCurrentCourseState(): CurrentCourseState? {
+        return coursePreference.currentCourseId?.let {
+            CurrentCourseState(
+                id = it,
+                userRoute = coursePreference.userRoute ?: emptyList(),
+                duration = ((Instant
+                    .now()
+                    .toEpochMilli() - coursePreference.courseStartedAt!!.toEpochMilli()) / (1000 * 60f)).toInt(),
+                distance = coursePreference.courseDistance ?: 0,
+            )
+        }
     }
 
     /**
@@ -264,10 +277,10 @@ class CourseRepository @Inject constructor(
     suspend fun saveCourseAndFinish(request: CourseSaveAndFinishRequest) {
         val now = Instant.now()
 
-        val courseId = coursePreference.currentCourseId ?: 1
         val userRoute = coursePreference.userRoute ?: emptyList()
         val courseStartedAt = coursePreference.courseStartedAt ?: now
         val distance = coursePreference.courseDistance ?: 10
+        val spotId = coursePreference.courseSpotId
 
         val infoDto = CourseInfoDto(
             title = request.title,
@@ -286,25 +299,29 @@ class CourseRepository @Inject constructor(
             },
         )
 
-        if (
-            courseControllerApi.withAuth {
-                saveCoursePointList(coursePointListDto = routeDto)
-            }.isSuccess != true
-        ) {
-            throw Exception("Failed to save course route")
-        }
+        val newCourseId = courseControllerApi.withAuth {
+            saveCoursePointList(
+                coursePointListDto = routeDto,
+                spotId = spotId,
+            )
+        }.result?.courseId ?: throw Exception("Failed to save course route")
 
-        if (
+        runCatching {
             courseControllerApi.withAuth {
                 saveCourseInfo(
-                    courseId = courseId,
+                    courseId = newCourseId,
                     courseInfoDto = infoDto,
                 )
-            }.isSuccess != true
-        ) {
-            throw Exception("Failed to save course info")
+            }
         }
 
+        coursePreference.clear()
+    }
+
+    /**
+     * 코스 진행상황 취소
+     */
+    suspend fun truncateCourseProgress() {
         coursePreference.clear()
     }
 
@@ -327,8 +344,8 @@ class CourseRepository @Inject constructor(
     suspend fun modifyUserRoute(action: UserRouteScope.() -> Unit) {
         action.invoke(
             object : UserRouteScope {
-                override var userRoute: List<Position>?
-                    get() = coursePreference.userRoute
+                override var userRoute: List<Position>
+                    get() = coursePreference.userRoute ?: emptyList()
                     set(value) {
                         coursePreference.userRoute = value
                     }

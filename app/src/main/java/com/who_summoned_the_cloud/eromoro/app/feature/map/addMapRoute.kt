@@ -34,6 +34,7 @@ import com.who_summoned_the_cloud.eromoro.app.util.launch
 import com.who_summoned_the_cloud.eromoro.app.util.subscribeLocation
 import com.who_summoned_the_cloud.eromoro.common.model.ObstacleType
 import com.who_summoned_the_cloud.eromoro.common.model.Position
+import com.who_summoned_the_cloud.eromoro.data.model.CurrentCourseState
 import com.who_summoned_the_cloud.eromoro.presentation.component.CustomConfirmPopup
 import com.who_summoned_the_cloud.eromoro.presentation.modal.LoadingModal
 import com.who_summoned_the_cloud.eromoro.presentation.model.Fetch
@@ -347,7 +348,7 @@ fun NavGraphBuilder.addMapRoute(
         ) { backStackEntry ->
             val viewModel = getViewModel(backStackEntry)
             val context = LocalContext.current
-            val currentProgressingCourse by viewModel.currentProgressingCourse.collectAsState()
+            val originalRunningCourse by viewModel.originalRunningCourse.collectAsState()
 
             val locationPermission = rememberMultiplePermissionsState(
                 permissions = listOf(
@@ -377,7 +378,7 @@ fun NavGraphBuilder.addMapRoute(
             }
 
             LaunchedEffect(Unit) {
-                if (currentProgressingCourse == null) viewModel.launch {
+                if (originalRunningCourse == null) viewModel.launch {
                     loadCurrentProgressingCourse()
                 }
             }
@@ -385,7 +386,8 @@ fun NavGraphBuilder.addMapRoute(
             DisposableEffect(Unit) {
                 val job = CoroutineScope(Dispatchers.IO).launch {
                     while (isActive) {
-                        viewModel.getUserRoute { userRoute = this@getUserRoute.userRoute }
+                        val course = runCatching { viewModel.getCurrentCourseState() }.getOrNull()
+                        course?.userRoute?.let { userRoute = it }
                         delay(timeMillis = 3000)
                     }
                 }
@@ -394,13 +396,13 @@ fun NavGraphBuilder.addMapRoute(
             }
 
             MapCourseProgressScreen(
-                courseName = currentProgressingCourse?.name,
+                courseName = originalRunningCourse?.name,
                 currentPosition = currentPosition,
-                coursePositions = currentProgressingCourse?.positions,
+                coursePositions = originalRunningCourse?.positions,
                 userRoute = userRoute,
                 obstacles = obstacles,
-                start = currentProgressingCourse?.positions?.firstOrNull(),
-                end = currentProgressingCourse?.positions?.lastOrNull(),
+                start = originalRunningCourse?.positions?.firstOrNull(),
+                end = originalRunningCourse?.positions?.lastOrNull(),
                 onBackButtonClicked = {
                     MainScope().launch { navController.popBackStack() }
                 },
@@ -427,8 +429,8 @@ fun NavGraphBuilder.addMapRoute(
                     }
                 },
             ) {
-                LaunchedEffect(currentProgressingCourse) {
-                    if (currentProgressingCourse != null) {
+                LaunchedEffect(originalRunningCourse) {
+                    if (originalRunningCourse != null) {
                         moveToMainCourseView()
                     }
                 }
@@ -457,7 +459,8 @@ fun NavGraphBuilder.addMapRoute(
         ) { backStackEntry ->
             val viewModel = getViewModel(backStackEntry)
             val context = LocalContext.current
-            val currentProcessingCourse by viewModel.currentProgressingCourse.collectAsState()
+            val originalRunningCourse by viewModel.originalRunningCourse.collectAsState()
+            var currentCourseState: CurrentCourseState? by remember { mutableStateOf(null) }
 
             val courseName = rememberTextFieldState()
             var courseRating by remember { mutableIntStateOf(5) }
@@ -467,10 +470,10 @@ fun NavGraphBuilder.addMapRoute(
             var showBackWithoutSaveConfirmPopup by remember { mutableStateOf(false) }
             var showLoading by remember { mutableStateOf(false) }
 
-            LaunchedEffect(currentProcessingCourse) {
+            LaunchedEffect(originalRunningCourse) {
                 courseName.edit {
                     delete(0, length)
-                    append(currentProcessingCourse?.name)
+                    append(originalRunningCourse?.name)
                 }
             }
 
@@ -484,11 +487,22 @@ fun NavGraphBuilder.addMapRoute(
                 }
             }
 
+            LaunchedEffect(Unit) {
+                viewModel.launch {
+                    runCatching {
+                        getCurrentCourseState()
+                    }.onSuccess {
+                        currentCourseState = it
+                    }
+                }
+            }
+
             MapCourseStatisticsScreen(
                 courseName = courseName,
-                coursePositions = currentProcessingCourse?.positions,
-                distance = currentProcessingCourse?.distance,
-                duration = currentProcessingCourse?.duration,
+                originalCoursePositions = originalRunningCourse?.positions,
+                userRoute = currentCourseState?.userRoute,
+                distance = currentCourseState?.distance,
+                duration = currentCourseState?.duration,
                 reportCount = reportCount,
                 courseRating = courseRating,
                 isShareEnabled = isSharingEnabled,
@@ -538,7 +552,21 @@ fun NavGraphBuilder.addMapRoute(
                 confirmButtonText = "나가기",
                 onDismissRequest = { showBackWithoutSaveConfirmPopup = false },
                 onConfirmButtonClicked = {
-                    MainScope().launch { navController.popBackStack() }
+                    viewModel.launch {
+                        showLoading = true
+
+                        runCatching { truncateCourseProgress() }
+                            .onSuccess {
+                                Intent(context, RouteRecordingService::class.java)
+                                    .apply { action = RouteRecordingService.ACTION_STOP_SERVICE }
+                                    .let { context.startService(it) }
+
+                                MainScope().launch { navController.popBackStack() }
+                            }
+                            .onFailure { showToast("오류가 발생했습니다.", ToastType.ERROR) }
+
+                        showLoading = false
+                    }
                 },
             )
         }

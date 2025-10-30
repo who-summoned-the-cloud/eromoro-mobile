@@ -15,6 +15,7 @@ class CoursePreference @Inject constructor(
         private const val CURRENT_COURSE_ID = "current_course_id"
         private const val COURSE_STARTED_AT = "course_started_at"
         private const val COURSE_DISTANCE = "course_distance"
+        private const val COURSE_SPOT_ID = "course_spot_id"
         private const val REPORT_COUNT = "report_count"
         private const val USER_ROUTE = "user_route"
     }
@@ -79,6 +80,18 @@ class CoursePreference @Inject constructor(
                 prefs.edit { remove(COURSE_DISTANCE) }
             } else {
                 prefs.edit { putInt(COURSE_DISTANCE, value) }
+            }
+        }
+
+    var courseSpotId: Long?
+        get() = prefs
+            .getLong(COURSE_SPOT_ID, -1)
+            .takeIf { it != -1L }
+        set(value) {
+            if (value == null) {
+                prefs.edit { remove(COURSE_SPOT_ID) }
+            } else {
+                prefs.edit { putLong(COURSE_SPOT_ID, value) }
             }
         }
 

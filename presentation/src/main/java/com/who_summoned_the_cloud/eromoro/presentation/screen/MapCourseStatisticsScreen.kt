@@ -49,7 +49,8 @@ import com.who_summoned_the_cloud.eromoro.presentation.util.rememberBitmap
 @Composable
 fun MapCourseStatisticsScreen(
     courseName: TextFieldState,
-    coursePositions: List<Position>?,
+    userRoute: List<Position>?,
+    originalCoursePositions: List<Position>?,
     distance: Int?,
     duration: Int?,
     reportCount: Int?,
@@ -64,9 +65,10 @@ fun MapCourseStatisticsScreen(
         modifier = Modifier.fillMaxSize()
     ) {
         CustomMap(
-            mainCourse = coursePositions
+            mainCourse = userRoute,
+            otherCourses = listOfNotNull(originalCoursePositions),
         ) {
-            LaunchedEffect(coursePositions) {
+            LaunchedEffect(userRoute, originalCoursePositions) {
                 moveToMainCourseView()
             }
         }
@@ -254,7 +256,14 @@ fun PreviewMapCourseStatisticsScreen() {
 
     MapCourseStatisticsScreen(
         courseName = TextFieldState(initialText = "이로모로님의 경복궁 코스"),
-        coursePositions = listOf(
+        originalCoursePositions = listOf(
+            37.566535 to 126.977969,
+            37.566335 to 126.977269,
+            37.566935 to 126.977769,
+        ).map {
+            Position(it)
+        },
+        userRoute = listOf(
             37.566535 to 126.977969,
             37.566335 to 126.977269,
             37.566935 to 126.977769,

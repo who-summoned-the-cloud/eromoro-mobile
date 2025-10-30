@@ -91,9 +91,7 @@ class RouteRecordingService : Service() {
 
     private fun createNotificationChannel() {
         val serviceChannel = NotificationChannel(
-            NOTIFICATION_CHANNEL_ID,
-            "이동 경로 수집 알림",
-            NotificationManager.IMPORTANCE_LOW
+            NOTIFICATION_CHANNEL_ID, "이동 경로 수집 알림", NotificationManager.IMPORTANCE_LOW
         )
 
         val manager = getSystemService(NotificationManager::class.java)
@@ -108,7 +106,7 @@ class RouteRecordingService : Service() {
                 CoroutineScope(Dispatchers.IO).launch {
                     courseRepository.modifyUserRoute {
                         userRoute =
-                            userRoute?.plus(Position(location.latitude to location.longitude))
+                            userRoute.plus(Position(location.latitude to location.longitude))
                     }
                 }
             }

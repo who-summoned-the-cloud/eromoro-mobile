@@ -17,6 +17,6 @@ class SplashViewModel @Inject constructor(
     }
 
     suspend fun checkIsCourseRunning(): Boolean {
-        return runCatching { courseRepository.getCurrentCourseId() != null }.getOrDefault(false)
+        return runCatching { courseRepository.getCurrentCourseState() != null }.getOrDefault(false)
     }
 }
