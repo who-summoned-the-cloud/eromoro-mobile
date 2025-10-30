@@ -63,6 +63,7 @@ fun CustomMap(
     obstacles: List<Pair<Position, ObstacleType>>? = null,
     centerMarkerType: CenterMarkerType? = null,
     onPositionChanged: ((Position) -> Unit)? = null,
+    onMeterPerPixelChanged: ((Double) -> Unit)? = null,
     isInteracting: Boolean = true,
     onClick: (() -> Unit)? = null,
     content: @Composable @NaverMapComposable (CustomMapScope.() -> Unit)? = null,
@@ -304,19 +305,23 @@ fun CustomMap(
                     )
                 }
 
-            DisposableMapEffect(onPositionChanged) { loadedMap ->
+            DisposableMapEffect(
+                onPositionChanged,
+                onMeterPerPixelChanged,
+            ) { loadedMap ->
                 targetMetersPerDp = loadedMap.projection.metersPerDp
 
-                val listener = NaverMap.OnCameraIdleListener {
+                val cameraListener = NaverMap.OnCameraIdleListener {
                     targetMetersPerDp = loadedMap.projection.metersPerDp
                     onPositionChanged?.invoke(loadedMap.cameraPosition.target.toPosition())
+                    onMeterPerPixelChanged?.invoke(loadedMap.projection.metersPerPixel)
                 }
 
-                loadedMap.addOnCameraIdleListener(listener)
+                loadedMap.addOnCameraIdleListener(cameraListener)
                 map = loadedMap
 
                 onDispose {
-                    loadedMap.removeOnCameraIdleListener(listener)
+                    loadedMap.removeOnCameraIdleListener(cameraListener)
                 }
             }
 

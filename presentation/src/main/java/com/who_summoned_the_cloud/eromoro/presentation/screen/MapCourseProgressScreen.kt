@@ -39,6 +39,7 @@ fun MapCourseProgressScreen(
     onReportButtonClicked: () -> Unit,
     onEndCourseButtonClicked: () -> Unit,
     onPositionChanged: (Position) -> Unit,
+    onMeterPerPixelChanged: (Double) -> Unit,
     content: @Composable CustomMapScope.() -> Unit,
 ) {
     Box(
@@ -52,6 +53,7 @@ fun MapCourseProgressScreen(
             start = start,
             end = end,
             onPositionChanged = onPositionChanged,
+            onMeterPerPixelChanged = onMeterPerPixelChanged,
             content = content,
         )
         Column(
@@ -129,6 +131,7 @@ fun PreviewMapCourseProgressScreen() {
         onReportButtonClicked = {},
         onEndCourseButtonClicked = {},
         onPositionChanged = {},
+        onMeterPerPixelChanged = {},
         content = {},
     )
 }

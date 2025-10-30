@@ -14,11 +14,14 @@ import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableDoubleStateOf
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.navigation.NavBackStackEntry
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavHostController
@@ -55,6 +58,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlin.coroutines.coroutineContext
+import kotlin.math.sqrt
 
 @OptIn(ExperimentalPermissionsApi::class)
 @SuppressLint("MissingPermission")
@@ -333,8 +337,10 @@ fun NavGraphBuilder.addMapRoute(
             exitTransition = { ExitTransition.None },
         ) { backStackEntry ->
             val viewModel = getViewModel(backStackEntry)
+
             val context = LocalContext.current
-            val originalRunningCourse by viewModel.originalRunningCourse.collectAsState()
+            val density = LocalDensity.current
+            val window = LocalWindowInfo.current
 
             val locationPermission = rememberMultiplePermissionsState(
                 permissions = listOf(
@@ -343,10 +349,19 @@ fun NavGraphBuilder.addMapRoute(
                 )
             )
 
+            val originalRunningCourse by viewModel.originalRunningCourse.collectAsState()
             var currentPosition: Position? by remember { mutableStateOf(null) }
             var obstacles: List<Pair<Position, ObstacleType>> by remember { mutableStateOf(emptyList()) }
             var showCourseFinishConfirmPopup by remember { mutableStateOf(false) }
             var userRoute: List<Position> by remember { mutableStateOf(emptyList()) }
+
+            val screenRadiusPx = remember {
+                val (width, height) = window.containerSize.let { listOf(it.width, it.height) }
+                sqrt((width * width + height * height).toFloat()) / 2
+            }
+
+            var mapPosition by remember { mutableStateOf(Position(0.0 to 0.0)) }
+            var meterPerPixel by remember { mutableDoubleStateOf(0.0) }
 
             DisposableEffect(locationPermission.allPermissionsGranted) {
                 val isGranted = locationPermission.allPermissionsGranted
@@ -358,9 +373,7 @@ fun NavGraphBuilder.addMapRoute(
                     null
                 }
 
-                onDispose {
-                    dispose?.invoke()
-                }
+                onDispose { dispose?.invoke() }
             }
 
             LaunchedEffect(Unit) {
@@ -379,6 +392,25 @@ fun NavGraphBuilder.addMapRoute(
                 }
 
                 onDispose { job.cancel() }
+            }
+
+            LaunchedEffect(meterPerPixel, mapPosition) {
+                val meter = meterPerPixel * screenRadiusPx
+                val dLat = 0.000009 * meter
+                val dLon = 0.000011 * meter
+
+                viewModel.launch {
+                    runCatching {
+                        getObstacles(
+                            topLeft = Position(mapPosition.latitude + dLat to mapPosition.longitude - dLon),
+                            bottomRight = Position(mapPosition.latitude - dLat to mapPosition.longitude + dLon),
+                        )
+                    }.onSuccess {
+                        obstacles = it.map { obstacle ->
+                            obstacle.position to obstacle.type
+                        }
+                    }
+                }
             }
 
             MapCourseProgressScreen(
@@ -400,20 +432,8 @@ fun NavGraphBuilder.addMapRoute(
                     }
                 },
                 onEndCourseButtonClicked = { showCourseFinishConfirmPopup = true },
-                onPositionChanged = { position ->
-                    viewModel.launch {
-                        runCatching {
-                            getObstacles(
-                                topLeft = Position(position.latitude + 0.03 to position.longitude - 0.03),
-                                bottomRight = Position(position.latitude - 0.03 to position.longitude + 0.03),
-                            )
-                        }.onSuccess {
-                            obstacles = it.map { obstacle ->
-                                obstacle.position to obstacle.type
-                            }
-                        }
-                    }
-                },
+                onPositionChanged = { mapPosition = it },
+                onMeterPerPixelChanged = { meterPerPixel = it },
             ) {
                 LaunchedEffect(originalRunningCourse) {
                     if (originalRunningCourse != null) {
