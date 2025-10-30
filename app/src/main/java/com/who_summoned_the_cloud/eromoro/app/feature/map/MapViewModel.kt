@@ -8,6 +8,7 @@ import com.who_summoned_the_cloud.eromoro.data.model.CourseSaveAndFinishRequest
 import com.who_summoned_the_cloud.eromoro.data.model.CurrentCourseState
 import com.who_summoned_the_cloud.eromoro.data.model.GeneratedCourse
 import com.who_summoned_the_cloud.eromoro.data.model.Obstacle
+import com.who_summoned_the_cloud.eromoro.data.model.Report
 import com.who_summoned_the_cloud.eromoro.data.repository.CourseRepository
 import com.who_summoned_the_cloud.eromoro.data.repository.GeolocationRepository
 import com.who_summoned_the_cloud.eromoro.data.repository.ReportRepository
@@ -64,6 +65,10 @@ class MapViewModel @Inject constructor(
             topLeft = topLeft,
             bottomRight = bottomRight,
         )
+    }
+
+    suspend fun getReport(reportId: Long): Report {
+        return reportRepository.getReport(reportId = reportId)
     }
 
     suspend fun getCurrentCourseState(): CurrentCourseState? {

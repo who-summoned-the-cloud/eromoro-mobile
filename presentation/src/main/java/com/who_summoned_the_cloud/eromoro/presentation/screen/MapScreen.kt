@@ -7,12 +7,12 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.naver.maps.map.compose.NaverMapComposable
-import com.who_summoned_the_cloud.eromoro.common.model.ObstacleType
 import com.who_summoned_the_cloud.eromoro.common.model.Position
 import com.who_summoned_the_cloud.eromoro.presentation.component.CustomElevatedBackButton
 import com.who_summoned_the_cloud.eromoro.presentation.component.CustomMap
 import com.who_summoned_the_cloud.eromoro.presentation.model.CenterMarkerType
 import com.who_summoned_the_cloud.eromoro.presentation.model.CustomMapScope
+import com.who_summoned_the_cloud.eromoro.presentation.model.MapObstacle
 import com.who_summoned_the_cloud.eromoro.presentation.util.SystemUiPadding
 
 @Composable
@@ -22,7 +22,7 @@ fun MapScreen(
     otherCourses: List<List<Position>>? = null,
     start: Position? = mainCourse?.firstOrNull(),
     end: Position? = mainCourse?.lastOrNull(),
-    obstacles: List<Pair<Position, ObstacleType>>? = null,
+    obstacles: List<MapObstacle>? = null,
     centerMarkerType: CenterMarkerType? = null,
     onPositionChanged: ((Position) -> Unit)? = null,
     isInteracting: Boolean = true,

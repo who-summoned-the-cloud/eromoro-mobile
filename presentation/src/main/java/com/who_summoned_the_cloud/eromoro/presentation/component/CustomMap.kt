@@ -47,6 +47,7 @@ import com.who_summoned_the_cloud.eromoro.common.model.Position
 import com.who_summoned_the_cloud.eromoro.presentation.R
 import com.who_summoned_the_cloud.eromoro.presentation.model.CenterMarkerType
 import com.who_summoned_the_cloud.eromoro.presentation.model.CustomMapScope
+import com.who_summoned_the_cloud.eromoro.presentation.model.MapObstacle
 import com.who_summoned_the_cloud.eromoro.presentation.theme.Colors
 import com.who_summoned_the_cloud.eromoro.presentation.util.rememberBitmap
 import com.who_summoned_the_cloud.eromoro.presentation.util.toLatLng
@@ -60,7 +61,7 @@ fun CustomMap(
     otherCourses: List<List<Position>>? = null,
     start: Position? = mainCourse?.firstOrNull(),
     end: Position? = mainCourse?.lastOrNull(),
-    obstacles: List<Pair<Position, ObstacleType>>? = null,
+    obstacles: List<MapObstacle>? = null,
     centerMarkerType: CenterMarkerType? = null,
     onPositionChanged: ((Position) -> Unit)? = null,
     onMeterPerPixelChanged: ((Double) -> Unit)? = null,
@@ -263,13 +264,17 @@ fun CustomMap(
             }
 
             // 장애물 마커
-            obstacles?.forEach { (position, obstacle) ->
-                val marker = obstacleMarkers[obstacle]!!
+            obstacles?.forEach { obstacle ->
+                val marker = obstacleMarkers[obstacle.type]!!
 
                 Marker(
-                    state = rememberUpdatedMarkerState(position = position.toLatLng()),
+                    state = rememberUpdatedMarkerState(position = obstacle.position.toLatLng()),
                     icon = marker,
                     anchor = Offset(0.5f, 0.8f),
+                    onClick = {
+                        obstacle.onClick?.invoke()
+                        obstacle.onClick != null
+                    }
                 )
             }
 

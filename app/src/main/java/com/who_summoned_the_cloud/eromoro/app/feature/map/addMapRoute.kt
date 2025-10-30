@@ -20,7 +20,6 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.navigation.NavBackStackEntry
 import androidx.navigation.NavGraphBuilder
@@ -31,20 +30,22 @@ import androidx.navigation.navArgument
 import androidx.navigation.navigation
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.rememberMultiplePermissionsState
+import com.who_summoned_the_cloud.eromoro.app.model.ObstacleInfoPopupEvent
 import com.who_summoned_the_cloud.eromoro.app.model.ToastCallback
 import com.who_summoned_the_cloud.eromoro.app.service.RouteRecordingService
 import com.who_summoned_the_cloud.eromoro.app.util.getLocation
 import com.who_summoned_the_cloud.eromoro.app.util.getNavScopedViewModel
 import com.who_summoned_the_cloud.eromoro.app.util.launch
 import com.who_summoned_the_cloud.eromoro.app.util.subscribeLocation
-import com.who_summoned_the_cloud.eromoro.common.model.ObstacleType
 import com.who_summoned_the_cloud.eromoro.common.model.Position
 import com.who_summoned_the_cloud.eromoro.data.model.CurrentCourseState
 import com.who_summoned_the_cloud.eromoro.presentation.component.CustomConfirmPopup
 import com.who_summoned_the_cloud.eromoro.presentation.modal.LoadingModal
+import com.who_summoned_the_cloud.eromoro.presentation.modal.ObstacleInfoPopup
 import com.who_summoned_the_cloud.eromoro.presentation.model.Fetch
 import com.who_summoned_the_cloud.eromoro.presentation.model.MapCourseGeneratingScreenMode
 import com.who_summoned_the_cloud.eromoro.presentation.model.MapCourseViewerScreenCourse
+import com.who_summoned_the_cloud.eromoro.presentation.model.MapObstacle
 import com.who_summoned_the_cloud.eromoro.presentation.model.ToastType
 import com.who_summoned_the_cloud.eromoro.presentation.screen.MapCourseGeneratingScreen
 import com.who_summoned_the_cloud.eromoro.presentation.screen.MapCourseProgressScreen
@@ -339,7 +340,6 @@ fun NavGraphBuilder.addMapRoute(
             val viewModel = getViewModel(backStackEntry)
 
             val context = LocalContext.current
-            val density = LocalDensity.current
             val window = LocalWindowInfo.current
 
             val locationPermission = rememberMultiplePermissionsState(
@@ -351,7 +351,7 @@ fun NavGraphBuilder.addMapRoute(
 
             val originalRunningCourse by viewModel.originalRunningCourse.collectAsState()
             var currentPosition: Position? by remember { mutableStateOf(null) }
-            var obstacles: List<Pair<Position, ObstacleType>> by remember { mutableStateOf(emptyList()) }
+            var obstacles: List<MapObstacle> by remember { mutableStateOf(emptyList()) }
             var showCourseFinishConfirmPopup by remember { mutableStateOf(false) }
             var userRoute: List<Position> by remember { mutableStateOf(emptyList()) }
 
@@ -362,6 +362,9 @@ fun NavGraphBuilder.addMapRoute(
 
             var mapPosition by remember { mutableStateOf(Position(0.0 to 0.0)) }
             var meterPerPixel by remember { mutableDoubleStateOf(0.0) }
+
+            var showLoading by remember { mutableStateOf(false) }
+            var obstacleInfoPopupEvent: ObstacleInfoPopupEvent? by remember { mutableStateOf(null) }
 
             DisposableEffect(locationPermission.allPermissionsGranted) {
                 val isGranted = locationPermission.allPermissionsGranted
@@ -407,7 +410,40 @@ fun NavGraphBuilder.addMapRoute(
                         )
                     }.onSuccess {
                         obstacles = it.map { obstacle ->
-                            obstacle.position to obstacle.type
+                            MapObstacle(
+                                position = obstacle.position,
+                                type = obstacle.type,
+                                onClick = {
+                                    obstacle.image?.let { image ->
+                                        obstacleInfoPopupEvent = ObstacleInfoPopupEvent(
+                                            image = image,
+                                            obstacleType = obstacle.type,
+                                        )
+                                    } ?: obstacle.reportId?.let { reportId ->
+                                        viewModel.launch {
+                                            showLoading = true
+
+                                            runCatching {
+                                                getReport(reportId = reportId)
+                                            }
+                                                .onSuccess { report ->
+                                                    obstacleInfoPopupEvent =
+                                                        report.image?.let { image ->
+                                                            ObstacleInfoPopupEvent(
+                                                                image = image,
+                                                                obstacleType = obstacle.type,
+                                                            )
+                                                        }
+                                                }
+                                                .onFailure {
+                                                    showToast("이미지를 불러오지 못했습니다.", ToastType.ERROR)
+                                                }
+
+                                            showLoading = false
+                                        }
+                                    }
+                                },
+                            )
                         }
                     }
                 }
@@ -442,6 +478,8 @@ fun NavGraphBuilder.addMapRoute(
                 }
             }
 
+            if (showLoading) LoadingModal()
+
             if (showCourseFinishConfirmPopup) CustomConfirmPopup(
                 title = "코스를 종료하시겠어요?",
                 content = "지금까지의 코스 진행 사항을 저장할 수 있습니다.",
@@ -453,9 +491,18 @@ fun NavGraphBuilder.addMapRoute(
                             popUpTo(route = "/map/progress") { inclusive = true }
                         }
                     }
+
                     showCourseFinishConfirmPopup = false
                 },
             )
+
+            obstacleInfoPopupEvent?.let { event ->
+                ObstacleInfoPopup(
+                    image = event.image,
+                    obstacleType = event.obstacleType,
+                    onDismissRequest = { obstacleInfoPopupEvent = null },
+                )
+            }
         }
 
         composable(

@@ -15,14 +15,14 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.who_summoned_the_cloud.eromoro.common.model.ObstacleType
+import com.who_summoned_the_cloud.eromoro.common.model.Position
 import com.who_summoned_the_cloud.eromoro.presentation.component.CustomButton
 import com.who_summoned_the_cloud.eromoro.presentation.component.CustomElevatedBackButton
 import com.who_summoned_the_cloud.eromoro.presentation.component.CustomMap
 import com.who_summoned_the_cloud.eromoro.presentation.component.CustomNonModalBottomSheet
 import com.who_summoned_the_cloud.eromoro.presentation.component.CustomOutlinedButton
 import com.who_summoned_the_cloud.eromoro.presentation.model.CustomMapScope
-import com.who_summoned_the_cloud.eromoro.common.model.Position
+import com.who_summoned_the_cloud.eromoro.presentation.model.MapObstacle
 import com.who_summoned_the_cloud.eromoro.presentation.theme.Colors
 import com.who_summoned_the_cloud.eromoro.presentation.util.SystemUiPadding
 
@@ -32,7 +32,7 @@ fun MapCourseProgressScreen(
     currentPosition: Position?,
     coursePositions: List<Position>?,
     userRoute: List<Position>?,
-    obstacles: List<Pair<Position, ObstacleType>>?,
+    obstacles: List<MapObstacle>?,
     start: Position?,
     end: Position?,
     onBackButtonClicked: () -> Unit,
