@@ -10,6 +10,7 @@ import com.who_summoned_the_cloud.eromoro.data.model.RegionalCourse
 import com.who_summoned_the_cloud.eromoro.data.model.Spot
 import com.who_summoned_the_cloud.eromoro.data.repository.CourseRepository
 import com.who_summoned_the_cloud.eromoro.data.repository.GeolocationRepository
+import com.who_summoned_the_cloud.eromoro.data.repository.SettingRepository
 import com.who_summoned_the_cloud.eromoro.data.repository.SpotRepository
 import com.who_summoned_the_cloud.eromoro.data.repository.UserRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -24,6 +25,7 @@ class HomeViewModel @Inject constructor(
     private val spotRepository: SpotRepository,
     private val courseRepository: CourseRepository,
     private val userRepository: UserRepository,
+    private val settingRepository: SettingRepository,
 ) : ViewModel() {
 
     companion object {
@@ -54,6 +56,10 @@ class HomeViewModel @Inject constructor(
     val spotCourseList = MutableStateFlow<List<List<RegionalCourse>>?>(null)
     val isSpotCourseListFetchedAll = MutableStateFlow(false)
 
+    val recentSearchWords = MutableStateFlow<List<String>>(emptyList())
+    val spotSearchResult = MutableStateFlow<List<ListableSpot>?>(null)
+    val isSpotSearchResultFetchedAll = MutableStateFlow(false)
+
     suspend fun loadNickname() {
         nickname.value = null
         val userInfo = userRepository.getUserInfo()
@@ -68,7 +74,7 @@ class HomeViewModel @Inject constructor(
             size = PAGE_SIZE,
             category = category.value,
             sigungu = sigungu.value,
-            searchKeyword = null,
+            keyword = null,
         )
 
         homeSpotList.value = currentHomeSpotList.plus<List<ListableSpot>>(fetchedList)
@@ -120,5 +126,49 @@ class HomeViewModel @Inject constructor(
 
     suspend fun startCourse(courseId: Long) {
         courseRepository.startCourse(courseId = courseId)
+    }
+
+    suspend fun modifyCurrentSpotCourseLike(
+        courseId: Long,
+        isLiked: Boolean,
+    ) {
+        val likeCount = courseRepository.modifyCourseLike(
+            courseId = courseId,
+            like = isLiked,
+        )
+
+        spotCourseList.value = spotCourseList.value?.map { spotCoursePage ->
+            spotCoursePage.map { course ->
+                if (course.id == courseId) course.copy(like = likeCount, isLiked = isLiked)
+                else course
+            }
+        }
+    }
+
+    suspend fun loadRecentSearchWords() {
+        recentSearchWords.value = settingRepository.getRecentSearchWords()
+    }
+
+    suspend fun searchSpot(keyword: String) {
+        val fetchedSpotSearchResult = spotRepository.getSpotList(
+            page = 0,
+            size = 10,
+            keyword = keyword,
+        )
+
+        spotSearchResult.value = fetchedSpotSearchResult
+        if (fetchedSpotSearchResult.size < PAGE_SIZE) {
+            isSpotSearchResultFetchedAll.value = true
+        }
+    }
+
+    suspend fun addRecentSearchWord(keyword: String) {
+        settingRepository.addRecentSearchWord(keyword)
+        loadRecentSearchWords()
+    }
+
+    suspend fun removeRecentSearchWord(keyword: String) {
+        settingRepository.deleteRecentSearchWord(keyword)
+        loadRecentSearchWords()
     }
 }

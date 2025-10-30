@@ -5,7 +5,7 @@ import com.who_summoned_the_cloud.eromoro.common.model.ObstacleType
 import com.who_summoned_the_cloud.eromoro.common.model.UserType
 import java.time.LocalDateTime
 
-class RegionalCourse(
+data class RegionalCourse(
     val id: Long,
     val image: Uri?,
     val title: String,

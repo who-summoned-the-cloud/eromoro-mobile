@@ -7,12 +7,14 @@ import androidx.compose.animation.EnterTransition
 import androidx.compose.animation.ExitTransition
 import androidx.compose.foundation.text.input.rememberTextFieldState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.platform.LocalContext
 import androidx.navigation.NavBackStackEntry
 import androidx.navigation.NavGraphBuilder
@@ -37,12 +39,16 @@ import com.who_summoned_the_cloud.eromoro.presentation.modal.CategorySelectModal
 import com.who_summoned_the_cloud.eromoro.presentation.model.Fetch
 import com.who_summoned_the_cloud.eromoro.presentation.model.HomeScreenPlace
 import com.who_summoned_the_cloud.eromoro.presentation.model.MapCourseViewerScreenCourse
+import com.who_summoned_the_cloud.eromoro.presentation.model.SearchScreenSearchResult
 import com.who_summoned_the_cloud.eromoro.presentation.model.SpotInformationScreenTab
 import com.who_summoned_the_cloud.eromoro.presentation.model.ToastType
 import com.who_summoned_the_cloud.eromoro.presentation.screen.HomeScreen
 import com.who_summoned_the_cloud.eromoro.presentation.screen.MapCourseViewerScreen
 import com.who_summoned_the_cloud.eromoro.presentation.screen.MapScreen
+import com.who_summoned_the_cloud.eromoro.presentation.screen.SearchScreen
 import com.who_summoned_the_cloud.eromoro.presentation.screen.SpotInformationScreen
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.launch
 
@@ -78,7 +84,6 @@ fun NavGraphBuilder.addHomeRoute(
                 )
             )
 
-            val search = rememberTextFieldState()
             val nickname by viewModel.nickname.collectAsState()
             val homeSpotList by viewModel.homeSpotList.collectAsState()
             val isHomeSpotListFetchedAll by viewModel.isHomeSpotListFetchedAll.collectAsState()
@@ -153,7 +158,6 @@ fun NavGraphBuilder.addHomeRoute(
                 navController = navController,
             ) {
                 HomeScreen(
-                    search = search,
                     currentLocation = currentLocation,
                     nickname = nickname,
                     nearbyPlaces = Fetch.Error(Unit),  // TODO
@@ -164,10 +168,9 @@ fun NavGraphBuilder.addHomeRoute(
                     recommendedPlaces = recommendedPlaces,
                     showLoadingAtTheEndOfRecommendedPlaces = !isHomeSpotListFetchedAll,
                     onSearchBarClicked = {
-                        // MainScope().launch {
-                        //     navController.navigate("/home/search")
-                        // }
-                        showToast("해당 기능은 준비중입니다!", ToastType.ERROR)
+                        MainScope().launch {
+                            navController.navigate("/home/search")
+                        }
                     },
                     onMyLikedCourseButtonClicked = {
                         MainScope().launch {
@@ -238,6 +241,68 @@ fun NavGraphBuilder.addHomeRoute(
         }
 
         composable(
+            route = "/home/search",
+        ) { backStackEntry ->
+            val viewModel = getViewModel(backStackEntry)
+
+            val searchText = rememberTextFieldState()
+            val spotSearchResults by viewModel.spotSearchResult.collectAsState()
+            val recentSearchWords by viewModel.recentSearchWords.collectAsState()
+
+            DisposableEffect(Unit) {
+                viewModel.launch {
+                    runCatching { loadRecentSearchWords() }
+                }
+
+                CoroutineScope(Dispatchers.IO).launch {
+                    snapshotFlow {
+                        searchText.text.toString()
+                    }.collect {
+                        if (it.isNotBlank()) runCatching {
+                            viewModel.searchSpot(keyword = it)
+                        }
+                    }
+                }
+
+                onDispose {
+                    viewModel.isSpotSearchResultFetchedAll.value = false
+                    viewModel.spotSearchResult.value = null
+                }
+            }
+
+            SearchScreen(
+                searchText = searchText,
+                placeholder = "찾고 계신 장소를 입력해주세요.",
+                searchResults = spotSearchResults?.map {
+                    SearchScreenSearchResult(
+                        title = it.name,
+                        content = "",  // TODO: 백엔드 지원 시 연결
+                        onClick = {
+                            viewModel.launch {
+                                runCatching { addRecentSearchWord(keyword = it.name) }
+                            }
+
+                            MainScope().launch {
+                                navController.navigate("/home/spot/${it.id}") {
+                                    popUpTo(route = "/home/main") { inclusive = false }
+                                }
+                            }
+                        },
+                    )
+                },
+                recentSearchTextChips = recentSearchWords,
+                onBackButtonClicked = {
+                    MainScope().launch { navController.popBackStack() }
+                },
+                onRecentSearchChipCloseClicked = {
+                    viewModel.launch {
+                        runCatching { removeRecentSearchWord(it) }
+                    }
+                },
+            )
+        }
+
+        composable(
             route = "/home/spot/{spotId}",
             arguments = listOf(navArgument("spotId") { type = NavType.LongType }),
         ) { backStackEntry ->
@@ -271,10 +336,9 @@ fun NavGraphBuilder.addHomeRoute(
                     MainScope().launch { navController.popBackStack() }
                 },
                 onSearchFieldClicked = {
-                    // MainScope().launch {
-                    //     navController.navigate(route = "/home/search")
-                    // }
-                    showToast("해당 기능은 준비중입니다!", ToastType.ERROR)
+                    MainScope().launch {
+                        navController.navigate(route = "/home/search")
+                    }
                 },
                 onTabClicked = { currentTab = it },
                 onMapClicked = {
@@ -294,9 +358,9 @@ fun NavGraphBuilder.addHomeRoute(
 
         composable(
             route = "/home/map/{spotId}",
+            arguments = listOf(navArgument("spotId") { type = NavType.LongType }),
             enterTransition = { EnterTransition.None },
             exitTransition = { ExitTransition.None },
-            arguments = listOf(navArgument("spotId") { type = NavType.LongType }),
         ) { backStackEntry ->
             val viewModel = getViewModel(backStackEntry)
             val spotId = backStackEntry.arguments?.getLong("spotId") ?: return@composable
@@ -306,6 +370,7 @@ fun NavGraphBuilder.addHomeRoute(
 
             LaunchedEffect(spotId) {
                 if (spot?.id == spotId) return@LaunchedEffect
+                viewModel.spot.value = null
                 viewModel.launch {
                     runCatching { loadSpot(spotId = spotId) }.onFailure {
                         showToast("정보를 불러오지 못했습니다.", ToastType.ERROR)
@@ -325,6 +390,7 @@ fun NavGraphBuilder.addHomeRoute(
 
         composable(
             route = "/home/course-view/{spotId}",
+            arguments = listOf(navArgument("spotId") { type = NavType.LongType }),
             enterTransition = { EnterTransition.None },
             exitTransition = { ExitTransition.None },
         ) { backStackEntry ->
@@ -341,22 +407,27 @@ fun NavGraphBuilder.addHomeRoute(
                 remember(spotCourseList) {
                     spotCourseList
                         ?.flatten()
-                        ?.map {
+                        ?.mapIndexed { index, course ->
                             MapCourseViewerScreenCourse(
                                 badge = null,
-                                name = it.title,
-                                rating = it.rating,
+                                name = course.title,
+                                rating = course.rating,
                                 coursePositions = Fetch.Loading(),
-                                isLiked = it.isLiked,
-                                obstacles = it.obstacles,
-                                distance = it.distance,
-                                duration = it.duration,
+                                isLiked = course.isLiked,
+                                obstacles = course.obstacles,
+                                distance = course.distance,
+                                duration = course.duration,
                                 onLikeButtonClicked = {
-                                    // TODO
+                                    viewModel.launch {
+                                        runCatching {
+                                            modifyCurrentSpotCourseLike(
+                                                courseId = course.id,
+                                                isLiked = !course.isLiked,
+                                            )
+                                        }
+                                    }
                                 },
-                                onClick = {
-                                    // TODO
-                                },
+                                onClick = { selectedCourseIndex = index },
                             )
                         }
                         ?.let { Fetch.Success(it) } ?: Fetch.Loading()
@@ -364,6 +435,7 @@ fun NavGraphBuilder.addHomeRoute(
 
             LaunchedEffect(spotId) {
                 if (spot?.id == spotId) return@LaunchedEffect
+                viewModel.spot.value = null
                 viewModel.launch {
                     runCatching { loadSpot(spotId = spotId) }
                 }
@@ -371,6 +443,7 @@ fun NavGraphBuilder.addHomeRoute(
 
             LaunchedEffect(spot) {
                 if (spot == null) return@LaunchedEffect
+                viewModel.spotCourseList.value = null
                 viewModel.launch {
                     runCatching { loadCurrentSpotCourse() }
                 }
@@ -387,7 +460,7 @@ fun NavGraphBuilder.addHomeRoute(
                     viewModel.launch {
                         val selectedCourseIndex = selectedCourseIndex ?: run {
                             MainScope().launch {
-                                navController.navigate(route = "/map/generate") {
+                                navController.navigate(route = "/map/generate?spotId=${spotId}") {
                                     popUpTo(route = "/home/main") { inclusive = false }
                                 }
                             }

@@ -26,12 +26,14 @@ class CoursePreference @Inject constructor(
      * 코스 시작시 정보 초기화
      */
     fun initialize(
-        courseId: Long
+        courseId: Long,
+        spotId: Long?,
     ) {
         currentCourseId = courseId
         userRoute = emptyList()
         courseStartedAt = Instant.now()
         courseDistance = 0
+        courseSpotId = spotId
         reportCount = 0
     }
 

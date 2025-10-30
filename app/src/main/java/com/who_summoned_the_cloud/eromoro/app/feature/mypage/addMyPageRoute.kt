@@ -4,12 +4,14 @@ import androidx.compose.animation.EnterTransition
 import androidx.compose.animation.ExitTransition
 import androidx.compose.foundation.text.input.rememberTextFieldState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshotFlow
 import androidx.navigation.NavBackStackEntry
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavHostController
@@ -32,6 +34,8 @@ import com.who_summoned_the_cloud.eromoro.presentation.model.ToastType
 import com.who_summoned_the_cloud.eromoro.presentation.screen.MapScreen
 import com.who_summoned_the_cloud.eromoro.presentation.screen.MyPageCourseListScreen
 import com.who_summoned_the_cloud.eromoro.presentation.screen.MyPageScreen
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.launch
 
@@ -274,6 +278,29 @@ fun NavGraphBuilder.addMyPageRoute(
                 }
             }
 
+            DisposableEffect(Unit) {
+                CoroutineScope(Dispatchers.IO).launch {
+                    snapshotFlow { search.text.toString() }.collect { keyword ->
+                        if (keyword.isBlank()) return@collect
+                        when (type) {
+                            "liked" -> {
+                                viewModel.likedCourses.value = null
+                                viewModel.isLikedCoursesFetchedAll.value = false
+                                runCatching { viewModel.loadLikedCourse(keyword = keyword) }
+                            }
+
+                            "used" -> {
+                                viewModel.usedCourses.value = null
+                                viewModel.isUsedCoursesFetchedAll.value = false
+                                runCatching { viewModel.loadUsedCourse(keyword = keyword) }
+                            }
+                        }
+                    }
+                }
+
+                onDispose { }
+            }
+
             MyPageCourseListScreen(
                 courseSetTitle = when (type) {
                     "liked" -> "내 좋아요 코스"
@@ -296,8 +323,8 @@ fun NavGraphBuilder.addMyPageRoute(
                     viewModel.launch {
                         runCatching {
                             when (type) {
-                                "liked" -> loadLikedCourse()
-                                "used" -> loadUsedCourse()
+                                "liked" -> loadLikedCourse(keyword = search.text.toString())
+                                "used" -> loadUsedCourse(keyword = search.text.toString())
                             }
                         }
                     }
@@ -337,11 +364,9 @@ fun NavGraphBuilder.addMyPageRoute(
         }
 
         MapScreen(
-            mainCourse = positions,
-            onBackButtonClicked = {
+            mainCourse = positions, onBackButtonClicked = {
                 MainScope().launch { navController.popBackStack() }
-            }
-        ) {
+            }) {
             LaunchedEffect(positions) {
                 moveToMainCourseView()
             }

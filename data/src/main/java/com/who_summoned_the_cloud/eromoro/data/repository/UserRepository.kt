@@ -27,14 +27,13 @@ class UserRepository @Inject constructor(
     override val authPreference: AuthPreference,
     override val userControllerApi: UserControllerApi,
     @param:Named("serverUrl") private val serverUrl: String,
+    private val okHttpClient: OkHttpClient,
 ) : AuthorizedRepository {
 
     /**
      * 회원 가입
      */
     suspend fun signUp(request: SignUpRequest) {
-        val client = OkHttpClient()
-
         val requestBodyBuilder = MultipartBody
             .Builder()
             .setType(MultipartBody.FORM)
@@ -74,7 +73,7 @@ class UserRepository @Inject constructor(
             .post(requestBodyBuilder.build())
             .build()
 
-        val response = client
+        val response = okHttpClient
             .newCall(request)
             .execute()
 

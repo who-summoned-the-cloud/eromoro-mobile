@@ -90,11 +90,15 @@ class CourseRepository @Inject constructor(
     suspend fun getLikedCourseList(
         page: Int,
         size: Int,
+        keyword: String? = null,
     ): List<LikedCourse> {
         if (page > 0) return emptyList()  // FIXME: 백엔드 페이징 구현 시 적용
 
         val response = courseControllerApi.withAuth {
-            getCourseList(courseType = CourseControllerApi.CourseTypeGetCourseList.LIKE)
+            getCourseList(
+                courseType = CourseControllerApi.CourseTypeGetCourseList.LIKE,
+                keyword = keyword,
+            )
         }
 
         val courses = response.result?.courseList?.map {
@@ -135,11 +139,15 @@ class CourseRepository @Inject constructor(
     suspend fun getUserCourseList(
         page: Int,
         size: Int,
+        keyword: String? = null,
     ): List<UsedCourse> {
         if (page > 0) return emptyList()  // FIXME: 백엔드 페이징 구현 시 적용
 
         val response = courseControllerApi.withAuth {
-            getCourseList(courseType = CourseControllerApi.CourseTypeGetCourseList.ALL)
+            getCourseList(
+                courseType = CourseControllerApi.CourseTypeGetCourseList.ALL,
+                keyword = keyword,
+            )
         }
 
         val courses = response.result?.courseList?.map {
@@ -247,10 +255,13 @@ class CourseRepository @Inject constructor(
 
     /**
      * 코스 시작
+     *
+     * `spotId`는 현재 코스를 어떤 관광지의 코스로서 수행할지를 설정하는 인자이다.
+     * 코스를 시작할 때 설정하고, 나중에 코스를 저장할 때 같이 전송하게 된다.
      */
-    suspend fun startCourse(courseId: Long) {
+    suspend fun startCourse(courseId: Long, spotId: Long? = null) {
         courseControllerApi.withAuth { startCourse(courseId = courseId) }
-        coursePreference.initialize(courseId = courseId)
+        coursePreference.initialize(courseId = courseId, spotId = spotId)
     }
 
     /**
@@ -348,6 +359,12 @@ class CourseRepository @Inject constructor(
                     get() = coursePreference.userRoute ?: emptyList()
                     set(value) {
                         coursePreference.userRoute = value
+                    }
+
+                override var distance: Int
+                    get() = coursePreference.courseDistance ?: 0
+                    set(value) {
+                        coursePreference.courseDistance = value
                     }
             },
         )

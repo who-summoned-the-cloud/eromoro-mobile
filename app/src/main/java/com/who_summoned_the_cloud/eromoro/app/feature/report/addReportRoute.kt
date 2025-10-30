@@ -7,6 +7,7 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.EnterTransition
 import androidx.compose.animation.ExitTransition
+import androidx.compose.foundation.text.input.clearText
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -118,7 +119,7 @@ fun NavGraphBuilder.addReportRoute(
             ) {
                 if (it) {
                     viewModel.reportingImage.value = tempImage
-                    MainScope().launch { navController.navigate(route = "/report/create") }
+                    MainScope().launch { navController.navigate(route = "/report/edit?mode=create") }
                 }
             }
 
@@ -126,6 +127,16 @@ fun NavGraphBuilder.addReportRoute(
                 viewModel.myReportList.value = null
                 viewModel.isReportsFetchedAll.value = false
                 viewModel.launch { runCatching { loadMyReports() } }
+            }
+
+            LaunchedEffect(Unit) {
+                viewModel.reportingImage.value = null
+                viewModel.title.clearText()
+                viewModel.content.clearText()
+                viewModel.obstacleType.value = null
+                viewModel.currentPosition.value = null
+                viewModel.address.value = null
+                viewModel.isForLocalGovernance.value = false
             }
 
             NavigationBarApp(
@@ -196,7 +207,9 @@ fun NavGraphBuilder.addReportRoute(
                     MainScope().launch { navController.popBackStack() }
                 },
                 onEditButtonClicked = {
-                    MainScope().launch { navController.navigate("/report/create") }
+                    // TODO
+                    showToast("준비중인 기능입니다.", ToastType.ERROR)
+                    // MainScope().launch { navController.navigate("/report/edit?mode=update") }
                 },
                 onDeleteButtonClicked = { if (report != null) showDeleteConfirmPopup = true },
                 onLikeButtonClicked = {
@@ -230,10 +243,12 @@ fun NavGraphBuilder.addReportRoute(
         }
 
         composable(
-            route = "/report/create",
+            route = "/report/edit?mode={mode}",
+            arguments = listOf(navArgument("mode") { defaultValue = "create" }),
         ) { backStackEntry ->
             val viewModel = getViewModel(backStackEntry)
             val context = LocalContext.current
+            val mode = backStackEntry.arguments?.getString("mode") ?: return@composable
 
             val locationPermission = rememberMultiplePermissionsState(
                 permissions = listOf(

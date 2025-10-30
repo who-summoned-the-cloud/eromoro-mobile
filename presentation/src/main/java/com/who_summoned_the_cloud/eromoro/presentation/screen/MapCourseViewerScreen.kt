@@ -48,6 +48,7 @@ import com.who_summoned_the_cloud.eromoro.presentation.component.CustomStarRatin
 import com.who_summoned_the_cloud.eromoro.presentation.model.Fetch
 import com.who_summoned_the_cloud.eromoro.presentation.model.MapCourseViewerScreenCourse
 import com.who_summoned_the_cloud.eromoro.common.model.Position
+import com.who_summoned_the_cloud.eromoro.presentation.component.CustomProgressIndicator
 import com.who_summoned_the_cloud.eromoro.presentation.model.CustomMapScope
 import com.who_summoned_the_cloud.eromoro.presentation.theme.Colors
 import com.who_summoned_the_cloud.eromoro.presentation.util.SystemUiPadding
@@ -121,25 +122,50 @@ fun MapCourseViewerScreen(
                 CustomElevatedBackButton(onBackButtonClicked)
             }
             Column(
-                horizontalAlignment = Alignment.End,
                 modifier = Modifier.onGloballyPositioned { courseCardCoordinates = it },
             ) {
+                val shape = remember { RoundedCornerShape(14.dp) }
+
                 LazyRow(
                     horizontalArrangement = Arrangement.spacedBy(10.dp),
                     contentPadding = PaddingValues(16.dp)
                 ) {
                     when (courses) {
-                        is Fetch.Loading -> {
-                            // TODO
+                        is Fetch.Loading -> items(count = 5) { index ->
+                            val isSelected = index == 0
+
+                            Box(
+                                contentAlignment = Alignment.Center,
+                                modifier = Modifier
+                                    .width(300.dp)
+                                    .height(185.dp)
+                                    .shadow(
+                                        elevation = 8.dp,
+                                        shape = shape,
+                                        spotColor = Colors.gray[600].copy(alpha = 0.2f),
+                                    )
+                                    .let {
+                                        if (isSelected) it.border(
+                                            width = 1.dp,
+                                            color = Colors.pink[200],
+                                            shape = shape,
+                                        ) else it
+                                    }
+                                    .background(
+                                        color = if (isSelected) Colors.pink[600] else Colors.white,
+                                        shape = shape,
+                                    ),
+                            ) {
+                                CustomProgressIndicator()
+                            }
                         }
 
                         is Fetch.Success -> {
-                            items(
+                            if (courses.data.isNotEmpty()) items(
                                 count = courses.data.size,
                             ) { index ->
                                 val course = courses.data[index]
                                 val isSelected = index == selectedCourseIndex
-                                val shape = remember { RoundedCornerShape(14.dp) }
 
                                 Box(
                                     modifier = Modifier
@@ -272,6 +298,48 @@ fun MapCourseViewerScreen(
                                                 letterSpacing = (-0.3).sp,
                                             )
                                         }
+                                    }
+                                }
+                            } else item {
+                                Box(
+                                    contentAlignment = Alignment.Center,
+                                    modifier = Modifier
+                                        .width(300.dp)
+                                        .height(185.dp)
+                                        .shadow(
+                                            elevation = 8.dp,
+                                            shape = shape,
+                                            spotColor = Colors.gray[600].copy(alpha = 0.2f),
+                                        )
+                                        .border(
+                                            width = 1.dp,
+                                            color = Colors.pink[200],
+                                            shape = shape,
+                                        )
+                                        .background(
+                                            color = Colors.pink[600],
+                                            shape = shape,
+                                        )
+                                ) {
+                                    Column(
+                                        verticalArrangement = Arrangement.spacedBy(
+                                            16.dp, Alignment.CenterVertically
+                                        ),
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .padding(20.dp)
+                                    ) {
+                                        Text(
+                                            text = "코스가 없습니다.",
+                                            fontWeight = FontWeight.Bold,
+                                            fontSize = 18.sp,
+                                        )
+                                        Text(
+                                            text = "나만의 코스를 생성해 보세요!",
+                                            fontWeight = FontWeight.Normal,
+                                            fontSize = 12.sp,
+                                            color = Colors.gray[400],
+                                        )
                                     }
                                 }
                             }

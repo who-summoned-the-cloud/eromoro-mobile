@@ -58,7 +58,7 @@ fun SearchScreen(
     recentSearchTextChips: List<String>,
     onBackButtonClicked: () -> Unit,
     onRecentSearchChipCloseClicked: (String) -> Unit,
-    onMoreButtonClicked: () -> Unit,
+    // onMoreButtonClicked: () -> Unit,
 ) {
     val searchTextChars by snapshotFlow { searchText.text.toSet() }.collectAsState(emptySet())
 
@@ -114,6 +114,7 @@ fun SearchScreen(
                             fontWeight = FontWeight.Normal,
                         ),
                         lineLimits = TextFieldLineLimits.SingleLine,
+                        modifier = Modifier.fillMaxWidth(),
                     )
                 }
                 if (!isEmpty) Box(
@@ -177,20 +178,20 @@ fun SearchScreen(
             }
 
             item {
-                Box(
-                    contentAlignment = Alignment.Center,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .clickable { onMoreButtonClicked() },
-                ) {
-                    Text(
-                        text = "더보기",
-                        color = Colors.gray[300],
-                        fontSize = 15.sp,
-                        fontWeight = FontWeight.Medium,
-                        modifier = Modifier.padding(vertical = 20.dp),
-                    )
-                }
+                // Box(
+                //     contentAlignment = Alignment.Center,
+                //     modifier = Modifier
+                //         .fillMaxWidth()
+                //         .clickable { onMoreButtonClicked() },
+                // ) {
+                //     Text(
+                //         text = "더보기",
+                //         color = Colors.gray[300],
+                //         fontSize = 15.sp,
+                //         fontWeight = FontWeight.Medium,
+                //         modifier = Modifier.padding(vertical = 20.dp),
+                //     )
+                // }
                 HorizontalDivider(
                     color = Colors.gray[100],
                     thickness = 1.dp,
@@ -277,7 +278,6 @@ fun PreviewSearchScreenInitial() {
         ),
         onBackButtonClicked = {},
         onRecentSearchChipCloseClicked = {},
-        onMoreButtonClicked = {},
     )
 }
 
@@ -303,6 +303,5 @@ fun PreviewSearchScreenSearched() {
         ),
         onBackButtonClicked = {},
         onRecentSearchChipCloseClicked = {},
-        onMoreButtonClicked = {},
     )
 }

@@ -27,9 +27,9 @@ class SpotRepository @Inject constructor(
     suspend fun getSpotList(
         page: Int,
         size: Int,  // TODO: 페이징 처리
-        category: SpotCategory,
+        category: SpotCategory? = null,
         sigungu: String? = null,
-        searchKeyword: String? = null,
+        keyword: String? = null,
     ): List<ListableSpot> {
 
         val response = spotControllerApi.withAuth {
@@ -45,10 +45,11 @@ class SpotRepository @Inject constructor(
                     SpotCategory.EXPERIENCE -> SpotControllerApi.CategoryGetSpotList.EXPERIENCE
                     SpotCategory.INDUSTRIAL -> SpotControllerApi.CategoryGetSpotList.INDUSTRIAL
                     SpotCategory.ARCHITECTURE_SCULPTURE -> SpotControllerApi.CategoryGetSpotList.ARCHITECTURE_SCULPTURE
+                    null -> null
                 },
                 pageNum = page,
                 siGunGu = sigungu,
-                keyword = searchKeyword,
+                keyword = keyword,
             )
         }
 

@@ -35,10 +35,13 @@ class MyPageViewModel @Inject constructor(
         user.value = userRepository.getUserInfo()
     }
 
-    suspend fun loadLikedCourse() {
+    suspend fun loadLikedCourse(keyword: String? = null) {
         val currentLikedCourses = likedCourses.value ?: emptyList()
-        val fetchedLikedCourses =
-            courseRepository.getLikedCourseList(page = currentLikedCourses.size, size = PAGE_SIZE)
+        val fetchedLikedCourses = courseRepository.getLikedCourseList(
+            page = currentLikedCourses.size,
+            size = PAGE_SIZE,
+            keyword = keyword,
+        )
 
         likedCourses.value = currentLikedCourses.plus<List<LikedCourse>>(fetchedLikedCourses)
         if (fetchedLikedCourses.size < PAGE_SIZE) {
@@ -46,10 +49,13 @@ class MyPageViewModel @Inject constructor(
         }
     }
 
-    suspend fun loadUsedCourse() {
+    suspend fun loadUsedCourse(keyword: String? = null) {
         val currentUsedCourses = usedCourses.value ?: emptyList()
-        val fetchedUsedCourses =
-            courseRepository.getUserCourseList(page = currentUsedCourses.size, size = PAGE_SIZE)
+        val fetchedUsedCourses = courseRepository.getUserCourseList(
+            page = currentUsedCourses.size,
+            size = PAGE_SIZE,
+            keyword = keyword,
+        )
 
         usedCourses.value = currentUsedCourses.plus<List<UsedCourse>>(fetchedUsedCourses)
         if (fetchedUsedCourses.size < PAGE_SIZE) {

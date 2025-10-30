@@ -22,7 +22,9 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.navigation.NavBackStackEntry
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavHostController
+import androidx.navigation.NavType
 import androidx.navigation.compose.composable
+import androidx.navigation.navArgument
 import androidx.navigation.navigation
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.rememberMultiplePermissionsState
@@ -45,7 +47,6 @@ import com.who_summoned_the_cloud.eromoro.presentation.screen.MapCourseGeneratin
 import com.who_summoned_the_cloud.eromoro.presentation.screen.MapCourseProgressScreen
 import com.who_summoned_the_cloud.eromoro.presentation.screen.MapCourseStatisticsScreen
 import com.who_summoned_the_cloud.eromoro.presentation.screen.MapCourseViewerScreen
-import com.who_summoned_the_cloud.eromoro.presentation.screen.SearchScreen
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -72,15 +73,17 @@ fun NavGraphBuilder.addMapRoute(
 
     navigation(
         route = "/map",
-        startDestination = "/map/generate",
+        startDestination = "/map/generate?spotId=-1",
     ) {
         composable(
-            route = "/map/generate",
+            route = "/map/generate?spotId={spotId}",
+            arguments = listOf(navArgument("spotId") { type = NavType.LongType }),
             enterTransition = { EnterTransition.None },
             exitTransition = { ExitTransition.None },
         ) { backStackEntry ->
             val viewModel = getViewModel(backStackEntry)
             val context = LocalContext.current
+            val spotId = backStackEntry.arguments?.getLong("spotId") ?: -1L
 
             val locationPermission = rememberMultiplePermissionsState(
                 permissions = listOf(
@@ -182,7 +185,7 @@ fun NavGraphBuilder.addMapRoute(
                                 }
                                     .onSuccess {
                                         if (coroutineContext.isActive) MainScope().launch {
-                                            navController.navigate("/map/generate/course-select")
+                                            navController.navigate("/map/generate/course-select?spotId=$spotId")
                                         }
                                     }
                                     .onFailure {
@@ -251,36 +254,14 @@ fun NavGraphBuilder.addMapRoute(
         }
 
         composable(
-            route = "/map/search",
-        ) { backStackEntry ->
-            val viewModel = getViewModel(backStackEntry)
-
-            val searchText = rememberTextFieldState()
-
-            SearchScreen(
-                searchText = searchText,
-                placeholder = "찾고 계신 장소를 입력해주세요.",
-                searchResults = listOf(),  // TODO
-                recentSearchTextChips = listOf(),  // TODO
-                onBackButtonClicked = {
-                    MainScope().launch { navController.popBackStack() }
-                },
-                onRecentSearchChipCloseClicked = {
-                    // TODO
-                },
-                onMoreButtonClicked = {
-                    // TODO
-                },
-            )
-        }
-
-        composable(
-            route = "/map/generate/course-select",
+            route = "/map/generate/course-select?spotId={spotId}",
+            arguments = listOf(navArgument("spotId") { type = NavType.LongType }),
             enterTransition = { EnterTransition.None },
             exitTransition = { ExitTransition.None },
         ) { backStackEntry ->
             val viewModel = getViewModel(backStackEntry)
             val context = LocalContext.current
+            val spotId = backStackEntry.arguments?.getLong("spotId") ?: -1L
 
             val courses by viewModel.generatedCourses.collectAsState()
             var selectedCourseIndex by remember { mutableIntStateOf(0) }
@@ -314,7 +295,12 @@ fun NavGraphBuilder.addMapRoute(
                     viewModel.launch {
                         showLoading = true
 
-                        runCatching { startCourse(courseId = courses[selectedCourseIndex].id) }
+                        runCatching {
+                            startCourse(
+                                courseId = courses[selectedCourseIndex].id,
+                                spotId = spotId.takeIf { it > 0 },
+                            )
+                        }
                             .onSuccess {
                                 Intent(context, RouteRecordingService::class.java)
                                     .apply { action = RouteRecordingService.ACTION_START_SERVICE }

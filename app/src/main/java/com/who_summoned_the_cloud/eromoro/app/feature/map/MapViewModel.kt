@@ -70,8 +70,8 @@ class MapViewModel @Inject constructor(
         return courseRepository.getCurrentCourseState()
     }
 
-    suspend fun startCourse(courseId: Long) {
-        courseRepository.startCourse(courseId = courseId)
+    suspend fun startCourse(courseId: Long, spotId: Long?) {
+        courseRepository.startCourse(courseId = courseId, spotId = spotId)
         originalRunningCourse.value = courseRepository.getCourse(courseId = courseId)
     }
 

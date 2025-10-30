@@ -29,6 +29,7 @@ class ReportRepository @Inject constructor(
     override val userControllerApi: UserControllerApi,
     private val feedbackControllerApi: FeedbackControllerApi,
     @param:Named("serverUrl") private val serverUrl: String,
+    private val okHttpClient: OkHttpClient,
     private val coursePreference: CoursePreference,
 ) : AuthorizedRepository {
 
@@ -111,8 +112,6 @@ class ReportRepository @Inject constructor(
     suspend fun report(
         request: ReportRequest,
     ): Int {
-        val client = OkHttpClient()
-
         val requestBodyBuilder = MultipartBody
             .Builder()
             .setType(MultipartBody.FORM)
@@ -156,7 +155,7 @@ class ReportRepository @Inject constructor(
             .post(requestBodyBuilder.build())
             .build()
 
-        val response = client
+        val response = okHttpClient
             .newCall(request)
             .execute()
 

@@ -1,6 +1,6 @@
 package com.who_summoned_the_cloud.eromoro.data.module
 
-import com.who_summoned_the_cloud.eromoro.data.util.ConditionalLoggingInterceptor
+import com.who_summoned_the_cloud.eromoro.data.util.LoggingInterceptor
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -15,7 +15,7 @@ object OkHttpClientModule {
     @Provides
     @Singleton
     fun provideOkHttpClient(): OkHttpClient {
-        val interceptor = ConditionalLoggingInterceptor()
+        val interceptor = LoggingInterceptor()
 
         val client = OkHttpClient
             .Builder()

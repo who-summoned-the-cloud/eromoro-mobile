@@ -40,6 +40,8 @@ class RouteRecordingService : Service() {
 
         const val ACTION_START_SERVICE = "START_SERVICE"
         const val ACTION_STOP_SERVICE = "STOP_SERVICE"
+
+        private const val DISTANCE_UNIT = 3
     }
 
     override fun onBind(intent: Intent?): IBinder? {
@@ -107,6 +109,8 @@ class RouteRecordingService : Service() {
                     courseRepository.modifyUserRoute {
                         userRoute =
                             userRoute.plus(Position(location.latitude to location.longitude))
+
+                        distance += DISTANCE_UNIT
                     }
                 }
             }
@@ -120,7 +124,7 @@ class RouteRecordingService : Service() {
                 Priority.PRIORITY_HIGH_ACCURACY,
                 60000,
             )
-            .setMinUpdateDistanceMeters(10f)
+            .setMinUpdateDistanceMeters(DISTANCE_UNIT.toFloat())
             .build()
 
         fusedLocationClient.requestLocationUpdates(
