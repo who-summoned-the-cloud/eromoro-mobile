@@ -8,10 +8,12 @@ import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableDoubleStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
+import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.navigation.NavBackStackEntry
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavHostController
@@ -19,6 +21,7 @@ import androidx.navigation.NavType
 import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
 import androidx.navigation.navigation
+import com.who_summoned_the_cloud.eromoro.app.model.ObstacleInfoPopupEvent
 import com.who_summoned_the_cloud.eromoro.app.model.ToastCallback
 import com.who_summoned_the_cloud.eromoro.app.util.FinishHandler
 import com.who_summoned_the_cloud.eromoro.app.util.NavigationBarApp
@@ -27,7 +30,9 @@ import com.who_summoned_the_cloud.eromoro.app.util.launch
 import com.who_summoned_the_cloud.eromoro.common.model.Position
 import com.who_summoned_the_cloud.eromoro.presentation.component.CustomConfirmPopup
 import com.who_summoned_the_cloud.eromoro.presentation.modal.LoadingModal
+import com.who_summoned_the_cloud.eromoro.presentation.modal.ObstacleInfoPopup
 import com.who_summoned_the_cloud.eromoro.presentation.model.Fetch
+import com.who_summoned_the_cloud.eromoro.presentation.model.MapObstacle
 import com.who_summoned_the_cloud.eromoro.presentation.model.MyPageCourseListScreenCourse
 import com.who_summoned_the_cloud.eromoro.presentation.model.MyPageScreenLikedCourse
 import com.who_summoned_the_cloud.eromoro.presentation.model.ToastType
@@ -38,6 +43,9 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.launch
+import kotlin.collections.component1
+import kotlin.collections.component2
+import kotlin.math.sqrt
 
 fun NavGraphBuilder.addMyPageRoute(
     navController: NavHostController,
@@ -340,38 +348,107 @@ fun NavGraphBuilder.addMyPageRoute(
         arguments = listOf(navArgument("courseId") { type = NavType.LongType }),
     ) { backStackEntry ->
         val viewModel = getViewModel(backStackEntry)
+        val window = LocalWindowInfo.current
         val courseId = backStackEntry.arguments?.getLong("courseId") ?: return@composable
 
         var showLoading by remember { mutableStateOf(false) }
         var positions: List<Position>? by remember { mutableStateOf(null) }
+        var obstacles: List<MapObstacle> by remember { mutableStateOf(emptyList()) }
+
+        val screenRadiusPx = remember {
+            val (width, height) = window.containerSize.let { listOf(it.width, it.height) }
+            sqrt((width * width + height * height).toFloat()) / 2
+        }
+
+        var mapPosition by remember { mutableStateOf(Position(0.0 to 0.0)) }
+        var meterPerPixel by remember { mutableDoubleStateOf(0.0) }
+
+        var obstacleInfoPopupEvent: ObstacleInfoPopupEvent? by remember { mutableStateOf(null) }
 
         LaunchedEffect(courseId) {
             viewModel.launch {
                 showLoading = true
 
-                runCatching {
-                    getCoursePositions(courseId = courseId)
-                }
-                    .onSuccess {
-                        positions = it
-                    }
-                    .onFailure {
-                        showToast("오류가 발생했습니다.", ToastType.ERROR)
-                    }
+                runCatching { getCoursePositions(courseId = courseId) }
+                    .onSuccess { positions = it }
+                    .onFailure { showToast("오류가 발생했습니다.", ToastType.ERROR) }
 
                 showLoading = false
             }
         }
 
+        LaunchedEffect(meterPerPixel, mapPosition) {
+            val meter = meterPerPixel * screenRadiusPx
+            val dLat = 0.000009 * meter
+            val dLon = 0.000011 * meter
+
+            viewModel.launch {
+                runCatching {
+                    getObstacles(
+                        topLeft = Position(mapPosition.latitude + dLat to mapPosition.longitude - dLon),
+                        bottomRight = Position(mapPosition.latitude - dLat to mapPosition.longitude + dLon),
+                    )
+                }.onSuccess {
+                    obstacles = it.map { obstacle ->
+                        MapObstacle(
+                            position = obstacle.position,
+                            type = obstacle.type,
+                            onClick = {
+                                obstacle.image?.let { image ->
+                                    obstacleInfoPopupEvent = ObstacleInfoPopupEvent(
+                                        image = image,
+                                        obstacleType = obstacle.type,
+                                    )
+                                } ?: obstacle.reportId?.let { reportId ->
+                                    viewModel.launch {
+                                        showLoading = true
+
+                                        runCatching { getReport(reportId = reportId) }
+                                            .onSuccess { report ->
+                                                obstacleInfoPopupEvent =
+                                                    report.image?.let { image ->
+                                                        ObstacleInfoPopupEvent(
+                                                            image = image,
+                                                            obstacleType = obstacle.type,
+                                                        )
+                                                    }
+                                            }
+                                            .onFailure {
+                                                showToast("이미지를 불러오지 못했습니다.", ToastType.ERROR)
+                                            }
+
+                                        showLoading = false
+                                    }
+                                }
+                            },
+                        )
+                    }
+                }
+            }
+        }
+
         MapScreen(
-            mainCourse = positions, onBackButtonClicked = {
+            mainCourse = positions,
+            obstacles = obstacles,
+            onPositionChanged = { mapPosition = it },
+            onMeterPerPixelChanged = { meterPerPixel = it },
+            onBackButtonClicked = {
                 MainScope().launch { navController.popBackStack() }
-            }) {
+            },
+        ) {
             LaunchedEffect(positions) {
                 moveToMainCourseView()
             }
         }
 
         if (showLoading) LoadingModal()
+
+        obstacleInfoPopupEvent?.let { event ->
+            ObstacleInfoPopup(
+                image = event.image,
+                obstacleType = event.obstacleType,
+                onDismissRequest = { obstacleInfoPopupEvent = null },
+            )
+        }
     }
 }

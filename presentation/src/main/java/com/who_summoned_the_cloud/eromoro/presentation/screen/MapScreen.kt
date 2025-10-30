@@ -25,9 +25,10 @@ fun MapScreen(
     obstacles: List<MapObstacle>? = null,
     centerMarkerType: CenterMarkerType? = null,
     onPositionChanged: ((Position) -> Unit)? = null,
+    onMeterPerPixelChanged: ((Double) -> Unit)? = null,
+    onBackButtonClicked: () -> Unit,
     isInteracting: Boolean = true,
     onClick: (() -> Unit)? = null,
-    onBackButtonClicked: () -> Unit,
     content: @Composable @NaverMapComposable (CustomMapScope.() -> Unit)? = null,
 ) {
     Box(
@@ -42,6 +43,7 @@ fun MapScreen(
             obstacles = obstacles,
             centerMarkerType = centerMarkerType,
             onPositionChanged = onPositionChanged,
+            onMeterPerPixelChanged = onMeterPerPixelChanged,
             isInteracting = isInteracting,
             onClick = onClick,
             content = content,

@@ -12,6 +12,7 @@ import com.who_summoned_the_cloud.eromoro.data.model.Report
 import com.who_summoned_the_cloud.eromoro.data.repository.CourseRepository
 import com.who_summoned_the_cloud.eromoro.data.repository.GeolocationRepository
 import com.who_summoned_the_cloud.eromoro.data.repository.ReportRepository
+import com.who_summoned_the_cloud.eromoro.data.repository.SpotRepository
 import com.who_summoned_the_cloud.eromoro.data.repository.UserRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -20,6 +21,7 @@ import javax.inject.Inject
 @HiltViewModel
 class MapViewModel @Inject constructor(
     private val geolocationRepository: GeolocationRepository,
+    private val spotRepository: SpotRepository,
     private val courseRepository: CourseRepository,
     private val reportRepository: ReportRepository,
     private val userRepository: UserRepository,
@@ -65,6 +67,12 @@ class MapViewModel @Inject constructor(
             topLeft = topLeft,
             bottomRight = bottomRight,
         )
+    }
+
+    suspend fun getSpotPosition(spotId: Long): Position {
+        val spot = spotRepository.getSpot(spotId = spotId)
+        val position = geolocationRepository.getPositionFromAddress(address = spot.address)
+        return position
     }
 
     suspend fun getReport(reportId: Long): Report {

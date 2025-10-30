@@ -11,11 +11,13 @@ import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableDoubleStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.navigation.NavBackStackEntry
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavHostController
@@ -25,6 +27,7 @@ import androidx.navigation.navArgument
 import androidx.navigation.navigation
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.rememberMultiplePermissionsState
+import com.who_summoned_the_cloud.eromoro.app.model.ObstacleInfoPopupEvent
 import com.who_summoned_the_cloud.eromoro.app.model.ToastCallback
 import com.who_summoned_the_cloud.eromoro.app.service.RouteRecordingService
 import com.who_summoned_the_cloud.eromoro.app.util.FinishHandler
@@ -36,9 +39,12 @@ import com.who_summoned_the_cloud.eromoro.common.model.Position
 import com.who_summoned_the_cloud.eromoro.common.model.SpotCategory
 import com.who_summoned_the_cloud.eromoro.presentation.modal.AddressSelectModalBottomSheet
 import com.who_summoned_the_cloud.eromoro.presentation.modal.CategorySelectModalBottomSheet
+import com.who_summoned_the_cloud.eromoro.presentation.modal.LoadingModal
+import com.who_summoned_the_cloud.eromoro.presentation.modal.ObstacleInfoPopup
 import com.who_summoned_the_cloud.eromoro.presentation.model.Fetch
 import com.who_summoned_the_cloud.eromoro.presentation.model.HomeScreenPlace
 import com.who_summoned_the_cloud.eromoro.presentation.model.MapCourseViewerScreenCourse
+import com.who_summoned_the_cloud.eromoro.presentation.model.MapObstacle
 import com.who_summoned_the_cloud.eromoro.presentation.model.SearchScreenSearchResult
 import com.who_summoned_the_cloud.eromoro.presentation.model.SpotInformationScreenTab
 import com.who_summoned_the_cloud.eromoro.presentation.model.ToastType
@@ -51,6 +57,9 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.launch
+import kotlin.collections.component1
+import kotlin.collections.component2
+import kotlin.math.sqrt
 
 @SuppressLint("MissingPermission")
 @OptIn(ExperimentalPermissionsApi::class)
@@ -396,23 +405,32 @@ fun NavGraphBuilder.addHomeRoute(
         ) { backStackEntry ->
             val viewModel = getViewModel(backStackEntry)
             val context = LocalContext.current
+            val window = LocalWindowInfo.current
+
             val spotId = backStackEntry.arguments?.getLong("spotId") ?: return@composable
 
             val spot by viewModel.spot.collectAsState()
+            val spotPosition by viewModel.spotPosition.collectAsState()
             val spotCourseList by viewModel.spotCourseList.collectAsState()
+            val spotCoursePositions by viewModel.spotCoursePositions.collectAsState()
 
             var selectedCourseIndex: Int? by remember { mutableStateOf(null) }
 
-            val spotCourses: Fetch<List<MapCourseViewerScreenCourse>, Unit> =
-                remember(spotCourseList) {
-                    spotCourseList
+            var spotCourses: Fetch<List<MapCourseViewerScreenCourse>, Unit> by remember(
+                spotCourseList,
+                spotCoursePositions,
+            ) {
+                mutableStateOf(
+                    value = spotCourseList
                         ?.flatten()
                         ?.mapIndexed { index, course ->
                             MapCourseViewerScreenCourse(
                                 badge = null,
                                 name = course.title,
                                 rating = course.rating,
-                                coursePositions = Fetch.Loading(),
+                                coursePositions = spotCoursePositions[course.id]?.let {
+                                    Fetch.Success(it)
+                                } ?: Fetch.Loading(),
                                 isLiked = course.isLiked,
                                 obstacles = course.obstacles,
                                 distance = course.distance,
@@ -430,8 +448,21 @@ fun NavGraphBuilder.addHomeRoute(
                                 onClick = { selectedCourseIndex = index },
                             )
                         }
-                        ?.let { Fetch.Success(it) } ?: Fetch.Loading()
-                }
+                        ?.let { Fetch.Success(it) } ?: Fetch.Loading(),
+                )
+            }
+
+            val screenRadiusPx = remember {
+                val (width, height) = window.containerSize.let { listOf(it.width, it.height) }
+                sqrt((width * width + height * height).toFloat()) / 2
+            }
+
+            var obstacles: List<MapObstacle> by remember { mutableStateOf(emptyList()) }
+            var mapPosition by remember { mutableStateOf(Position(0.0 to 0.0)) }
+            var meterPerPixel by remember { mutableDoubleStateOf(0.0) }
+
+            var showLoading by remember { mutableStateOf(false) }
+            var obstacleInfoPopupEvent: ObstacleInfoPopupEvent? by remember { mutableStateOf(null) }
 
             LaunchedEffect(spotId) {
                 if (spot?.id == spotId) return@LaunchedEffect
@@ -445,12 +476,66 @@ fun NavGraphBuilder.addHomeRoute(
                 if (spot == null) return@LaunchedEffect
                 viewModel.spotCourseList.value = null
                 viewModel.launch {
-                    runCatching { loadCurrentSpotCourse() }
+                    runCatching { loadCurrentSpotCourse() }.onFailure {
+                        showToast("코스를 불러오지 못했습니다.", ToastType.ERROR)
+                        spotCourses = Fetch.Error(Unit)
+                    }
+                }
+            }
+
+            LaunchedEffect(meterPerPixel, mapPosition) {
+                val meter = meterPerPixel * screenRadiusPx
+                val dLat = 0.000009 * meter
+                val dLon = 0.000011 * meter
+
+                viewModel.launch {
+                    runCatching {
+                        getObstacles(
+                            topLeft = Position(mapPosition.latitude + dLat to mapPosition.longitude - dLon),
+                            bottomRight = Position(mapPosition.latitude - dLat to mapPosition.longitude + dLon),
+                        )
+                    }.onSuccess {
+                        obstacles = it.map { obstacle ->
+                            MapObstacle(
+                                position = obstacle.position,
+                                type = obstacle.type,
+                                onClick = {
+                                    obstacle.image?.let { image ->
+                                        obstacleInfoPopupEvent = ObstacleInfoPopupEvent(
+                                            image = image,
+                                            obstacleType = obstacle.type,
+                                        )
+                                    } ?: obstacle.reportId?.let { reportId ->
+                                        viewModel.launch {
+                                            showLoading = true
+
+                                            runCatching { getReport(reportId = reportId) }
+                                                .onSuccess { report ->
+                                                    obstacleInfoPopupEvent =
+                                                        report.image?.let { image ->
+                                                            ObstacleInfoPopupEvent(
+                                                                image = image,
+                                                                obstacleType = obstacle.type,
+                                                            )
+                                                        }
+                                                }
+                                                .onFailure {
+                                                    showToast("이미지를 불러오지 못했습니다.", ToastType.ERROR)
+                                                }
+
+                                            showLoading = false
+                                        }
+                                    }
+                                },
+                            )
+                        }
+                    }
                 }
             }
 
             MapCourseViewerScreen(
                 courses = spotCourses,
+                obstacles = obstacles,
                 selectedCourseIndex = selectedCourseIndex,
                 buttonLabel = if (selectedCourseIndex == null) "코스 생성하기" else "코스 시작",
                 onBackButtonClicked = {
@@ -489,8 +574,22 @@ fun NavGraphBuilder.addHomeRoute(
                             }
                     }
                 },
+                onMeterPerPixelChanged = { meterPerPixel = it },
+                onPositionChanged = { mapPosition = it },
             ) {
-                // EMPTY
+                LaunchedEffect(spotPosition) {
+                    spotPosition?.let { moveMap(it) }
+                }
+            }
+
+            if (showLoading) LoadingModal()
+
+            obstacleInfoPopupEvent?.let { event ->
+                ObstacleInfoPopup(
+                    image = event.image,
+                    obstacleType = event.obstacleType,
+                    onDismissRequest = { obstacleInfoPopupEvent = null },
+                )
             }
         }
     }

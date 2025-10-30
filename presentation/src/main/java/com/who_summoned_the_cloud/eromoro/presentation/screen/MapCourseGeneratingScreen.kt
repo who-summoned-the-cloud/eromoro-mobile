@@ -40,6 +40,7 @@ import com.who_summoned_the_cloud.eromoro.presentation.component.CustomSlider
 import com.who_summoned_the_cloud.eromoro.presentation.model.CenterMarkerType
 import com.who_summoned_the_cloud.eromoro.presentation.model.CustomMapScope
 import com.who_summoned_the_cloud.eromoro.presentation.model.MapCourseGeneratingScreenMode
+import com.who_summoned_the_cloud.eromoro.presentation.model.MapObstacle
 import com.who_summoned_the_cloud.eromoro.presentation.theme.Colors
 import com.who_summoned_the_cloud.eromoro.presentation.util.SystemUiPadding
 import kotlin.math.roundToInt
@@ -47,9 +48,11 @@ import kotlin.math.roundToInt
 @Composable
 fun MapCourseGeneratingScreen(
     currentPosition: Position?,
+    obstacles: List<MapObstacle>,
     mode: MapCourseGeneratingScreenMode,
     onBackButtonClicked: () -> Unit,
     onPositionChanged: (Position) -> Unit,
+    onMeterPerPixelChanged: (Double) -> Unit,
     onCurrentLocationButtonClicked: () -> Unit,
     content: @Composable CustomMapScope.() -> Unit
 ) {
@@ -65,6 +68,8 @@ fun MapCourseGeneratingScreen(
                 !is MapCourseGeneratingScreenMode.HasEnd -> CenterMarkerType.END
                 else -> null
             },
+            obstacles = obstacles,
+            onMeterPerPixelChanged = onMeterPerPixelChanged,
             onPositionChanged = onPositionChanged,
             content = content,
         )
@@ -315,10 +320,12 @@ fun PreviewMapCourseGeneratingScreen() {
 
     MapCourseGeneratingScreen(
         mode = mode,
+        obstacles = emptyList(),
         currentPosition = Position(37.5666805 to 126.9784147),
         onBackButtonClicked = {},
         onPositionChanged = { position = it },
         onCurrentLocationButtonClicked = {},
+        onMeterPerPixelChanged = {},
         content = {},
     )
 }

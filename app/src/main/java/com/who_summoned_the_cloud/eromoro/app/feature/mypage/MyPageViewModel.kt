@@ -3,10 +3,14 @@ package com.who_summoned_the_cloud.eromoro.app.feature.mypage
 import androidx.lifecycle.ViewModel
 import com.who_summoned_the_cloud.eromoro.common.model.Position
 import com.who_summoned_the_cloud.eromoro.data.model.LikedCourse
+import com.who_summoned_the_cloud.eromoro.data.model.Obstacle
+import com.who_summoned_the_cloud.eromoro.data.model.Report
 import com.who_summoned_the_cloud.eromoro.data.model.UsedCourse
 import com.who_summoned_the_cloud.eromoro.data.model.User
 import com.who_summoned_the_cloud.eromoro.data.repository.AuthRepository
 import com.who_summoned_the_cloud.eromoro.data.repository.CourseRepository
+import com.who_summoned_the_cloud.eromoro.data.repository.GeolocationRepository
+import com.who_summoned_the_cloud.eromoro.data.repository.ReportRepository
 import com.who_summoned_the_cloud.eromoro.data.repository.UserRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -16,6 +20,8 @@ import javax.inject.Inject
 class MyPageViewModel @Inject constructor(
     private val courseRepository: CourseRepository,
     private val userRepository: UserRepository,
+    private val geolocationRepository: GeolocationRepository,
+    private val reportRepository: ReportRepository,
     private val authRepository: AuthRepository,
 ) : ViewModel() {
 
@@ -65,6 +71,20 @@ class MyPageViewModel @Inject constructor(
 
     suspend fun getCoursePositions(courseId: Long): List<Position> {
         return courseRepository.getCourse(courseId = courseId).positions
+    }
+
+    suspend fun getObstacles(
+        topLeft: Position,
+        bottomRight: Position,
+    ): List<Obstacle> {
+        return geolocationRepository.getObstacles(
+            topLeft = topLeft,
+            bottomRight = bottomRight,
+        )
+    }
+
+    suspend fun getReport(reportId: Long): Report {
+        return reportRepository.getReport(reportId = reportId)
     }
 
     suspend fun modifyCourseLike(courseId: Long, isLiked: Boolean) {

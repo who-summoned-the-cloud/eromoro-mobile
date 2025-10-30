@@ -6,14 +6,18 @@ import com.who_summoned_the_cloud.eromoro.common.model.KoreanAreas
 import com.who_summoned_the_cloud.eromoro.common.model.Position
 import com.who_summoned_the_cloud.eromoro.common.model.SpotCategory
 import com.who_summoned_the_cloud.eromoro.data.model.ListableSpot
+import com.who_summoned_the_cloud.eromoro.data.model.Obstacle
 import com.who_summoned_the_cloud.eromoro.data.model.RegionalCourse
+import com.who_summoned_the_cloud.eromoro.data.model.Report
 import com.who_summoned_the_cloud.eromoro.data.model.Spot
 import com.who_summoned_the_cloud.eromoro.data.repository.CourseRepository
 import com.who_summoned_the_cloud.eromoro.data.repository.GeolocationRepository
+import com.who_summoned_the_cloud.eromoro.data.repository.ReportRepository
 import com.who_summoned_the_cloud.eromoro.data.repository.SettingRepository
 import com.who_summoned_the_cloud.eromoro.data.repository.SpotRepository
 import com.who_summoned_the_cloud.eromoro.data.repository.UserRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
@@ -26,6 +30,7 @@ class HomeViewModel @Inject constructor(
     private val courseRepository: CourseRepository,
     private val userRepository: UserRepository,
     private val settingRepository: SettingRepository,
+    private val reportRepository: ReportRepository,
 ) : ViewModel() {
 
     companion object {
@@ -54,6 +59,7 @@ class HomeViewModel @Inject constructor(
     val spot = MutableStateFlow<Spot?>(null)
     val spotPosition = MutableStateFlow<Position?>(null)
     val spotCourseList = MutableStateFlow<List<List<RegionalCourse>>?>(null)
+    val spotCoursePositions = MutableStateFlow<Map<Long, List<Position>>>(emptyMap())
     val isSpotCourseListFetchedAll = MutableStateFlow(false)
 
     val recentSearchWords = MutableStateFlow<List<String>>(emptyList())
@@ -122,6 +128,15 @@ class HomeViewModel @Inject constructor(
         if (fetchedSpotCourses.size < PAGE_SIZE) {
             isSpotCourseListFetchedAll.value = true
         }
+
+        fetchedSpotCourses.forEach { spotCourse ->
+            CoroutineScope(Dispatchers.IO).launch {
+                runCatching {
+                    val course = courseRepository.getCourse(courseId = spotCourse.id)
+                    spotCoursePositions.value += spotCourse.id to course.positions
+                }
+            }
+        }
     }
 
     suspend fun startCourse(courseId: Long) {
@@ -143,6 +158,20 @@ class HomeViewModel @Inject constructor(
                 else course
             }
         }
+    }
+
+    suspend fun getObstacles(
+        topLeft: Position,
+        bottomRight: Position,
+    ): List<Obstacle> {
+        return geolocationRepository.getObstacles(
+            topLeft = topLeft,
+            bottomRight = bottomRight,
+        )
+    }
+
+    suspend fun getReport(reportId: Long): Report {
+        return reportRepository.getReport(reportId = reportId)
     }
 
     suspend fun loadRecentSearchWords() {

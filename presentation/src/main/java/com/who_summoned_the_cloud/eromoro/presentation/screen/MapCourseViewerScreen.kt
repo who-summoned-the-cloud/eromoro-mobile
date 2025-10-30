@@ -50,6 +50,7 @@ import com.who_summoned_the_cloud.eromoro.presentation.model.MapCourseViewerScre
 import com.who_summoned_the_cloud.eromoro.common.model.Position
 import com.who_summoned_the_cloud.eromoro.presentation.component.CustomProgressIndicator
 import com.who_summoned_the_cloud.eromoro.presentation.model.CustomMapScope
+import com.who_summoned_the_cloud.eromoro.presentation.model.MapObstacle
 import com.who_summoned_the_cloud.eromoro.presentation.theme.Colors
 import com.who_summoned_the_cloud.eromoro.presentation.util.SystemUiPadding
 import com.who_summoned_the_cloud.eromoro.presentation.util.getDistanceExpression
@@ -57,10 +58,13 @@ import com.who_summoned_the_cloud.eromoro.presentation.util.getDistanceExpressio
 @Composable
 fun MapCourseViewerScreen(
     courses: Fetch<List<MapCourseViewerScreenCourse>, Unit>,
+    obstacles: List<MapObstacle>,
     selectedCourseIndex: Int?,
     buttonLabel: String = "코스 시작",
     onBackButtonClicked: () -> Unit,
     onCourseStartButtonClicked: () -> Unit,
+    onPositionChanged: (Position) -> Unit,
+    onMeterPerPixelChanged: (Double) -> Unit,
     content: @Composable CustomMapScope.() -> Unit,
 ) {
     val (mainCourse, otherCourses) = remember(courses, selectedCourseIndex) {
@@ -87,6 +91,9 @@ fun MapCourseViewerScreen(
         CustomMap(
             mainCourse = mainCourse,
             otherCourses = otherCourses,
+            obstacles = obstacles,
+            onPositionChanged = onPositionChanged,
+            onMeterPerPixelChanged = onMeterPerPixelChanged,
         ) {
             LaunchedEffect(mainCourse) {
                 mainCourse?.let {
@@ -445,7 +452,10 @@ fun PreviewMapCourseViewerScreen() {
     MapCourseViewerScreen(
         courses = courses,
         selectedCourseIndex = selectedCourseIndex,
+        obstacles = emptyList(),
         onBackButtonClicked = {},
+        onMeterPerPixelChanged = {},
+        onPositionChanged = {},
         onCourseStartButtonClicked = {},
     ) {
         LaunchedEffect(selectedCourseIndex) {
