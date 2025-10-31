@@ -22,7 +22,6 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
@@ -53,13 +52,13 @@ import coil3.compose.rememberAsyncImagePainter
 import com.who_summoned_the_cloud.eromoro.common.model.SpotCategory
 import com.who_summoned_the_cloud.eromoro.common.model.UserType
 import com.who_summoned_the_cloud.eromoro.presentation.R
+import com.who_summoned_the_cloud.eromoro.presentation.component.CustomAvailableUserTypeListView
 import com.who_summoned_the_cloud.eromoro.presentation.component.CustomProgressIndicator
 import com.who_summoned_the_cloud.eromoro.presentation.model.Fetch
 import com.who_summoned_the_cloud.eromoro.presentation.model.HomeScreenPlace
 import com.who_summoned_the_cloud.eromoro.presentation.theme.Colors
 import com.who_summoned_the_cloud.eromoro.presentation.util.SystemUiPadding
 import com.who_summoned_the_cloud.eromoro.presentation.util.getDistanceExpression
-import com.who_summoned_the_cloud.eromoro.presentation.util.getUserTypeIconRes
 import com.who_summoned_the_cloud.eromoro.presentation.util.rememberBitmap
 import kotlin.math.ceil
 import kotlin.math.min
@@ -419,7 +418,7 @@ fun HomeScreen(
                                                 fontWeight = FontWeight.Normal,
                                             )
                                             Spacer(modifier = Modifier.height(10.dp))
-                                            AvailableUserTypeListView(availableUserType = place.availableUserType)
+                                            CustomAvailableUserTypeListView(availableUserType = place.availableUserType)
                                         }
                                     }
                                 }
@@ -629,7 +628,7 @@ fun HomeScreen(
                                                     maxLines = 1,
                                                 )
                                             }
-                                            AvailableUserTypeListView(
+                                            CustomAvailableUserTypeListView(
                                                 availableUserType = place.availableUserType,
                                             )
                                         }
@@ -677,36 +676,6 @@ fun HomeScreen(
                 }
             }
         }
-    }
-}
-
-@Composable
-private fun AvailableUserTypeListView(
-    availableUserType: Set<UserType>,
-) {
-    Row(
-        horizontalArrangement = Arrangement.spacedBy(5.dp),
-    ) {
-        UserType.entries
-            .filter { it != UserType.OTHER }
-            .forEach { userType ->
-                val icon = getUserTypeIconRes(userType)
-                val isAvailable = userType in availableUserType
-
-                Box(
-                    contentAlignment = Alignment.Center, modifier = Modifier.background(
-                        color = if (isAvailable) Colors.pink[200] else Colors.pink[600],
-                        shape = CircleShape
-                    )
-                ) {
-                    Icon(
-                        painter = painterResource(icon),
-                        tint = Colors.white,
-                        modifier = Modifier.size(28.dp),
-                        contentDescription = "${userType.label} ${if (isAvailable) "친화적인 코스 함유" else "친화적인 코스 미함유"}"
-                    )
-                }
-            }
     }
 }
 

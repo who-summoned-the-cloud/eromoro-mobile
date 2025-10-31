@@ -425,12 +425,13 @@ fun NavGraphBuilder.addHomeRoute(
                         ?.flatten()
                         ?.mapIndexed { index, course ->
                             MapCourseViewerScreenCourse(
-                                badge = null,
+                                badge = MapCourseViewerScreenCourse.Badge.POPULAR,
                                 name = course.title,
                                 rating = course.rating,
                                 coursePositions = spotCoursePositions[course.id]?.let {
                                     Fetch.Success(it)
                                 } ?: Fetch.Loading(),
+                                availableUserTypes = course.availableUserTypes,
                                 isLiked = course.isLiked,
                                 obstacles = course.obstacles,
                                 distance = course.distance,

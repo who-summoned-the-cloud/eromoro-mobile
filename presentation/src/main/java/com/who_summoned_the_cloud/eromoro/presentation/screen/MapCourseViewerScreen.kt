@@ -10,10 +10,10 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyRow
@@ -40,16 +40,18 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.who_summoned_the_cloud.eromoro.common.model.ObstacleType
+import com.who_summoned_the_cloud.eromoro.common.model.Position
+import com.who_summoned_the_cloud.eromoro.common.model.UserType
 import com.who_summoned_the_cloud.eromoro.presentation.R
+import com.who_summoned_the_cloud.eromoro.presentation.component.CustomAvailableUserTypeListView
 import com.who_summoned_the_cloud.eromoro.presentation.component.CustomButton
 import com.who_summoned_the_cloud.eromoro.presentation.component.CustomElevatedBackButton
 import com.who_summoned_the_cloud.eromoro.presentation.component.CustomMap
+import com.who_summoned_the_cloud.eromoro.presentation.component.CustomProgressIndicator
 import com.who_summoned_the_cloud.eromoro.presentation.component.CustomStarRatingBar
+import com.who_summoned_the_cloud.eromoro.presentation.model.CustomMapScope
 import com.who_summoned_the_cloud.eromoro.presentation.model.Fetch
 import com.who_summoned_the_cloud.eromoro.presentation.model.MapCourseViewerScreenCourse
-import com.who_summoned_the_cloud.eromoro.common.model.Position
-import com.who_summoned_the_cloud.eromoro.presentation.component.CustomProgressIndicator
-import com.who_summoned_the_cloud.eromoro.presentation.model.CustomMapScope
 import com.who_summoned_the_cloud.eromoro.presentation.model.MapObstacle
 import com.who_summoned_the_cloud.eromoro.presentation.theme.Colors
 import com.who_summoned_the_cloud.eromoro.presentation.util.SystemUiPadding
@@ -177,7 +179,6 @@ fun MapCourseViewerScreen(
                                 Box(
                                     modifier = Modifier
                                         .width(300.dp)
-                                        .height(185.dp)
                                         .shadow(
                                             elevation = 8.dp,
                                             shape = shape,
@@ -201,7 +202,7 @@ fun MapCourseViewerScreen(
                                         verticalArrangement = Arrangement.SpaceBetween,
                                         modifier = Modifier
                                             .padding(20.dp)
-                                            .fillMaxHeight(),
+                                            .heightIn(min = 145.dp),
                                     ) {
                                         Column {
                                             Row(
@@ -288,6 +289,10 @@ fun MapCourseViewerScreen(
                                                 fontWeight = FontWeight.Normal,
                                                 color = Colors.gray[500],
                                             )
+                                            Spacer(modifier = Modifier.height(8.dp))
+                                            course.availableUserTypes?.let {
+                                                CustomAvailableUserTypeListView(it)
+                                            }
                                         }
                                         Row(
                                             horizontalArrangement = Arrangement.End,
@@ -397,6 +402,10 @@ fun PreviewMapCourseViewerScreen() {
                     badge = MapCourseViewerScreenCourse.Badge.POPULAR,
                     name = "경복궁 코스",
                     rating = 4.2f,
+                    availableUserTypes = setOf(
+                        UserType.PREGNANT,
+                        UserType.PHYSICAL_DISABILITY,
+                    ),
                     coursePositions = Fetch.Success(
                         listOf(
                             37.566535 to 126.977969,
