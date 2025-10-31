@@ -32,7 +32,7 @@ class CoursePreference @Inject constructor(
         currentCourseId = courseId
         userRoute = emptyList()
         courseStartedAt = Instant.now()
-        courseDistance = 0
+        courseDistance = 0f
         courseSpotId = spotId
         reportCount = 0
     }
@@ -73,15 +73,15 @@ class CoursePreference @Inject constructor(
             }
         }
 
-    var courseDistance: Int?
+    var courseDistance: Float?
         get() = prefs
-            .getInt(COURSE_DISTANCE, -1)
-            .takeIf { it != -1 }
+            .getFloat(COURSE_DISTANCE, -1.0f)
+            .takeIf { it >= -0.001 }
         set(value) {
             if (value == null) {
                 prefs.edit { remove(COURSE_DISTANCE) }
             } else {
-                prefs.edit { putInt(COURSE_DISTANCE, value) }
+                prefs.edit { putFloat(COURSE_DISTANCE, value) }
             }
         }
 

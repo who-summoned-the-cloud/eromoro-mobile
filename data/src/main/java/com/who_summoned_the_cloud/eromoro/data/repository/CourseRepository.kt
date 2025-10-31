@@ -27,6 +27,7 @@ import org.openapitools.client.models.LatLon
 import java.time.Instant
 import javax.inject.Inject
 import javax.inject.Singleton
+import kotlin.math.roundToInt
 
 @Singleton
 class CourseRepository @Inject constructor(
@@ -277,7 +278,7 @@ class CourseRepository @Inject constructor(
                 duration = ((Instant
                     .now()
                     .toEpochMilli() - coursePreference.courseStartedAt!!.toEpochMilli()) / (1000 * 60f)).toInt(),
-                distance = coursePreference.courseDistance ?: 0,
+                distance = coursePreference.courseDistance?.roundToInt() ?: 0,
             )
         }
     }
@@ -290,7 +291,7 @@ class CourseRepository @Inject constructor(
 
         val userRoute = coursePreference.userRoute ?: emptyList()
         val courseStartedAt = coursePreference.courseStartedAt ?: now
-        val distance = coursePreference.courseDistance ?: 10
+        val distance = coursePreference.courseDistance?.roundToInt() ?: 10
         val spotId = coursePreference.courseSpotId
 
         val infoDto = CourseInfoDto(
@@ -361,8 +362,8 @@ class CourseRepository @Inject constructor(
                         coursePreference.userRoute = value
                     }
 
-                override var distance: Int
-                    get() = coursePreference.courseDistance ?: 0
+                override var distance: Float
+                    get() = coursePreference.courseDistance ?: 0f
                     set(value) {
                         coursePreference.courseDistance = value
                     }

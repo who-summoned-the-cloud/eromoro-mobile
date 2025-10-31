@@ -24,7 +24,6 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import javax.inject.Inject
-import kotlin.math.roundToInt
 
 @AndroidEntryPoint
 class RouteRecordingService : Service() {
@@ -117,7 +116,7 @@ class RouteRecordingService : Service() {
                         }
 
                         userRoute = currentUserRoute.plus(position)
-                        distance += (meter?.roundToInt() ?: 0)
+                        distance += (meter?.toFloat() ?: 0f)
                     }
                 }
             }
