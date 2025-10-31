@@ -446,7 +446,10 @@ fun NavGraphBuilder.addHomeRoute(
                                         }
                                     }
                                 },
-                                onClick = { selectedCourseIndex = index },
+                                onClick = {
+                                    selectedCourseIndex =
+                                        if (selectedCourseIndex == index) null else index
+                                },
                             )
                         }
                         ?.let { Fetch.Success(it) } ?: Fetch.Loading(),
