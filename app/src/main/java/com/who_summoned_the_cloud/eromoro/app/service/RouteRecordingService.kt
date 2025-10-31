@@ -16,6 +16,7 @@ import com.google.android.gms.location.LocationResult
 import com.google.android.gms.location.LocationServices
 import com.google.android.gms.location.Priority
 import com.who_summoned_the_cloud.eromoro.app.R
+import com.who_summoned_the_cloud.eromoro.app.util.getDistanceBetweenPositions
 import com.who_summoned_the_cloud.eromoro.common.model.Position
 import com.who_summoned_the_cloud.eromoro.data.repository.CourseRepository
 import dagger.hilt.android.AndroidEntryPoint
@@ -23,6 +24,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import javax.inject.Inject
+import kotlin.math.roundToInt
 
 @AndroidEntryPoint
 class RouteRecordingService : Service() {
@@ -104,13 +106,18 @@ class RouteRecordingService : Service() {
         locationCallback = object : LocationCallback() {
             override fun onLocationResult(locationResult: LocationResult) {
                 val location = locationResult.lastLocation ?: return
+                val position = Position(location.latitude to location.longitude)
 
                 CoroutineScope(Dispatchers.IO).launch {
                     courseRepository.modifyUserRoute {
-                        userRoute =
-                            userRoute.plus(Position(location.latitude to location.longitude))
+                        val currentUserRoute = userRoute
+                        val lastPosition = currentUserRoute.lastOrNull()
+                        val meter = lastPosition?.let {
+                            getDistanceBetweenPositions(pos1 = lastPosition, pos2 = position)
+                        }
 
-                        distance += DISTANCE_UNIT
+                        userRoute = currentUserRoute.plus(position)
+                        distance += (meter?.roundToInt() ?: 0)
                     }
                 }
             }
@@ -122,7 +129,7 @@ class RouteRecordingService : Service() {
         val locationRequest = LocationRequest
             .Builder(
                 Priority.PRIORITY_HIGH_ACCURACY,
-                60000,
+                3000,
             )
             .setMinUpdateDistanceMeters(DISTANCE_UNIT.toFloat())
             .build()
