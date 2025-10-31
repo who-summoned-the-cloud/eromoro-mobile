@@ -156,7 +156,7 @@ fun NavGraphBuilder.addMapRoute(
                         .onSuccess { isCourseRunning ->
                             if (isCourseRunning) MainScope().launch {
                                 navController.navigate("/map/progress") {
-                                    popUpTo(route = "/map/generate") { inclusive = true }
+                                    popUpTo(route = "/map/generate?spotId={spotId}") { inclusive = true }
                                 }
                             }
                         }
@@ -463,11 +463,9 @@ fun NavGraphBuilder.addMapRoute(
                                     .also { context.startService(it) }
 
                                 MainScope().launch {
-                                    navController.popBackStack(
-                                        route = "/map/generate",
-                                        inclusive = true,
-                                    )
-                                    navController.navigate("/map/progress")
+                                    navController.navigate("/map/progress") {
+                                        popUpTo("/map/generate?spotId={spotId}") { inclusive = true }
+                                    }
                                 }
                             }
                             .onFailure {
@@ -738,13 +736,7 @@ fun NavGraphBuilder.addMapRoute(
                                     .apply { action = RouteRecordingService.ACTION_STOP_SERVICE }
                                     .let { context.startService(it) }
 
-                                MainScope().launch {
-                                    navController.popBackStack(
-                                        destinationId = navController.graph.startDestinationId,
-                                        inclusive = false,
-                                    )
-                                }
-
+                                MainScope().launch { navController.popBackStack() }
                                 showToast("코스가 저장되었습니다!", ToastType.SUCCESS)
                             }
                             .onFailure {

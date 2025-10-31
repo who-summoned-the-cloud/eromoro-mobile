@@ -84,8 +84,11 @@ class MapViewModel @Inject constructor(
     }
 
     suspend fun startCourse(courseId: Long, spotId: Long?) {
+        val nickname = nickname.value ?: userRepository.getUserInfo().nickname
         courseRepository.startCourse(courseId = courseId, spotId = spotId)
-        originalRunningCourse.value = courseRepository.getCourse(courseId = courseId)
+        originalRunningCourse.value = courseRepository
+            .getCourse(courseId = courseId)
+            .copy(name = "${nickname}님의 코스")  // 코스 제목의 기본값 요구사항 반영
     }
 
     suspend fun truncateCourseProgress() {
